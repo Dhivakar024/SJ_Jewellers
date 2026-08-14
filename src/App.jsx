@@ -29,59 +29,109 @@ import AdminSettings from './admin/AdminSettings';
 
 import './styles/app.css';
 
+// Route Helper to resolve initial screen on boot / browser refresh
+const resolveInitialRoute = (currentUser) => {
+  const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+  const path = window.location.pathname.replace(/^\//, '').toLowerCase();
+  const rawRoute = hash || path;
+
+  if (rawRoute.startsWith('admin')) {
+    return { mode: 'admin', screen: 'home' };
+  }
+
+  if (!currentUser.isAuthenticated) {
+    if (rawRoute === 'signup') return { mode: 'user', screen: 'signup' };
+    if (rawRoute === 'forgot-username') return { mode: 'user', screen: 'forgot-username' };
+    return { mode: 'user', screen: 'signin' };
+  }
+
+  // Check if incomplete user has skipped profile for this session
+  const isSessionSkipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
+
+  if (!currentUser.profileCompleted && !isSessionSkipped) {
+    return { mode: 'user', screen: 'create-profile' };
+  }
+
+  const validScreens = [
+    'home', 'buy', 'buy-gold', 'buy-silver', 'holdings',
+    'profile', 'transactions', 'contact', 'withdraw', 'create-profile'
+  ];
+
+  if (validScreens.includes(rawRoute)) {
+    return { mode: 'user', screen: rawRoute === 'buy-gold' ? 'buy' : rawRoute };
+  }
+
+  const savedScreen = sessionStorage.getItem('sj_activeScreen');
+  if (savedScreen && validScreens.includes(savedScreen)) {
+    return { mode: 'user', screen: savedScreen };
+  }
+
+  return { mode: 'user', screen: 'home' };
+};
+
 function MainContent() {
   const { currentUser, adminAuth } = useApp();
-  const [viewMode, setViewMode] = useState('user'); // 'user' or 'admin'
-  const [userScreen, setUserScreen] = useState(() => {
-    if (!currentUser.isAuthenticated) return 'signin';
-    if (!currentUser.profileCompleted) return 'create-profile';
-    return 'home';
-  });
+  
+  const initialRoute = resolveInitialRoute(currentUser);
+  const [viewMode, setViewMode] = useState(initialRoute.mode); // 'user' or 'admin'
+  const [userScreen, setUserScreen] = useState(initialRoute.screen);
   const [adminTab, setAdminTab] = useState('dashboard');
   const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
 
-  // Check URL hash for direct admin access e.g. #admin
+  // Sync route on popstate / hashchange (browser back/forward/refresh)
   useEffect(() => {
-    const handleHash = () => {
-      if (window.location.hash === '#admin') {
-        setViewMode('admin');
-      }
+    const handleUrlChange = () => {
+      const routeInfo = resolveInitialRoute(currentUser);
+      setViewMode(routeInfo.mode);
+      setUserScreen(routeInfo.screen);
     };
-    handleHash();
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
-  }, []);
 
-  // Persistent Auth & Profile Completion Redirection Guard
+    window.addEventListener('hashchange', handleUrlChange);
+    window.addEventListener('popstate', handleUrlChange);
+    return () => {
+      window.removeEventListener('hashchange', handleUrlChange);
+      window.removeEventListener('popstate', handleUrlChange);
+    };
+  }, [currentUser]);
+
+  // Persistent Auth & Route Guard
   useEffect(() => {
     if (viewMode === 'user') {
+      const isSessionSkipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
+
       if (!currentUser.isAuthenticated) {
-        // If unauthenticated and on a protected screen, redirect to signin
         if (userScreen !== 'signin' && userScreen !== 'signup' && userScreen !== 'forgot-username') {
           setUserScreen('signin');
+          window.location.hash = 'signin';
         }
-      } else if (currentUser.isAuthenticated && !currentUser.profileCompleted) {
-        // If authenticated but profile incomplete, redirect to profile completion
+      } else if (!currentUser.profileCompleted && !isSessionSkipped) {
         if (userScreen !== 'create-profile') {
           setUserScreen('create-profile');
+          window.location.hash = 'create-profile';
         }
-      } else if (currentUser.isAuthenticated && currentUser.profileCompleted) {
-        // If authenticated with completed profile and on auth screens, redirect to home
+      } else if (currentUser.isAuthenticated && (currentUser.profileCompleted || isSessionSkipped)) {
         if (userScreen === 'signin' || userScreen === 'signup' || userScreen === 'forgot-username') {
           setUserScreen('home');
+          window.location.hash = 'home';
         }
       }
     }
   }, [currentUser.isAuthenticated, currentUser.profileCompleted, viewMode, userScreen]);
 
   const handleUserNavigate = (screen) => {
-    // Intercept and prevent bypass if profile is incomplete
-    if (currentUser.isAuthenticated && !currentUser.profileCompleted && screen !== 'create-profile' && screen !== 'signin') {
+    const isSessionSkipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
+
+    // If profile is incomplete and user hasn't skipped for this session, require create-profile
+    if (currentUser.isAuthenticated && !currentUser.profileCompleted && !isSessionSkipped && screen !== 'create-profile' && screen !== 'signin') {
       setUserScreen('create-profile');
+      window.location.hash = 'create-profile';
       setIsActionSheetOpen(false);
       return;
     }
+
     setUserScreen(screen);
+    sessionStorage.setItem('sj_activeScreen', screen);
+    window.location.hash = screen;
     setIsActionSheetOpen(false);
   };
 
@@ -116,9 +166,9 @@ function MainContent() {
         </MobileContainer>
       ) : (
         !adminAuth.isAuthenticated ? (
-          <AdminLogin onSwitchToUserApp={() => { setViewMode('user'); window.location.hash = ''; }} />
+          <AdminLogin onSwitchToUserApp={() => { setViewMode('user'); window.location.hash = 'home'; }} />
         ) : (
-          <AdminLayout activeTab={adminTab} onSelectTab={setAdminTab} onSwitchToUserApp={() => { setViewMode('user'); window.location.hash = ''; }}>
+          <AdminLayout activeTab={adminTab} onSelectTab={setAdminTab} onSwitchToUserApp={() => { setViewMode('user'); window.location.hash = 'home'; }}>
             {adminTab === 'dashboard' && <AdminDashboard onSelectTab={setAdminTab} />}
             {adminTab === 'users' && <AdminUsers />}
             {adminTab === 'kyc' && <AdminKyc />}

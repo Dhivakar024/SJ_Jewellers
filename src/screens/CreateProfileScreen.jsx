@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, Calendar, ChevronDown, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { LogOut, Calendar, ChevronDown, ArrowLeft } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export default function CreateProfileScreen({ onNavigate }) {
@@ -31,7 +31,9 @@ export default function CreateProfileScreen({ onNavigate }) {
 
   const handleSkip = () => {
     if (!isExistingCompletedUser) {
-      setErrorMessage('Please complete all required profile fields to activate your account.');
+      // Mark as skipped for the active browser session only (does NOT mark profile completed)
+      sessionStorage.setItem('sj_session_skipped_profile', 'true');
+      onNavigate('home');
       return;
     }
     onNavigate('profile');
@@ -43,6 +45,7 @@ export default function CreateProfileScreen({ onNavigate }) {
     } else {
       // Allow logging out if they want to exit the app
       logoutUser();
+      sessionStorage.removeItem('sj_session_skipped_profile');
       onNavigate('signin');
     }
   };
@@ -76,6 +79,7 @@ export default function CreateProfileScreen({ onNavigate }) {
 
     // Save profile persistently with profileCompleted: true
     completeUserProfile(formData);
+    sessionStorage.removeItem('sj_session_skipped_profile');
     setErrorMessage('');
 
     if (isExistingCompletedUser) {
@@ -113,7 +117,6 @@ export default function CreateProfileScreen({ onNavigate }) {
 
       {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
       <main className="app-scroll-content" style={{ padding: '20px 18px 30px 18px' }}>
-
         {errorMessage && (
           <div style={{
             backgroundColor: '#fee2e2',
