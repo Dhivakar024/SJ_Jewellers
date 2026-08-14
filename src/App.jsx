@@ -29,64 +29,56 @@ import AdminSettings from './admin/AdminSettings';
 
 import './styles/app.css';
 
-// Route Helper to strictly enforce Authentication check before Profile Completion check
-const resolveInitialRoute = (currentUser) => {
-  const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
-  const path = window.location.pathname.replace(/^\//, '').toLowerCase();
-  const rawRoute = hash || path;
-
-  // 1. Admin route check
-  if (rawRoute.startsWith('admin')) {
-    return { mode: 'admin', screen: 'home' };
-  }
-
-  // 2. CHECK AUTHENTICATION FIRST! (Logged out users NEVER see Create Profile)
-  if (!currentUser || !currentUser.isAuthenticated) {
-    if (rawRoute === 'signup') return { mode: 'user', screen: 'signup' };
-    if (rawRoute === 'forgot-username') return { mode: 'user', screen: 'forgot-username' };
-    return { mode: 'user', screen: 'signin' };
-  }
-
-  // 3. User IS AUTHENTICATED -> NOW check profile completion status:
-  const isSessionSkipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
-
-  if (!currentUser.profileCompleted && !isSessionSkipped) {
-    return { mode: 'user', screen: 'create-profile' };
-  }
-
-  // 4. Authenticated and profile is completed (or skipped for session)
-  const validScreens = [
-    'home', 'buy', 'buy-gold', 'buy-silver', 'holdings',
-    'profile', 'transactions', 'contact', 'withdraw', 'create-profile'
-  ];
-
-  if (validScreens.includes(rawRoute)) {
-    return { mode: 'user', screen: rawRoute === 'buy-gold' ? 'buy' : rawRoute };
-  }
-
-  const savedScreen = sessionStorage.getItem('sj_activeScreen');
-  if (savedScreen && validScreens.includes(savedScreen) && savedScreen !== 'signin' && savedScreen !== 'signup' && savedScreen !== 'forgot-username') {
-    return { mode: 'user', screen: savedScreen };
-  }
-
-  return { mode: 'user', screen: 'home' };
-};
-
 function MainContent() {
   const { currentUser, adminAuth } = useApp();
+  const [viewMode, setViewMode] = useState(() => {
+    return window.location.hash.startsWith('#admin') ? 'admin' : 'user';
+  });
   
-  const initialRoute = resolveInitialRoute(currentUser);
-  const [viewMode, setViewMode] = useState(initialRoute.mode); // 'user' or 'admin'
-  const [userScreen, setUserScreen] = useState(initialRoute.screen);
+  // App startup MUST ALWAYS start at Sign In / Sign Up
+  const [userScreen, setUserScreen] = useState(() => {
+    const rawRoute = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+    if (rawRoute === 'signup') return 'signup';
+    if (rawRoute === 'forgot-username') return 'forgot-username';
+    return 'signin';
+  });
+
   const [adminTab, setAdminTab] = useState('dashboard');
   const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
 
-  // Sync route on popstate / hashchange (browser back/forward/refresh)
+  // Sync route on popstate / hashchange
   useEffect(() => {
     const handleUrlChange = () => {
-      const routeInfo = resolveInitialRoute(currentUser);
-      setViewMode(routeInfo.mode);
-      setUserScreen(routeInfo.screen);
+      const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+      if (hash.startsWith('admin')) {
+        setViewMode('admin');
+        return;
+      }
+      setViewMode('user');
+
+      // Unauthenticated users can only view auth screens
+      if (!currentUser || !currentUser.isAuthenticated) {
+        if (hash === 'signup') {
+          setUserScreen('signup');
+        } else if (hash === 'forgot-username') {
+          setUserScreen('forgot-username');
+        } else {
+          setUserScreen('signin');
+          window.location.hash = 'signin';
+        }
+        return;
+      }
+
+      // Authenticated users
+      const validScreens = [
+        'home', 'buy', 'buy-gold', 'buy-silver', 'holdings',
+        'profile', 'transactions', 'contact', 'withdraw', 'create-profile'
+      ];
+      if (validScreens.includes(hash)) {
+        setUserScreen(hash === 'buy-gold' ? 'buy' : hash);
+      } else {
+        setUserScreen('home');
+      }
     };
 
     window.addEventListener('hashchange', handleUrlChange);
@@ -97,31 +89,13 @@ function MainContent() {
     };
   }, [currentUser]);
 
-  // Persistent Auth & Route Guard (Enforces Auth First, Profile Second)
+  // Auth Guard: Enforce Sign In on app open / unauthenticated state
   useEffect(() => {
     if (viewMode === 'user') {
-      // 1. If NOT authenticated: ALWAYS keep on auth screens
       if (!currentUser || !currentUser.isAuthenticated) {
         if (userScreen !== 'signin' && userScreen !== 'signup' && userScreen !== 'forgot-username') {
           setUserScreen('signin');
           window.location.hash = 'signin';
-        }
-        return;
-      }
-
-      // 2. If authenticated, now check profile completion:
-      const isSessionSkipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
-
-      if (!currentUser.profileCompleted && !isSessionSkipped) {
-        if (userScreen !== 'create-profile') {
-          setUserScreen('create-profile');
-          window.location.hash = 'create-profile';
-        }
-      } else {
-        // Authenticated and (profile completed or skipped in this session)
-        if (userScreen === 'signin' || userScreen === 'signup' || userScreen === 'forgot-username') {
-          setUserScreen('home');
-          window.location.hash = 'home';
         }
       }
     }
@@ -141,18 +115,7 @@ function MainContent() {
       return;
     }
 
-    const isSessionSkipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
-
-    // If authenticated but profile incomplete and hasn't skipped for session
-    if (!currentUser.profileCompleted && !isSessionSkipped && screen !== 'create-profile' && screen !== 'signin') {
-      setUserScreen('create-profile');
-      window.location.hash = 'create-profile';
-      setIsActionSheetOpen(false);
-      return;
-    }
-
     setUserScreen(screen);
-    sessionStorage.setItem('sj_activeScreen', screen);
     window.location.hash = screen;
     setIsActionSheetOpen(false);
   };
@@ -188,9 +151,9 @@ function MainContent() {
         </MobileContainer>
       ) : (
         !adminAuth.isAuthenticated ? (
-          <AdminLogin onSwitchToUserApp={() => { setViewMode('user'); window.location.hash = 'home'; }} />
+          <AdminLogin onSwitchToUserApp={() => { setViewMode('user'); window.location.hash = 'signin'; }} />
         ) : (
-          <AdminLayout activeTab={adminTab} onSelectTab={setAdminTab} onSwitchToUserApp={() => { setViewMode('user'); window.location.hash = 'home'; }}>
+          <AdminLayout activeTab={adminTab} onSelectTab={setAdminTab} onSwitchToUserApp={() => { setViewMode('user'); window.location.hash = 'signin'; }}>
             {adminTab === 'dashboard' && <AdminDashboard onSelectTab={setAdminTab} />}
             {adminTab === 'users' && <AdminUsers />}
             {adminTab === 'kyc' && <AdminKyc />}

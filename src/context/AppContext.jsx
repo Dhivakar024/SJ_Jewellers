@@ -63,28 +63,36 @@ const INITIAL_TRANSACTIONS = [
 ];
 
 const INITIAL_USERS_LIST = [
-  { id: 'USR-8821', name: 'Demo User', mobile: '9999999999', email: 'demo@example.com', goldGrams: 0.0000, silverGrams: 0.0377, kycStatus: 'Pending', profileCompleted: true, status: 'Active', createdAt: '2026-08-01' },
+  {
+    id: 'USR-8821',
+    name: 'Demo User',
+    mobile: '9999999999',
+    email: 'demo@example.com',
+    goldGrams: 0.0000,
+    silverGrams: 0.0377,
+    kycStatus: 'Pending',
+    profileCompleted: true,
+    status: 'Active',
+    address: '123 Cross Cut Road, Salem',
+    pan: 'ABCDE1234F',
+    aadhar: '1234-5678-9012',
+    accountNumber: '918237192837',
+    ifsc: 'SBIN0001234',
+    nomineeName: 'Priya',
+    nomineeMobile: '9876543210',
+    nomineeDob: '15/06/1995',
+    nomineeAddress: '123 Cross Cut Road, Salem',
+    relationship: 'Spouse',
+    createdAt: '2026-08-01'
+  },
   { id: 'USR-8820', name: 'Rajesh Kumar', mobile: '9842109823', email: 'rajesh@example.com', goldGrams: 1.2500, silverGrams: 15.0000, kycStatus: 'Verified', profileCompleted: true, status: 'Active', createdAt: '2026-07-20' },
   { id: 'USR-8819', name: 'Priya Sharma', mobile: '9789012345', email: 'priya@example.com', goldGrams: 0.5000, silverGrams: 5.2500, kycStatus: 'Under Review', profileCompleted: true, status: 'Active', createdAt: '2026-07-15' },
   { id: 'USR-8818', name: 'Arun Varma', mobile: '9655432109', email: 'arun@example.com', goldGrams: 0.0000, silverGrams: 0.0000, kycStatus: 'Rejected', profileCompleted: false, status: 'Blocked', createdAt: '2026-07-10' }
 ];
 
 export function AppProvider({ children }) {
-  // Load initial states from localStorage if explicitly authenticated
-  const [currentUser, setCurrentUser] = useState(() => {
-    const saved = localStorage.getItem('sj_currentUser');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.isAuthenticated === true) {
-          return parsed;
-        }
-      } catch {
-        return LOGGED_OUT_USER;
-      }
-    }
-    return LOGGED_OUT_USER;
-  });
+  // Always start in unauthenticated state on app startup/refresh
+  const [currentUser, setCurrentUser] = useState(LOGGED_OUT_USER);
 
   const [goldRate, setGoldRate] = useState(() => {
     const saved = localStorage.getItem('sj_goldRate');
@@ -139,8 +147,7 @@ export function AppProvider({ children }) {
 
   const [adminAuth, setAdminAuth] = useState({ isAuthenticated: false, email: '' });
 
-  // Sync to localStorage
-  useEffect(() => { localStorage.setItem('sj_currentUser', JSON.stringify(currentUser)); }, [currentUser]);
+  // Sync persistent datasets to localStorage
   useEffect(() => { localStorage.setItem('sj_goldRate', goldRate.toString()); }, [goldRate]);
   useEffect(() => { localStorage.setItem('sj_silverRate', silverRate.toString()); }, [silverRate]);
   useEffect(() => { localStorage.setItem('sj_holdings', JSON.stringify(holdings)); }, [holdings]);
@@ -158,8 +165,8 @@ export function AppProvider({ children }) {
       mobile: mobile || '9876543210',
       email: '',
       kycStatus: 'Pending',
-      profileCompleted: false, // Incomplete on new registration
-      isAuthenticated: true,   // Authenticated upon registration
+      profileCompleted: false, // Must complete profile
+      isAuthenticated: true,
       address: '',
       pan: '',
       aadhar: '',
@@ -178,7 +185,6 @@ export function AppProvider({ children }) {
 
     setCurrentUser(newUser);
     setUsersList((prev) => [newUser, ...prev]);
-    localStorage.setItem('sj_currentUser', JSON.stringify(newUser));
     return newUser;
   };
 
@@ -190,8 +196,12 @@ export function AppProvider({ children }) {
 
     let loggedInUser;
     if (existing) {
-      loggedInUser = { ...existing, isAuthenticated: true };
+      loggedInUser = {
+        ...existing,
+        isAuthenticated: true
+      };
     } else {
+      // Demo fallback user
       loggedInUser = {
         id: `USR-${Math.floor(1000 + Math.random() * 9000)}`,
         name: username || 'Demo User',
@@ -218,7 +228,6 @@ export function AppProvider({ children }) {
     }
 
     setCurrentUser(loggedInUser);
-    localStorage.setItem('sj_currentUser', JSON.stringify(loggedInUser));
     return loggedInUser;
   };
 
@@ -231,14 +240,12 @@ export function AppProvider({ children }) {
     };
 
     setCurrentUser(updated);
-    setUsersList((prev) => prev.map((u) => u.id === currentUser.id ? { ...u, ...updated } : u));
-    localStorage.setItem('sj_currentUser', JSON.stringify(updated));
+    setUsersList((prev) => prev.map((u) => u.id === currentUser.id ? { ...u, ...updated, profileCompleted: true } : u));
     return updated;
   };
 
   const logoutUser = () => {
     setCurrentUser(LOGGED_OUT_USER);
-    localStorage.setItem('sj_currentUser', JSON.stringify(LOGGED_OUT_USER));
     sessionStorage.removeItem('sj_session_skipped_profile');
     sessionStorage.removeItem('sj_activeScreen');
   };
