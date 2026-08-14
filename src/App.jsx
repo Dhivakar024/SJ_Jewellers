@@ -29,29 +29,32 @@ import AdminSettings from './admin/AdminSettings';
 
 import './styles/app.css';
 
-// Route Helper to resolve initial screen on boot / browser refresh
+// Route Helper to strictly enforce Authentication check before Profile Completion check
 const resolveInitialRoute = (currentUser) => {
   const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
   const path = window.location.pathname.replace(/^\//, '').toLowerCase();
   const rawRoute = hash || path;
 
+  // 1. Admin route check
   if (rawRoute.startsWith('admin')) {
     return { mode: 'admin', screen: 'home' };
   }
 
-  if (!currentUser.isAuthenticated) {
+  // 2. CHECK AUTHENTICATION FIRST! (Logged out users NEVER see Create Profile)
+  if (!currentUser || !currentUser.isAuthenticated) {
     if (rawRoute === 'signup') return { mode: 'user', screen: 'signup' };
     if (rawRoute === 'forgot-username') return { mode: 'user', screen: 'forgot-username' };
     return { mode: 'user', screen: 'signin' };
   }
 
-  // Check if incomplete user has skipped profile for this session
+  // 3. User IS AUTHENTICATED -> NOW check profile completion status:
   const isSessionSkipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
 
   if (!currentUser.profileCompleted && !isSessionSkipped) {
     return { mode: 'user', screen: 'create-profile' };
   }
 
+  // 4. Authenticated and profile is completed (or skipped for session)
   const validScreens = [
     'home', 'buy', 'buy-gold', 'buy-silver', 'holdings',
     'profile', 'transactions', 'contact', 'withdraw', 'create-profile'
@@ -62,7 +65,7 @@ const resolveInitialRoute = (currentUser) => {
   }
 
   const savedScreen = sessionStorage.getItem('sj_activeScreen');
-  if (savedScreen && validScreens.includes(savedScreen)) {
+  if (savedScreen && validScreens.includes(savedScreen) && savedScreen !== 'signin' && savedScreen !== 'signup' && savedScreen !== 'forgot-username') {
     return { mode: 'user', screen: savedScreen };
   }
 
@@ -94,35 +97,54 @@ function MainContent() {
     };
   }, [currentUser]);
 
-  // Persistent Auth & Route Guard
+  // Persistent Auth & Route Guard (Enforces Auth First, Profile Second)
   useEffect(() => {
     if (viewMode === 'user') {
-      const isSessionSkipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
-
-      if (!currentUser.isAuthenticated) {
+      // 1. If NOT authenticated: ALWAYS keep on auth screens
+      if (!currentUser || !currentUser.isAuthenticated) {
         if (userScreen !== 'signin' && userScreen !== 'signup' && userScreen !== 'forgot-username') {
           setUserScreen('signin');
           window.location.hash = 'signin';
         }
-      } else if (!currentUser.profileCompleted && !isSessionSkipped) {
+        return;
+      }
+
+      // 2. If authenticated, now check profile completion:
+      const isSessionSkipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
+
+      if (!currentUser.profileCompleted && !isSessionSkipped) {
         if (userScreen !== 'create-profile') {
           setUserScreen('create-profile');
           window.location.hash = 'create-profile';
         }
-      } else if (currentUser.isAuthenticated && (currentUser.profileCompleted || isSessionSkipped)) {
+      } else {
+        // Authenticated and (profile completed or skipped in this session)
         if (userScreen === 'signin' || userScreen === 'signup' || userScreen === 'forgot-username') {
           setUserScreen('home');
           window.location.hash = 'home';
         }
       }
     }
-  }, [currentUser.isAuthenticated, currentUser.profileCompleted, viewMode, userScreen]);
+  }, [currentUser, viewMode, userScreen]);
 
   const handleUserNavigate = (screen) => {
+    // If not authenticated, only allow auth screens
+    if (!currentUser || !currentUser.isAuthenticated) {
+      if (screen === 'signup' || screen === 'forgot-username' || screen === 'signin') {
+        setUserScreen(screen);
+        window.location.hash = screen;
+      } else {
+        setUserScreen('signin');
+        window.location.hash = 'signin';
+      }
+      setIsActionSheetOpen(false);
+      return;
+    }
+
     const isSessionSkipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
 
-    // If profile is incomplete and user hasn't skipped for this session, require create-profile
-    if (currentUser.isAuthenticated && !currentUser.profileCompleted && !isSessionSkipped && screen !== 'create-profile' && screen !== 'signin') {
+    // If authenticated but profile incomplete and hasn't skipped for session
+    if (!currentUser.profileCompleted && !isSessionSkipped && screen !== 'create-profile' && screen !== 'signin') {
       setUserScreen('create-profile');
       window.location.hash = 'create-profile';
       setIsActionSheetOpen(false);

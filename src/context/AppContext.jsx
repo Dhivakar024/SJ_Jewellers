@@ -7,9 +7,9 @@ const INITIAL_USER = {
   name: 'Demo User',
   mobile: '9999999999',
   email: 'demo@example.com',
-  kycStatus: 'Pending', // 'Pending', 'Under Review', 'Verified', 'Rejected'
+  kycStatus: 'Pending',
   profileCompleted: true, // Demo user is pre-completed
-  isAuthenticated: false, // Starts at Sign In for unauthenticated sessions
+  isAuthenticated: false, // Default logged-out on fresh startup
   address: '123 Cross Cut Road, Salem',
   pan: 'ABCDE1234F',
   aadhar: '1234-5678-9012',
@@ -73,7 +73,19 @@ export function AppProvider({ children }) {
   // Load initial states from localStorage if available
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('sj_currentUser');
-    return saved ? JSON.parse(saved) : INITIAL_USER;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          ...INITIAL_USER,
+          ...parsed,
+          isAuthenticated: Boolean(parsed.isAuthenticated)
+        };
+      } catch {
+        return INITIAL_USER;
+      }
+    }
+    return INITIAL_USER;
   });
 
   const [goldRate, setGoldRate] = useState(() => {
@@ -148,8 +160,8 @@ export function AppProvider({ children }) {
       mobile: mobile || '9876543210',
       email: '',
       kycStatus: 'Pending',
-      profileCompleted: false, // Mandatory profile fill required
-      isAuthenticated: true,
+      profileCompleted: false, // Mandatory profile completion needed
+      isAuthenticated: true,   // User is authenticated upon signup
       address: '',
       pan: '',
       aadhar: '',
@@ -186,6 +198,7 @@ export function AppProvider({ children }) {
         ...currentUser,
         name: username || currentUser.name || 'Demo User',
         mobile: mobile || currentUser.mobile || '9999999999',
+        profileCompleted: currentUser.profileCompleted ?? true,
         isAuthenticated: true
       };
     }
@@ -213,6 +226,8 @@ export function AppProvider({ children }) {
     const loggedOut = { ...currentUser, isAuthenticated: false };
     setCurrentUser(loggedOut);
     localStorage.setItem('sj_currentUser', JSON.stringify(loggedOut));
+    sessionStorage.removeItem('sj_session_skipped_profile');
+    sessionStorage.removeItem('sj_activeScreen');
   };
 
   // Transaction & KYC Action Helpers
