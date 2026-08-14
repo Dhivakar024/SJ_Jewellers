@@ -3,12 +3,14 @@ import { useApp } from '../context/AppContext';
 
 export default function SignInScreen({ onNavigate }) {
   const { loginUser } = useApp();
-  const [username, setUsername] = useState('Demo User');
-  const [mobile, setMobile] = useState('9999999999');
+  const [username, setUsername] = useState('');
+  const [mobile, setMobile] = useState('');
 
   const handleSignIn = (e) => {
     e.preventDefault();
-    const user = loginUser({ username: username.trim(), mobile: mobile.trim() });
+    const uName = username.trim() || 'Demo User';
+    const uMobile = mobile.trim() || '9999999999';
+    const user = loginUser({ username: uName, mobile: uMobile });
     
     if (!user.profileCompleted) {
       onNavigate('create-profile');

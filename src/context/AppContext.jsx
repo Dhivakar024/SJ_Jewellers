@@ -2,26 +2,26 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AppContext = createContext();
 
-const INITIAL_USER = {
-  id: 'USR-8821',
-  name: 'Demo User',
-  mobile: '9999999999',
-  email: 'demo@example.com',
+const LOGGED_OUT_USER = {
+  id: '',
+  name: '',
+  mobile: '',
+  email: '',
   kycStatus: 'Pending',
-  profileCompleted: true, // Demo user is pre-completed
-  isAuthenticated: false, // Default logged-out on fresh startup
-  address: '123 Cross Cut Road, Salem',
-  pan: 'ABCDE1234F',
-  aadhar: '1234-5678-9012',
-  accountNumber: '918237192837',
-  ifsc: 'SBIN0001234',
-  nomineeName: 'Priya',
-  nomineeMobile: '9876543210',
-  nomineeDob: '15/06/1995',
-  nomineeAddress: '123 Cross Cut Road, Salem',
-  relationship: 'Spouse',
+  profileCompleted: false,
+  isAuthenticated: false,
+  address: '',
+  pan: '',
+  aadhar: '',
+  accountNumber: '',
+  ifsc: '',
+  nomineeName: '',
+  nomineeMobile: '',
+  nomineeDob: '',
+  nomineeAddress: '',
+  relationship: '',
   isBlocked: false,
-  createdAt: '2026-08-01'
+  createdAt: ''
 };
 
 const INITIAL_HOLDINGS = {
@@ -70,22 +70,20 @@ const INITIAL_USERS_LIST = [
 ];
 
 export function AppProvider({ children }) {
-  // Load initial states from localStorage if available
+  // Load initial states from localStorage if explicitly authenticated
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('sj_currentUser');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        return {
-          ...INITIAL_USER,
-          ...parsed,
-          isAuthenticated: Boolean(parsed.isAuthenticated)
-        };
+        if (parsed && parsed.isAuthenticated === true) {
+          return parsed;
+        }
       } catch {
-        return INITIAL_USER;
+        return LOGGED_OUT_USER;
       }
     }
-    return INITIAL_USER;
+    return LOGGED_OUT_USER;
   });
 
   const [goldRate, setGoldRate] = useState(() => {
@@ -160,8 +158,8 @@ export function AppProvider({ children }) {
       mobile: mobile || '9876543210',
       email: '',
       kycStatus: 'Pending',
-      profileCompleted: false, // Mandatory profile completion needed
-      isAuthenticated: true,   // User is authenticated upon signup
+      profileCompleted: false, // Incomplete on new registration
+      isAuthenticated: true,   // Authenticated upon registration
       address: '',
       pan: '',
       aadhar: '',
@@ -195,11 +193,27 @@ export function AppProvider({ children }) {
       loggedInUser = { ...existing, isAuthenticated: true };
     } else {
       loggedInUser = {
-        ...currentUser,
-        name: username || currentUser.name || 'Demo User',
-        mobile: mobile || currentUser.mobile || '9999999999',
-        profileCompleted: currentUser.profileCompleted ?? true,
-        isAuthenticated: true
+        id: `USR-${Math.floor(1000 + Math.random() * 9000)}`,
+        name: username || 'Demo User',
+        mobile: mobile || '9999999999',
+        email: 'demo@example.com',
+        kycStatus: 'Pending',
+        profileCompleted: true,
+        isAuthenticated: true,
+        address: '123 Cross Cut Road, Salem',
+        pan: 'ABCDE1234F',
+        aadhar: '1234-5678-9012',
+        accountNumber: '918237192837',
+        ifsc: 'SBIN0001234',
+        nomineeName: 'Priya',
+        nomineeMobile: '9876543210',
+        nomineeDob: '15/06/1995',
+        nomineeAddress: '123 Cross Cut Road, Salem',
+        relationship: 'Spouse',
+        goldGrams: 0.0000,
+        silverGrams: 0.0377,
+        status: 'Active',
+        createdAt: new Date().toISOString().split('T')[0]
       };
     }
 
@@ -223,9 +237,8 @@ export function AppProvider({ children }) {
   };
 
   const logoutUser = () => {
-    const loggedOut = { ...currentUser, isAuthenticated: false };
-    setCurrentUser(loggedOut);
-    localStorage.setItem('sj_currentUser', JSON.stringify(loggedOut));
+    setCurrentUser(LOGGED_OUT_USER);
+    localStorage.setItem('sj_currentUser', JSON.stringify(LOGGED_OUT_USER));
     sessionStorage.removeItem('sj_session_skipped_profile');
     sessionStorage.removeItem('sj_activeScreen');
   };
