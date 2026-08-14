@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
+import { useApp } from '../context/AppContext';
 
 export default function SignInScreen({ onNavigate }) {
-  const [username, setUsername] = useState('');
-  const [mobile, setMobile] = useState('');
+  const { loginUser } = useApp();
+  const [username, setUsername] = useState('Demo User');
+  const [mobile, setMobile] = useState('9999999999');
 
   const handleSignIn = (e) => {
     e.preventDefault();
-    onNavigate('home');
+    const user = loginUser({ username: username.trim(), mobile: mobile.trim() });
+    
+    if (!user.profileCompleted) {
+      onNavigate('create-profile');
+    } else {
+      onNavigate('home');
+    }
   };
 
   return (

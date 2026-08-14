@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import BottomNav from '../components/BottomNav';
 
 export default function ProfileScreen({ onNavigate, onTogglePlus }) {
-  const { currentUser } = useApp();
+  const { currentUser, logoutUser } = useApp();
 
   const getKycBadgeColor = () => {
     switch (currentUser.kycStatus) {
@@ -16,6 +16,11 @@ export default function ProfileScreen({ onNavigate, onTogglePlus }) {
   };
 
   const kycColors = getKycBadgeColor();
+
+  const handleLogout = () => {
+    logoutUser();
+    onNavigate('signin');
+  };
 
   return (
     <div className="app-screen-layout">
@@ -42,7 +47,7 @@ export default function ProfileScreen({ onNavigate, onTogglePlus }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 6px 18px rgba(88, 60, 245, 0.3)'
           }}>
-            {currentUser.name.charAt(0)}
+            {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
           </div>
 
           <h3 style={{ fontSize: '22px', fontWeight: '800', color: '#1e1b2e' }}>
@@ -126,7 +131,7 @@ export default function ProfileScreen({ onNavigate, onTogglePlus }) {
 
         {/* Logout Button */}
         <button
-          onClick={() => onNavigate('signin')}
+          onClick={handleLogout}
           style={{
             width: '100%',
             height: '52px',

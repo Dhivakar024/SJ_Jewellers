@@ -8,8 +8,18 @@ const INITIAL_USER = {
   mobile: '9999999999',
   email: 'demo@example.com',
   kycStatus: 'Pending', // 'Pending', 'Under Review', 'Verified', 'Rejected'
-  accountDetails: null,
-  nomineeDetails: null,
+  profileCompleted: true, // Demo user is pre-completed
+  isAuthenticated: false, // Starts at Sign In for unauthenticated sessions
+  address: '123 Cross Cut Road, Salem',
+  pan: 'ABCDE1234F',
+  aadhar: '1234-5678-9012',
+  accountNumber: '918237192837',
+  ifsc: 'SBIN0001234',
+  nomineeName: 'Priya',
+  nomineeMobile: '9876543210',
+  nomineeDob: '15/06/1995',
+  nomineeAddress: '123 Cross Cut Road, Salem',
+  relationship: 'Spouse',
   isBlocked: false,
   createdAt: '2026-08-01'
 };
@@ -53,10 +63,10 @@ const INITIAL_TRANSACTIONS = [
 ];
 
 const INITIAL_USERS_LIST = [
-  { id: 'USR-8821', name: 'Demo User', mobile: '9999999999', email: 'demo@example.com', goldGrams: 0.0000, silverGrams: 0.0377, kycStatus: 'Pending', status: 'Active', createdAt: '2026-08-01' },
-  { id: 'USR-8820', name: 'Rajesh Kumar', mobile: '9842109823', email: 'rajesh@example.com', goldGrams: 1.2500, silverGrams: 15.0000, kycStatus: 'Verified', status: 'Active', createdAt: '2026-07-20' },
-  { id: 'USR-8819', name: 'Priya Sharma', mobile: '9789012345', email: 'priya@example.com', goldGrams: 0.5000, silverGrams: 5.2500, kycStatus: 'Under Review', status: 'Active', createdAt: '2026-07-15' },
-  { id: 'USR-8818', name: 'Arun Varma', mobile: '9655432109', email: 'arun@example.com', goldGrams: 0.0000, silverGrams: 0.0000, kycStatus: 'Rejected', status: 'Blocked', createdAt: '2026-07-10' }
+  { id: 'USR-8821', name: 'Demo User', mobile: '9999999999', email: 'demo@example.com', goldGrams: 0.0000, silverGrams: 0.0377, kycStatus: 'Pending', profileCompleted: true, status: 'Active', createdAt: '2026-08-01' },
+  { id: 'USR-8820', name: 'Rajesh Kumar', mobile: '9842109823', email: 'rajesh@example.com', goldGrams: 1.2500, silverGrams: 15.0000, kycStatus: 'Verified', profileCompleted: true, status: 'Active', createdAt: '2026-07-20' },
+  { id: 'USR-8819', name: 'Priya Sharma', mobile: '9789012345', email: 'priya@example.com', goldGrams: 0.5000, silverGrams: 5.2500, kycStatus: 'Under Review', profileCompleted: true, status: 'Active', createdAt: '2026-07-15' },
+  { id: 'USR-8818', name: 'Arun Varma', mobile: '9655432109', email: 'arun@example.com', goldGrams: 0.0000, silverGrams: 0.0000, kycStatus: 'Rejected', profileCompleted: false, status: 'Blocked', createdAt: '2026-07-10' }
 ];
 
 export function AppProvider({ children }) {
@@ -130,7 +140,82 @@ export function AppProvider({ children }) {
   useEffect(() => { localStorage.setItem('sj_withdrawals', JSON.stringify(withdrawals)); }, [withdrawals]);
   useEffect(() => { localStorage.setItem('sj_settings', JSON.stringify(settings)); }, [settings]);
 
-  // Action Helpers
+  // Auth & Profile Lifecycle Handlers
+  const registerNewUser = ({ username, mobile }) => {
+    const newUser = {
+      id: `USR-${Math.floor(1000 + Math.random() * 9000)}`,
+      name: username || 'New User',
+      mobile: mobile || '9876543210',
+      email: '',
+      kycStatus: 'Pending',
+      profileCompleted: false, // Mandatory profile fill required
+      isAuthenticated: true,
+      address: '',
+      pan: '',
+      aadhar: '',
+      accountNumber: '',
+      ifsc: '',
+      nomineeName: '',
+      nomineeMobile: '',
+      nomineeDob: '',
+      nomineeAddress: '',
+      relationship: '',
+      goldGrams: 0.0000,
+      silverGrams: 0.0000,
+      status: 'Active',
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+
+    setCurrentUser(newUser);
+    setUsersList((prev) => [newUser, ...prev]);
+    localStorage.setItem('sj_currentUser', JSON.stringify(newUser));
+    return newUser;
+  };
+
+  const loginUser = ({ username, mobile }) => {
+    const existing = usersList.find((u) => 
+      (username && u.name.toLowerCase() === username.toLowerCase()) ||
+      (mobile && u.mobile === mobile)
+    );
+
+    let loggedInUser;
+    if (existing) {
+      loggedInUser = { ...existing, isAuthenticated: true };
+    } else {
+      loggedInUser = {
+        ...currentUser,
+        name: username || currentUser.name || 'Demo User',
+        mobile: mobile || currentUser.mobile || '9999999999',
+        isAuthenticated: true
+      };
+    }
+
+    setCurrentUser(loggedInUser);
+    localStorage.setItem('sj_currentUser', JSON.stringify(loggedInUser));
+    return loggedInUser;
+  };
+
+  const completeUserProfile = (profileData) => {
+    const updated = {
+      ...currentUser,
+      ...profileData,
+      profileCompleted: true,
+      isAuthenticated: true
+    };
+
+    setCurrentUser(updated);
+    setUsersList((prev) => prev.map((u) => u.id === currentUser.id ? { ...u, ...updated } : u));
+    localStorage.setItem('sj_currentUser', JSON.stringify(updated));
+    return updated;
+  };
+
+  const logoutUser = () => {
+    const loggedOut = { ...currentUser, isAuthenticated: false };
+    setCurrentUser(loggedOut);
+    localStorage.setItem('sj_currentUser', JSON.stringify(loggedOut));
+  };
+
+  // Transaction & KYC Action Helpers
   const addPurchaseTransaction = ({ asset, amount, grams, paymentMethod }) => {
     const gramsNum = parseFloat(grams) || 0;
     const now = new Date();
@@ -159,7 +244,7 @@ export function AppProvider({ children }) {
       }
     });
 
-    // Update Demo User entry in usersList
+    // Update user entry in usersList
     setUsersList((prev) => prev.map((u) => {
       if (u.id === currentUser.id) {
         return {
@@ -244,6 +329,10 @@ export function AppProvider({ children }) {
       withdrawals, setWithdrawals,
       settings, setSettings,
       adminAuth, setAdminAuth,
+      registerNewUser,
+      loginUser,
+      completeUserProfile,
+      logoutUser,
       addPurchaseTransaction,
       submitKycRequest,
       approveKyc,

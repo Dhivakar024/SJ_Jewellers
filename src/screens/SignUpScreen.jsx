@@ -1,13 +1,24 @@
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 
 export default function SignUpScreen({ onNavigate }) {
+  const { registerNewUser } = useApp();
   const [username, setUsername] = useState('');
   const [mobile, setMobile] = useState('');
 
   const handleGetOtp = (e) => {
     e.preventDefault();
-    onNavigate('signin');
+    if (!username.trim() || !mobile.trim()) {
+      alert('Please enter your User Name and Mobile Number.');
+      return;
+    }
+
+    // Register new user with profileCompleted: false
+    registerNewUser({ username: username.trim(), mobile: mobile.trim() });
+    
+    // Immediately redirect to Profile Fill page
+    onNavigate('create-profile');
   };
 
   return (

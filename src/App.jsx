@@ -30,9 +30,13 @@ import AdminSettings from './admin/AdminSettings';
 import './styles/app.css';
 
 function MainContent() {
-  const { adminAuth } = useApp();
+  const { currentUser, adminAuth } = useApp();
   const [viewMode, setViewMode] = useState('user'); // 'user' or 'admin'
-  const [userScreen, setUserScreen] = useState('signin');
+  const [userScreen, setUserScreen] = useState(() => {
+    if (!currentUser.isAuthenticated) return 'signin';
+    if (!currentUser.profileCompleted) return 'create-profile';
+    return 'home';
+  });
   const [adminTab, setAdminTab] = useState('dashboard');
   const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
 
@@ -48,14 +52,42 @@ function MainContent() {
     return () => window.removeEventListener('hashchange', handleHash);
   }, []);
 
+  // Persistent Auth & Profile Completion Redirection Guard
+  useEffect(() => {
+    if (viewMode === 'user') {
+      if (!currentUser.isAuthenticated) {
+        // If unauthenticated and on a protected screen, redirect to signin
+        if (userScreen !== 'signin' && userScreen !== 'signup' && userScreen !== 'forgot-username') {
+          setUserScreen('signin');
+        }
+      } else if (currentUser.isAuthenticated && !currentUser.profileCompleted) {
+        // If authenticated but profile incomplete, redirect to profile completion
+        if (userScreen !== 'create-profile') {
+          setUserScreen('create-profile');
+        }
+      } else if (currentUser.isAuthenticated && currentUser.profileCompleted) {
+        // If authenticated with completed profile and on auth screens, redirect to home
+        if (userScreen === 'signin' || userScreen === 'signup' || userScreen === 'forgot-username') {
+          setUserScreen('home');
+        }
+      }
+    }
+  }, [currentUser.isAuthenticated, currentUser.profileCompleted, viewMode, userScreen]);
+
   const handleUserNavigate = (screen) => {
+    // Intercept and prevent bypass if profile is incomplete
+    if (currentUser.isAuthenticated && !currentUser.profileCompleted && screen !== 'create-profile' && screen !== 'signin') {
+      setUserScreen('create-profile');
+      setIsActionSheetOpen(false);
+      return;
+    }
     setUserScreen(screen);
     setIsActionSheetOpen(false);
   };
 
   return (
     <div className="app-root-container">
-      {/* Pure User Application Rendering */}
+      {/* User Mobile Application */}
       {viewMode === 'user' ? (
         <MobileContainer>
           {userScreen === 'signin' && <SignInScreen onNavigate={handleUserNavigate} />}

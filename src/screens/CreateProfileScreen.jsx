@@ -1,50 +1,111 @@
 import React, { useState } from 'react';
-import { LogOut, Calendar, ChevronDown } from 'lucide-react';
+import { LogOut, Calendar, ChevronDown, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export default function CreateProfileScreen({ onNavigate }) {
-  const { currentUser, setCurrentUser } = useApp();
+  const { currentUser, completeUserProfile, logoutUser } = useApp();
+  const isExistingCompletedUser = currentUser.profileCompleted === true;
+
   const [formData, setFormData] = useState({
-    name: currentUser.name || 'Demo User',
-    email: currentUser.email || 'demo@example.com',
-    mobile: currentUser.mobile || '9999999999',
-    address: '',
-    pan: '',
-    aadhar: '',
-    accountNumber: '',
-    ifsc: '',
-    nomineeName: '',
-    nomineeMobile: '',
-    nomineeDob: '',
-    nomineeAddress: '',
-    relationship: ''
+    name: currentUser.name || '',
+    email: currentUser.email || '',
+    mobile: currentUser.mobile || '',
+    address: currentUser.address || '',
+    pan: currentUser.pan || '',
+    aadhar: currentUser.aadhar || '',
+    accountNumber: currentUser.accountNumber || '',
+    ifsc: currentUser.ifsc || '',
+    nomineeName: currentUser.nomineeName || '',
+    nomineeMobile: currentUser.nomineeMobile || '',
+    nomineeDob: currentUser.nomineeDob || '',
+    nomineeAddress: currentUser.nomineeAddress || '',
+    relationship: currentUser.relationship || ''
   });
+
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    setErrorMessage('');
+  };
+
+  const handleSkip = () => {
+    if (!isExistingCompletedUser) {
+      setErrorMessage('Please complete all required profile fields to activate your account.');
+      return;
+    }
+    onNavigate('profile');
+  };
+
+  const handleHeaderExit = () => {
+    if (isExistingCompletedUser) {
+      onNavigate('profile');
+    } else {
+      // Allow logging out if they want to exit the app
+      logoutUser();
+      onNavigate('signin');
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setCurrentUser((prev) => ({
-      ...prev,
-      name: formData.name,
-      email: formData.email,
-      mobile: formData.mobile
-    }));
-    alert('Profile details saved successfully!');
-    onNavigate('profile');
+
+    // Required Field Validation
+    const requiredFields = [
+      { key: 'name', label: 'Name' },
+      { key: 'email', label: 'Email ID' },
+      { key: 'mobile', label: 'Mobile No' },
+      { key: 'address', label: 'Address' },
+      { key: 'pan', label: 'PAN Card' },
+      { key: 'aadhar', label: 'Aadhar Card' },
+      { key: 'accountNumber', label: 'Account Number' },
+      { key: 'ifsc', label: 'IFSC Number' },
+      { key: 'nomineeName', label: 'Nominee Name' },
+      { key: 'nomineeMobile', label: 'Nominee Mobile' },
+      { key: 'nomineeDob', label: 'Nominee DOB' },
+      { key: 'nomineeAddress', label: 'Nominee Address' },
+      { key: 'relationship', label: 'Relationship' }
+    ];
+
+    const missingFields = requiredFields.filter((f) => !formData[f.key] || !formData[f.key].trim());
+
+    if (missingFields.length > 0) {
+      setErrorMessage(`Please fill all required fields (${missingFields.map((f) => f.label).slice(0, 3).join(', ')}${missingFields.length > 3 ? '...' : ''}).`);
+      return;
+    }
+
+    // Save profile persistently with profileCompleted: true
+    completeUserProfile(formData);
+    setErrorMessage('');
+
+    if (isExistingCompletedUser) {
+      alert('Profile details updated successfully!');
+      onNavigate('profile');
+    } else {
+      alert('Profile completed successfully! Welcome to SJ Jewelers.');
+      onNavigate('home');
+    }
   };
 
   return (
     <div className="app-screen-layout">
       {/* 1. Fixed Top Header */}
       <header className="top-header-bar" style={{ justifyContent: 'space-between' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: '800' }}>Create Profile</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {isExistingCompletedUser && (
+            <button className="back-btn" onClick={() => onNavigate('profile')} aria-label="Back">
+              <ArrowLeft size={22} />
+            </button>
+          )}
+          <h2 style={{ fontSize: '24px', fontWeight: '800' }}>
+            {isExistingCompletedUser ? 'Edit Profile' : 'Create Profile'}
+          </h2>
+        </div>
+
         <button
-          onClick={() => onNavigate('profile')}
+          onClick={handleHeaderExit}
           style={{ backgroundColor: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}
-          aria-label="Back"
+          aria-label="Exit"
         >
           <LogOut size={24} />
         </button>
@@ -52,6 +113,37 @@ export default function CreateProfileScreen({ onNavigate }) {
 
       {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
       <main className="app-scroll-content" style={{ padding: '20px 18px 30px 18px' }}>
+        {!isExistingCompletedUser && (
+          <div style={{
+            backgroundColor: '#ede7fc',
+            border: '1.5px solid var(--primary-purple)',
+            borderRadius: '16px',
+            padding: '14px 16px',
+            marginBottom: '18px',
+            fontSize: '13px',
+            fontWeight: '700',
+            color: 'var(--primary-purple)',
+            lineHeight: '1.4'
+          }}>
+            ⚡ Complete your account profile to access the SJ Jewelers dashboard & assets.
+          </div>
+        )}
+
+        {errorMessage && (
+          <div style={{
+            backgroundColor: '#fee2e2',
+            border: '1px solid #ef4444',
+            borderRadius: '14px',
+            padding: '12px 16px',
+            marginBottom: '16px',
+            fontSize: '13px',
+            fontWeight: '700',
+            color: '#dc2626'
+          }}>
+            {errorMessage}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
           {/* Account Details Section */}
           <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#1e1b2e', marginBottom: '14px' }}>
@@ -292,7 +384,7 @@ export default function CreateProfileScreen({ onNavigate }) {
           <div style={{ display: 'flex', gap: '16px', marginTop: '10px' }}>
             <button
               type="button"
-              onClick={() => onNavigate('profile')}
+              onClick={handleSkip}
               style={{
                 flex: 1, height: '52px', borderRadius: '16px', border: '1.5px solid var(--primary-purple)',
                 backgroundColor: 'transparent', color: 'var(--text-dark)', fontSize: '17px', fontWeight: '800', cursor: 'pointer'
