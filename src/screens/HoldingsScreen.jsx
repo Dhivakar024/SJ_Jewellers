@@ -11,24 +11,17 @@ export default function HoldingsScreen({ onNavigate, onTogglePlus }) {
   const totalValue = goldValue + silverValue;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Top Header */}
-      <div style={{
-        backgroundColor: 'var(--primary-purple)',
-        padding: '20px',
-        color: 'white',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
+    <div className="app-screen-layout">
+      {/* 1. Fixed Top Header */}
+      <header className="top-header-bar" style={{ justifyContent: 'space-between' }}>
         <h2 style={{ fontSize: '26px', fontWeight: '800' }}>Holdings</h2>
         <button style={{ backgroundColor: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}>
           <RotateCw size={24} />
         </button>
-      </div>
+      </header>
 
-      {/* Content */}
-      <div className="screen-content" style={{ padding: '20px 18px 24px 18px', gap: '16px' }}>
+      {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
+      <main className="app-scroll-content" style={{ padding: '20px 18px 24px 18px', gap: '16px' }}>
         {/* Total Value Box */}
         <div style={{
           backgroundColor: '#dcd0ff',
@@ -128,9 +121,9 @@ export default function HoldingsScreen({ onNavigate, onTogglePlus }) {
           Last updated: 14 Aug 2026, 10:34 am<br />
           Based on successful transactions only
         </div>
-      </div>
+      </main>
 
-      {/* Bottom Nav */}
+      {/* 3. Fixed Bottom Nav */}
       <BottomNav
         activeTab="holdings"
         onSelectTab={(tab) => onNavigate(tab)}

@@ -7,9 +7,15 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
   const [metalTab, setMetalTab] = useState('gold'); // 'gold' or 'silver'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Top Header Banner */}
-      <div style={{ backgroundColor: 'var(--primary-purple)', padding: '24px 20px 36px 20px', color: 'white' }}>
+    <div className="app-screen-layout">
+      {/* 1. Fixed Top Header Banner */}
+      <header style={{
+        backgroundColor: 'var(--primary-purple)',
+        padding: '24px 20px 36px 20px',
+        color: 'white',
+        flexShrink: 0,
+        zIndex: 20
+      }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ fontSize: '15px', fontWeight: '500', opacity: 0.9 }}>Hello,</div>
@@ -46,10 +52,10 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Main Content Area */}
-      <div className="screen-content" style={{ padding: '0 16px 24px 16px', marginTop: '-18px' }}>
+      {/* 2. Middle Scrollable Content Area (ONLY THIS SCROLLS) */}
+      <main className="app-scroll-content" style={{ padding: '0 16px 24px 16px', marginTop: '-18px' }}>
         {/* Main Card */}
         <div style={{
           backgroundColor: '#ffffff',
@@ -241,9 +247,9 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
             </svg>
           </div>
         </div>
-      </div>
+      </main>
 
-      {/* Bottom Nav Bar */}
+      {/* 3. Fixed Bottom Nav Bar */}
       <BottomNav
         activeTab="home"
         onSelectTab={(tab) => onNavigate(tab)}

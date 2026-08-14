@@ -75,17 +75,17 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
   const popularGrams = isGold ? '0.0151' : '0.7547';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
-      {/* Top Header Bar */}
-      <div className="top-header-bar">
+    <div className="app-screen-layout">
+      {/* 1. Fixed Top Header Bar */}
+      <header className="top-header-bar">
         <button className="back-btn" onClick={() => onNavigate('home')} aria-label="Back">
           <ArrowLeft size={22} />
         </button>
         <h2>Buy Now</h2>
-      </div>
+      </header>
 
-      {/* Screen Content */}
-      <div className="screen-content" style={{ padding: '20px 18px 30px 18px' }}>
+      {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
+      <main className="app-scroll-content" style={{ padding: '20px 18px 30px 18px' }}>
         {/* Live Price Box */}
         <div style={{
           backgroundColor: '#dcd0ff',
@@ -362,7 +362,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
         >
           Proceed
         </button>
-      </div>
+      </main>
 
       {/* Mock Payment Gateway Modal Step */}
       {showConfirmModal && (
@@ -511,7 +511,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
         </div>
       )}
 
-      {/* Bottom Navigation */}
+      {/* 3. Fixed Bottom Navigation */}
       <BottomNav
         activeTab="buy"
         onSelectTab={(tab) => onNavigate(tab)}

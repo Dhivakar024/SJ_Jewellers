@@ -7,15 +7,17 @@ export default function TransactionHistoryScreen({ onNavigate, onTogglePlus }) {
   const { transactions } = useApp();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Top Header */}
-      <div style={{
+    <div className="app-screen-layout">
+      {/* 1. Fixed Top Header */}
+      <header style={{
         backgroundColor: 'var(--primary-purple)',
         padding: '16px 20px 24px 20px',
         color: 'white',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        flexShrink: 0,
+        zIndex: 20
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <button className="back-btn" onClick={() => onNavigate('home')} aria-label="Back">
@@ -43,10 +45,10 @@ export default function TransactionHistoryScreen({ onNavigate, onTogglePlus }) {
           <SlidersHorizontal size={16} />
           <span>Filter</span>
         </button>
-      </div>
+      </header>
 
-      {/* Content */}
-      <div className="screen-content" style={{ padding: '20px 18px' }}>
+      {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
+      <main className="app-scroll-content" style={{ padding: '20px 18px' }}>
         {transactions.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 20px', color: '#736d85', fontWeight: '600' }}>
             No transactions found.
@@ -116,9 +118,9 @@ export default function TransactionHistoryScreen({ onNavigate, onTogglePlus }) {
             ))}
           </div>
         )}
-      </div>
+      </main>
 
-      {/* Bottom Nav */}
+      {/* 3. Fixed Bottom Nav */}
       <BottomNav
         activeTab="home"
         onSelectTab={(tab) => onNavigate(tab)}

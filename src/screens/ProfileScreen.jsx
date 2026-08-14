@@ -18,16 +18,9 @@ export default function ProfileScreen({ onNavigate, onTogglePlus }) {
   const kycColors = getKycBadgeColor();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Top Header */}
-      <div style={{
-        backgroundColor: 'var(--primary-purple)',
-        padding: '20px',
-        color: 'white',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
+    <div className="app-screen-layout">
+      {/* 1. Fixed Top Header */}
+      <header className="top-header-bar" style={{ justifyContent: 'space-between' }}>
         <h2 style={{ fontSize: '26px', fontWeight: '800' }}>Profile</h2>
         <button
           onClick={() => onNavigate('create-profile')}
@@ -36,10 +29,10 @@ export default function ProfileScreen({ onNavigate, onTogglePlus }) {
         >
           <Pencil size={24} />
         </button>
-      </div>
+      </header>
 
-      {/* Content */}
-      <div className="screen-content" style={{ padding: '20px 18px 24px 18px' }}>
+      {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
+      <main className="app-scroll-content" style={{ padding: '20px 18px 24px 18px' }}>
         {/* User Avatar Card */}
         <div style={{ textAlign: 'center', padding: '10px 0 20px 0' }}>
           <div style={{
@@ -154,9 +147,9 @@ export default function ProfileScreen({ onNavigate, onTogglePlus }) {
           <LogOut size={22} />
           <span>Logout</span>
         </button>
-      </div>
+      </main>
 
-      {/* Bottom Nav */}
+      {/* 3. Fixed Bottom Nav */}
       <BottomNav
         activeTab="profile"
         onSelectTab={(tab) => onNavigate(tab)}

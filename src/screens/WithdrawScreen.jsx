@@ -60,17 +60,17 @@ export default function WithdrawScreen({ onNavigate }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
-      {/* Top Header */}
-      <div className="top-header-bar">
+    <div className="app-screen-layout">
+      {/* 1. Fixed Top Header */}
+      <header className="top-header-bar">
         <button className="back-btn" onClick={() => onNavigate('home')} aria-label="Back">
           <ArrowLeft size={22} />
         </button>
         <h2>Mode of Withdraw</h2>
-      </div>
+      </header>
 
-      {/* Content */}
-      <div className="screen-content" style={{ padding: '20px 18px', gap: '20px' }}>
+      {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
+      <main className="app-scroll-content" style={{ padding: '20px 18px', gap: '20px' }}>
         {/* Gold Box */}
         <div style={{
           backgroundColor: '#c4b5fd',
@@ -162,7 +162,7 @@ export default function WithdrawScreen({ onNavigate }) {
             <span>↑ Withdraw</span>
           </button>
         </div>
-      </div>
+      </main>
 
       {/* Verify KYC Prompt Modal Sheet */}
       {showKycModal && !showKycForm && (

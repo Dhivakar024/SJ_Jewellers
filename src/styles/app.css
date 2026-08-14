@@ -33,33 +33,41 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-body, html {
+/* 1. Global Viewport Shell - Prevent outer body/page from scrolling */
+html,
+body,
+#root {
   width: 100%;
-  min-height: 100vh;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
   background-color: #0f0d19;
-  overflow-x: hidden;
 }
 
-/* App Root Outer Container */
+/* Root container for centering on desktop while fixed on mobile */
 .app-root-container {
   width: 100%;
-  min-height: 100vh;
+  height: 100%;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   background-color: #0f0d19;
+  overflow: hidden;
 }
 
-/* Device Viewport Wrapper Frame */
+/* 2. Mobile App Shell Viewport */
 .app-viewport {
   width: 100%;
-  min-height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
+  max-height: 100dvh;
   max-width: 430px;
   background-color: var(--bg-lavender);
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow-x: hidden;
+  overflow: hidden;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
 }
 
@@ -67,28 +75,42 @@ body, html {
   .app-viewport {
     border-radius: 36px;
     height: 92vh;
-    margin: 20px 0;
+    min-height: 92vh;
+    max-height: 932px;
     border: 8px solid #2a2438;
   }
 }
 
-/* Main Scrollable Screen Content Container */
+/* 3. Screen Layout Container (Header + Scrollable Middle + Bottom Nav) */
+.app-screen-layout {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 4. Dedicated Scrollable Content Area (ONLY THIS SCROLLS) */
+.app-scroll-content,
 .screen-content {
   flex: 1;
+  min-height: 0; /* Critical for flex child scrolling inside bounded container */
   overflow-y: auto;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   position: relative;
-  padding-bottom: 90px !important; /* Prevents content clipping behind bottom navigation bar */
-  -webkit-overflow-scrolling: touch;
+  padding-bottom: 24px;
 }
 
+.app-scroll-content::-webkit-scrollbar,
 .screen-content::-webkit-scrollbar {
   display: none;
 }
 
-/* Common Header Bar */
+/* 5. Fixed Top Header Bar */
 .top-header-bar {
   background-color: var(--primary-purple);
   color: white;
@@ -96,7 +118,9 @@ body, html {
   display: flex;
   align-items: center;
   gap: 16px;
-  flex-shrink: 0;
+  flex-shrink: 0; /* Stays fixed at top */
+  z-index: 30;
+  padding-top: calc(16px + env(safe-area-inset-top, 0px));
 }
 
 .top-header-bar h2 {
@@ -123,12 +147,16 @@ body, html {
   stroke-width: 2.5;
 }
 
-/* Auth Screens Specific Styling */
+/* 6. Auth Screens Specific Styling */
 .auth-screen {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   padding: 30px 24px;
   display: flex;
   flex-direction: column;
-  min-height: 100%;
   background-color: var(--bg-lavender);
 }
 
@@ -204,6 +232,7 @@ body, html {
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 14px rgba(88, 60, 245, 0.25);
+  flex-shrink: 0;
 }
 
 .btn-primary:active {
@@ -267,20 +296,18 @@ body, html {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* Bottom Navigation Bar */
+/* 7. Fixed Bottom Navigation Bar */
 .bottom-nav {
   height: 68px;
   background-color: var(--primary-purple);
   display: flex;
   justify-content: space-around;
   align-items: center;
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 40;
-  flex-shrink: 0;
+  position: relative;
+  flex-shrink: 0; /* Stays fixed at bottom */
   width: 100%;
+  z-index: 40;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .nav-item {
@@ -364,6 +391,8 @@ body, html {
   gap: 20px;
   animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
+  max-height: 85vh;
+  overflow-y: auto;
 }
 
 @keyframes slideUp {

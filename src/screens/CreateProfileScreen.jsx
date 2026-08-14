@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { LogOut, Calendar, ChevronDown } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 
 export default function CreateProfileScreen({ onNavigate }) {
+  const { currentUser, setCurrentUser } = useApp();
   const [formData, setFormData] = useState({
-    name: 'kavipriya',
-    email: '',
-    mobile: '6381353131',
+    name: currentUser.name || 'Demo User',
+    email: currentUser.email || 'demo@example.com',
+    mobile: currentUser.mobile || '9999999999',
     address: '',
     pan: '',
     aadhar: '',
@@ -24,32 +26,32 @@ export default function CreateProfileScreen({ onNavigate }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setCurrentUser((prev) => ({
+      ...prev,
+      name: formData.name,
+      email: formData.email,
+      mobile: formData.mobile
+    }));
     alert('Profile details saved successfully!');
     onNavigate('profile');
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Header */}
-      <div style={{
-        backgroundColor: 'var(--primary-purple)',
-        padding: '20px',
-        color: 'white',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
+    <div className="app-screen-layout">
+      {/* 1. Fixed Top Header */}
+      <header className="top-header-bar" style={{ justifyContent: 'space-between' }}>
         <h2 style={{ fontSize: '24px', fontWeight: '800' }}>Create Profile</h2>
         <button
           onClick={() => onNavigate('profile')}
           style={{ backgroundColor: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}
+          aria-label="Back"
         >
           <LogOut size={24} />
         </button>
-      </div>
+      </header>
 
-      {/* Content */}
-      <div className="screen-content" style={{ padding: '20px 18px 30px 18px' }}>
+      {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
+      <main className="app-scroll-content" style={{ padding: '20px 18px 30px 18px' }}>
         <form onSubmit={handleSubmit}>
           {/* Account Details Section */}
           <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#1e1b2e', marginBottom: '14px' }}>
@@ -309,7 +311,7 @@ export default function CreateProfileScreen({ onNavigate }) {
             </button>
           </div>
         </form>
-      </div>
+      </main>
     </div>
   );
 }
