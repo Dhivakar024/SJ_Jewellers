@@ -113,21 +113,6 @@ export default function CreateProfileScreen({ onNavigate }) {
 
       {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
       <main className="app-scroll-content" style={{ padding: '20px 18px 30px 18px' }}>
-        {!isExistingCompletedUser && (
-          <div style={{
-            backgroundColor: '#ede7fc',
-            border: '1.5px solid var(--primary-purple)',
-            borderRadius: '16px',
-            padding: '14px 16px',
-            marginBottom: '18px',
-            fontSize: '13px',
-            fontWeight: '700',
-            color: 'var(--primary-purple)',
-            lineHeight: '1.4'
-          }}>
-            ⚡ Complete your account profile to access the SJ Jewelers dashboard & assets.
-          </div>
-        )}
 
         {errorMessage && (
           <div style={{
