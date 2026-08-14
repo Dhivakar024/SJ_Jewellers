@@ -85,6 +85,8 @@ body,
 .app-screen-layout {
   width: 100%;
   height: 100%;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -94,15 +96,17 @@ body,
 /* 4. Dedicated Scrollable Content Area (ONLY THIS SCROLLS) */
 .app-scroll-content,
 .screen-content {
-  flex: 1;
-  min-height: 0; /* Critical for flex child scrolling inside bounded container */
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
   display: flex;
   flex-direction: column;
   position: relative;
-  padding-bottom: 24px;
+  padding-bottom: 50px !important;
 }
 
 .app-scroll-content::-webkit-scrollbar,

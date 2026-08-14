@@ -55,18 +55,45 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
       </header>
 
       {/* 2. Middle Scrollable Content Area (ONLY THIS SCROLLS) */}
-      <main className="app-scroll-content" style={{ padding: '0 16px 24px 16px', marginTop: '-18px' }}>
-        {/* Main Card */}
+      <main 
+        className="app-scroll-content" 
+        style={{ 
+          padding: '0 16px 40px 16px', 
+          marginTop: '-18px',
+          flex: '1 1 auto',
+          minHeight: 0,
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch'
+        }}
+      >
+        {/* Main Asset Card */}
         <div style={{
           backgroundColor: '#ffffff',
           borderRadius: '24px',
           padding: '24px 20px',
           position: 'relative',
           boxShadow: '0 10px 30px rgba(0, 0, 0, 0.06)',
-          overflow: 'hidden'
+          width: '100%',
+          boxSizing: 'border-box',
+          flexShrink: 0
         }}>
           {/* LOWEST PRICE Ribbon */}
-          <div className="ribbon-banner">LOWEST PRICE</div>
+          <div style={{
+            position: 'absolute',
+            top: '18px',
+            left: '-10px',
+            backgroundColor: 'var(--orange-ribbon)',
+            color: 'white',
+            fontSize: '10px',
+            fontWeight: '800',
+            padding: '4px 14px',
+            borderRadius: '0 8px 8px 0',
+            letterSpacing: '0.5px',
+            boxShadow: '0 2px 6px rgba(255, 122, 0, 0.4)',
+            zIndex: 5
+          }}>
+            LOWEST PRICE
+          </div>
 
           {/* Gold / Silver Toggle Pills */}
           <div style={{
@@ -210,7 +237,10 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
           marginTop: '20px',
           color: 'white',
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          width: '100%',
+          boxSizing: 'border-box',
+          flexShrink: 0
         }}>
           <h2 style={{ fontSize: '28px', fontWeight: '800', marginBottom: '14px' }}>Shop</h2>
 
