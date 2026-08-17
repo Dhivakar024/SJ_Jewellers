@@ -77,14 +77,15 @@ export default function WithdrawScreen({ onNavigate }) {
       </header>
 
       {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
-      <main className="app-scroll-content withdraw-cards-container">
+      <main className="app-scroll-content withdraw-cards-container" style={{ paddingTop: '28px', paddingBottom: '120px' }}>
         {/* Unified Cards Group */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
           {/* Gold Asset Card */}
           <div style={{
             backgroundColor: '#dcd0ff',
             borderRadius: '24px',
-            padding: '24px 20px',
+            paddingTop: '28px',
+            paddingBottom:'120px',
             textAlign: 'center',
             border: '1px solid #c9b8fc',
             boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',

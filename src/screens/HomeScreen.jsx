@@ -59,7 +59,7 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
       <main 
         className="app-scroll-content" 
         style={{ 
-          padding: '0 16px 40px 16px', 
+          padding: '0 14px 40px 14px', 
           marginTop: '-18px',
           flex: '1 1 auto',
           minHeight: 0,
@@ -67,23 +67,31 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
           WebkitOverflowScrolling: 'touch'
         }}
       >
-        {/* Main Asset Card (Properly centered & aligned with all 4 rounded corners visible) */}
+        {/* Main Asset Card (Compact, 4 visible rounded corners, matching reference screenshot) */}
         <div style={{
           backgroundColor: '#ffffff',
           borderRadius: '24px',
-          padding: '24px 20px',
+          padding: '20px 16px',
           boxShadow: '0 10px 30px rgba(0, 0, 0, 0.06)',
-          width: '100%',
+          width: 'calc(100% - 4px)',
+          margin: '0 auto',
           boxSizing: 'border-box',
+          position: 'relative',
+          overflow: 'visible',
           flexShrink: 0
         }}>
+          {/* LOWEST PRICE Diagonal Corner Ribbon */}
+          <div className="lowest-price-ribbon">
+            LOWEST PRICE
+          </div>
+
           {/* Gold / Silver Toggle Pills */}
           <div style={{
             backgroundColor: '#f1ecfe',
             borderRadius: '30px',
             padding: '4px',
             display: 'flex',
-            margin: '0 auto 18px auto',
+            margin: '0 auto 16px auto',
             width: '230px'
           }}>
             <button
@@ -122,25 +130,25 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
             </button>
           </div>
 
-          {/* Balance Inner Card (Shows ONLY the selected asset balance) */}
+          {/* Balance Inner Card (Compact side-by-side Gold & Silver balances exactly like reference) */}
           <div style={{
             backgroundColor: '#f6f2ff',
             borderRadius: '18px',
-            padding: '20px 16px',
+            padding: '14px 12px 16px 12px',
             textAlign: 'center',
-            marginBottom: '18px',
-            border: '1px solid #e8e2fa',
-            boxShadow: '0 2px 8px rgba(88, 60, 245, 0.04)'
+            marginBottom: '16px',
+            border: '1px solid #e8e2fa'
           }}>
-            <div style={{ color: 'var(--primary-purple)', fontWeight: '700', fontSize: '13.5px', marginBottom: '10px' }}>
+            <div style={{ color: 'var(--primary-purple)', fontWeight: '700', fontSize: '13.5px', marginBottom: '12px' }}>
               Your balance
             </div>
 
-            {metalTab === 'gold' ? (
-              <div style={{ textAlign: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
+              {/* Gold Column */}
+              <div style={{ flex: 1, textAlign: 'center' }}>
                 <div style={{
-                  width: '46px', height: '46px', borderRadius: '50%',
-                  backgroundColor: '#fde9b8', margin: '0 auto 8px auto',
+                  width: '42px', height: '42px', borderRadius: '50%',
+                  backgroundColor: '#fde9b8', margin: '0 auto 6px auto',
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="#e5a415">
@@ -149,30 +157,34 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
                     <circle cx="12" cy="17" r="5" fill="#e5a415" />
                   </svg>
                 </div>
-                <div style={{ fontSize: '13.5px', color: '#736d85', fontWeight: '700' }}>Gold</div>
-                <div style={{ fontSize: '22px', fontWeight: '900', color: '#1c1829', marginTop: '3px' }}>
-                  {holdings.goldGrams.toFixed(4)} gm
+                <div style={{ fontSize: '12.5px', color: '#736d85', fontWeight: '600' }}>Gold</div>
+                <div style={{ fontSize: '18px', fontWeight: '800', color: '#1c1829', marginTop: '2px' }}>
+                  {holdings.goldGrams.toFixed(metalTab === 'gold' ? 4 : 2)} gm
                 </div>
               </div>
-            ) : (
-              <div style={{ textAlign: 'center' }}>
+
+              {/* Vertical Separator */}
+              <div style={{ width: '1px', height: '48px', backgroundColor: '#dcd4fa' }}></div>
+
+              {/* Silver Column */}
+              <div style={{ flex: 1, textAlign: 'center' }}>
                 <div style={{
-                  width: '46px', height: '46px', borderRadius: '50%',
-                  backgroundColor: '#e2e6ea', margin: '0 auto 8px auto',
+                  width: '42px', height: '42px', borderRadius: '50%',
+                  backgroundColor: '#e2e6ea', margin: '0 auto 6px auto',
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="#a0aab4">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="#a0aab4">
                     <circle cx="12" cy="7" r="5" />
                     <circle cx="12" cy="12" r="5" fill="#ccd3db" />
                     <circle cx="12" cy="17" r="5" fill="#a0aab4" />
                   </svg>
                 </div>
-                <div style={{ fontSize: '13.5px', color: '#736d85', fontWeight: '700' }}>Silver</div>
-                <div style={{ fontSize: '22px', fontWeight: '900', color: '#1c1829', marginTop: '3px' }}>
+                <div style={{ fontSize: '12.5px', color: '#736d85', fontWeight: '600' }}>Silver</div>
+                <div style={{ fontSize: '18px', fontWeight: '800', color: '#1c1829', marginTop: '2px' }}>
                   {holdings.silverGrams.toFixed(4)} gm
                 </div>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Subtitle Promo text */}
@@ -182,29 +194,28 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
             color: '#3d3852',
             fontWeight: '600',
             lineHeight: '1.4',
-            margin: '0 10px 18px 10px'
+            margin: '0 10px 16px 10px'
           }}>
             Buy {metalTab} daily, at your<br />
             convenience price @ Salem Jewels
           </div>
 
-          {/* Buy Now Primary CTA Button */}
+          {/* Buy Now Button (Clean pill button matching reference screenshot) */}
           <button
             onClick={() => onNavigate(metalTab === 'gold' ? 'buy-gold' : 'buy-silver')}
-            className="btn-primary"
             style={{
-              width: '100%',
-              height: '50px',
+              width: '180px',
+              height: '46px',
               margin: '0 auto',
               display: 'block',
-              borderRadius: '16px',
-              backgroundColor: 'var(--primary-purple)',
-              color: '#ffffff',
+              borderRadius: '14px',
+              border: '1.5px solid var(--primary-purple)',
+              backgroundColor: '#ede7fc',
+              color: 'var(--primary-purple)',
               fontWeight: '800',
-              fontSize: '16px',
+              fontSize: '15px',
               cursor: 'pointer',
-              boxShadow: '0 6px 18px rgba(88, 60, 245, 0.35)',
-              border: 'none'
+              transition: 'all 0.2s ease'
             }}
           >
             Buy Now
