@@ -77,7 +77,7 @@ export default function WithdrawScreen({ onNavigate }) {
       </header>
 
       {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
-      <main className="app-scroll-content" style={{ padding: '20px 16px 40px 16px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <main className="app-scroll-content" style={{ padding: '32px 16px 48px 16px', display: 'flex', flexDirection: 'column', gap: '22px' }}>
         
         {/* Gold Asset Card */}
         <div style={{
