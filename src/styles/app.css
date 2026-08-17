@@ -551,10 +551,10 @@ textarea.profile-custom-input {
 /* Home Page Diagonal LOWEST PRICE Ribbon */
 .lowest-price-ribbon {
   position: absolute;
-  left: -20px;
-  top: 22px;
-  width: 152px;
-  height: 32px;
+  left: -14px;
+  top: 16px;
+  width: 132px;
+  height: 28px;
   background: linear-gradient(90deg, #FF8A00, #FF6A00);
   color: #ffffff;
   display: flex;
@@ -562,30 +562,31 @@ textarea.profile-custom-input {
   justify-content: center;
   transform: rotate(-45deg);
   font-weight: 800;
-  font-size: 11px;
-  letter-spacing: 0.9px;
+  font-size: 10px;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
   z-index: 25;
-  box-shadow: 0 5px 14px rgba(255, 106, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(255, 106, 0, 0.4), 0 2px 5px rgba(0, 0, 0, 0.15);
   pointer-events: none;
   overflow: visible;
+  white-space: nowrap;
 }
 
 .lowest-price-ribbon::after {
   content: "";
   position: absolute;
-  right: -6px;
-  bottom: -6px;
-  border-left: 6px solid #C85A00;
-  border-top: 6px solid transparent;
+  right: -5px;
+  bottom: -5px;
+  border-left: 5px solid #C85A00;
+  border-top: 5px solid transparent;
 }
 
 .lowest-price-ribbon::before {
   content: "";
   position: absolute;
-  left: -6px;
-  bottom: -6px;
-  border-right: 6px solid #C85A00;
-  border-top: 6px solid transparent;
+  left: -5px;
+  bottom: -5px;
+  border-right: 5px solid #C85A00;
+  border-top: 5px solid transparent;
 }
 
