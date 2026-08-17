@@ -111,7 +111,7 @@ export default function CreateProfileScreen({ onNavigate }) {
         </button>
       </header>
 
-      {/* 2. Middle Scrollable Content (Clean Two-Column Form Layout) */}
+      {/* 2. Middle Scrollable Content (Strict 3-Column Alignment: [Label] [:] [Input]) */}
       <main className="app-scroll-content" style={{ padding: '18px 16px 60px 16px' }}>
         {errorMessage && (
           <div style={{
@@ -146,8 +146,9 @@ export default function CreateProfileScreen({ onNavigate }) {
           }}>
             {/* Name */}
             <div className="profile-form-row">
-              <label className="profile-form-label">Name :</label>
-              <div className="profile-form-input-wrap">
+              <div className="profile-label-col">Name</div>
+              <div className="profile-colon-col">:</div>
+              <div className="profile-input-col">
                 <input
                   type="text"
                   placeholder="Enter full name"
@@ -160,8 +161,9 @@ export default function CreateProfileScreen({ onNavigate }) {
 
             {/* Email ID */}
             <div className="profile-form-row">
-              <label className="profile-form-label">Email ID :</label>
-              <div className="profile-form-input-wrap">
+              <div className="profile-label-col">Email ID</div>
+              <div className="profile-colon-col">:</div>
+              <div className="profile-input-col">
                 <input
                   type="email"
                   placeholder="Enter email address"
@@ -174,8 +176,9 @@ export default function CreateProfileScreen({ onNavigate }) {
 
             {/* Mobile No. */}
             <div className="profile-form-row">
-              <label className="profile-form-label">Mobile No. :</label>
-              <div className="profile-form-input-wrap">
+              <div className="profile-label-col">Mobile No.</div>
+              <div className="profile-colon-col">:</div>
+              <div className="profile-input-col">
                 <input
                   type="tel"
                   placeholder="Enter mobile number"
@@ -187,9 +190,10 @@ export default function CreateProfileScreen({ onNavigate }) {
             </div>
 
             {/* Address */}
-            <div className="profile-form-row" style={{ alignItems: 'flex-start' }}>
-              <label className="profile-form-label" style={{ paddingTop: '10px' }}>Address :</label>
-              <div className="profile-form-input-wrap">
+            <div className="profile-form-row align-top">
+              <div className="profile-label-col">Address</div>
+              <div className="profile-colon-col">:</div>
+              <div className="profile-input-col">
                 <textarea
                   placeholder="Enter full address"
                   value={formData.address}
@@ -209,8 +213,9 @@ export default function CreateProfileScreen({ onNavigate }) {
 
             {/* PAN Card */}
             <div className="profile-form-row">
-              <label className="profile-form-label">PAN Card :</label>
-              <div className="profile-form-input-wrap">
+              <div className="profile-label-col">PAN Card</div>
+              <div className="profile-colon-col">:</div>
+              <div className="profile-input-col">
                 <input
                   type="text"
                   placeholder="Enter PAN number"
@@ -223,8 +228,9 @@ export default function CreateProfileScreen({ onNavigate }) {
 
             {/* Aadhaar Card */}
             <div className="profile-form-row">
-              <label className="profile-form-label">Aadhaar Card :</label>
-              <div className="profile-form-input-wrap">
+              <div className="profile-label-col">Aadhaar Card</div>
+              <div className="profile-colon-col">:</div>
+              <div className="profile-input-col">
                 <input
                   type="text"
                   placeholder="Enter Aadhaar number"
@@ -237,8 +243,9 @@ export default function CreateProfileScreen({ onNavigate }) {
 
             {/* Account Number */}
             <div className="profile-form-row">
-              <label className="profile-form-label">Account Number :</label>
-              <div className="profile-form-input-wrap">
+              <div className="profile-label-col">Account Number</div>
+              <div className="profile-colon-col">:</div>
+              <div className="profile-input-col">
                 <input
                   type="text"
                   placeholder="Enter bank account no"
@@ -251,8 +258,9 @@ export default function CreateProfileScreen({ onNavigate }) {
 
             {/* IFSC Number */}
             <div className="profile-form-row">
-              <label className="profile-form-label">IFSC Number :</label>
-              <div className="profile-form-input-wrap">
+              <div className="profile-label-col">IFSC Number</div>
+              <div className="profile-colon-col">:</div>
+              <div className="profile-input-col">
                 <input
                   type="text"
                   placeholder="Enter bank IFSC code"
@@ -281,8 +289,9 @@ export default function CreateProfileScreen({ onNavigate }) {
           }}>
             {/* Nominee Name */}
             <div className="profile-form-row">
-              <label className="profile-form-label">Name :</label>
-              <div className="profile-form-input-wrap">
+              <div className="profile-label-col">Name</div>
+              <div className="profile-colon-col">:</div>
+              <div className="profile-input-col">
                 <input
                   type="text"
                   placeholder="Enter nominee name"
@@ -295,8 +304,9 @@ export default function CreateProfileScreen({ onNavigate }) {
 
             {/* Nominee Mobile */}
             <div className="profile-form-row">
-              <label className="profile-form-label">Mobile No. :</label>
-              <div className="profile-form-input-wrap">
+              <div className="profile-label-col">Mobile No.</div>
+              <div className="profile-colon-col">:</div>
+              <div className="profile-input-col">
                 <input
                   type="tel"
                   placeholder="Enter nominee mobile"
@@ -309,8 +319,9 @@ export default function CreateProfileScreen({ onNavigate }) {
 
             {/* DOB */}
             <div className="profile-form-row">
-              <label className="profile-form-label">DOB :</label>
-              <div className="profile-form-input-wrap" style={{ position: 'relative' }}>
+              <div className="profile-label-col">DOB</div>
+              <div className="profile-colon-col">:</div>
+              <div className="profile-input-col" style={{ position: 'relative' }}>
                 <input
                   type="text"
                   placeholder="DD/MM/YYYY"
@@ -324,9 +335,10 @@ export default function CreateProfileScreen({ onNavigate }) {
             </div>
 
             {/* Nominee Address */}
-            <div className="profile-form-row" style={{ alignItems: 'flex-start' }}>
-              <label className="profile-form-label" style={{ paddingTop: '10px' }}>Address :</label>
-              <div className="profile-form-input-wrap">
+            <div className="profile-form-row align-top">
+              <div className="profile-label-col">Address</div>
+              <div className="profile-colon-col">:</div>
+              <div className="profile-input-col">
                 <textarea
                   placeholder="Enter nominee address"
                   value={formData.nomineeAddress}
@@ -346,8 +358,9 @@ export default function CreateProfileScreen({ onNavigate }) {
 
             {/* Relationship */}
             <div className="profile-form-row">
-              <label className="profile-form-label">Relationship :</label>
-              <div className="profile-form-input-wrap" style={{ position: 'relative' }}>
+              <div className="profile-label-col">Relationship</div>
+              <div className="profile-colon-col">:</div>
+              <div className="profile-input-col" style={{ position: 'relative' }}>
                 <select
                   value={formData.relationship}
                   onChange={(e) => handleChange('relationship', e.target.value)}

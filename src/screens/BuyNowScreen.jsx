@@ -416,42 +416,32 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
                   </div>
                 </div>
 
-                {/* Payment Method Selector */}
+                {/* Payment Method Section (UPI / GooglePay / PhonePe only) */}
                 <div style={{ marginBottom: '20px' }}>
                   <div style={{ fontSize: '14px', fontWeight: '800', color: '#1e1b2e', marginBottom: '10px' }}>
                     Select Payment Method
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {[
-                      { id: 'UPI', label: 'UPI / GooglePay / PhonePe', icon: <Smartphone size={18} /> },
-                      { id: 'Card', label: 'Credit / Debit Card', icon: <CreditCard size={18} /> },
-                      { id: 'NetBanking', label: 'Net Banking', icon: <Building2 size={18} /> }
-                    ].map((m) => (
-                      <div
-                        key={m.id}
-                        onClick={() => setSelectedMethod(m.id)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '12px 16px',
-                          borderRadius: '14px',
-                          border: selectedMethod === m.id ? '2px solid var(--primary-purple)' : '1px solid #dcd4fa',
-                          backgroundColor: selectedMethod === m.id ? '#f3eeff' : '#ffffff',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700', fontSize: '14px', color: '#1e1b2e' }}>
-                          {m.icon}
-                          <span>{m.label}</span>
-                        </div>
-                        <div style={{
-                          width: '18px', height: '18px', borderRadius: '50%',
-                          border: selectedMethod === m.id ? '6px solid var(--primary-purple)' : '2px solid #a49bbd'
-                        }}></div>
-                      </div>
-                    ))}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '13px 16px',
+                      borderRadius: '14px',
+                      border: '2px solid var(--primary-purple)',
+                      backgroundColor: '#f3eeff',
+                      cursor: 'default'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700', fontSize: '14px', color: '#1e1b2e' }}>
+                      <Smartphone size={20} color="var(--primary-purple)" />
+                      <span>UPI / GooglePay / PhonePe</span>
+                    </div>
+                    <div style={{
+                      width: '18px', height: '18px', borderRadius: '50%',
+                      border: '6px solid var(--primary-purple)'
+                    }}></div>
                   </div>
                 </div>
 

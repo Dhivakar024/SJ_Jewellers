@@ -451,28 +451,49 @@ body,
   z-index: 5;
 }
 
-/* Profile Form Two-Column Structure */
+/* Profile Form 3-Column Structure [Label Area] [Colon Area] [Input Area] */
 .profile-form-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
   width: 100%;
+  gap: 0;
 }
 
-.profile-form-label {
-  width: 112px;
-  min-width: 105px;
-  max-width: 120px;
+.profile-form-row.align-top {
+  align-items: flex-start;
+}
+
+.profile-label-col {
+  width: 95px;
+  min-width: 95px;
+  max-width: 95px;
   flex-shrink: 0;
   font-size: 13.5px;
   font-weight: 700;
   color: #2c2642;
   line-height: 1.25;
   word-break: break-word;
+  padding-right: 4px;
 }
 
-.profile-form-input-wrap {
+.profile-colon-col {
+  width: 14px;
+  min-width: 14px;
+  max-width: 14px;
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: #2c2642;
+  text-align: center;
+  padding-right: 8px;
+}
+
+.profile-form-row.align-top .profile-label-col,
+.profile-form-row.align-top .profile-colon-col {
+  padding-top: 10px;
+}
+
+.profile-input-col {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
