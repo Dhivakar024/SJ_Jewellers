@@ -67,30 +67,23 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
           WebkitOverflowScrolling: 'touch'
         }}
       >
-        {/* Main Asset Card (Slightly compact & balanced) */}
+        {/* Main Asset Card (Properly centered & aligned with all 4 rounded corners visible) */}
         <div style={{
           backgroundColor: '#ffffff',
           borderRadius: '24px',
-          padding: '24px 18px 20px 18px',
-          position: 'relative',
+          padding: '24px 20px',
           boxShadow: '0 10px 30px rgba(0, 0, 0, 0.06)',
           width: '100%',
           boxSizing: 'border-box',
-          flexShrink: 0,
-          overflow: 'visible'
+          flexShrink: 0
         }}>
-          {/* LOWEST PRICE Diagonal Corner Ribbon */}
-          <div className="lowest-price-ribbon">
-            LOWEST PRICE
-          </div>
-
           {/* Gold / Silver Toggle Pills */}
           <div style={{
             backgroundColor: '#f1ecfe',
             borderRadius: '30px',
             padding: '4px',
             display: 'flex',
-            margin: '6px auto 16px auto',
+            margin: '0 auto 18px auto',
             width: '230px'
           }}>
             <button
@@ -133,9 +126,9 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
           <div style={{
             backgroundColor: '#f6f2ff',
             borderRadius: '18px',
-            padding: '18px 14px 20px 14px',
+            padding: '20px 16px',
             textAlign: 'center',
-            marginBottom: '16px',
+            marginBottom: '18px',
             border: '1px solid #e8e2fa',
             boxShadow: '0 2px 8px rgba(88, 60, 245, 0.04)'
           }}>
@@ -146,7 +139,7 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
             {metalTab === 'gold' ? (
               <div style={{ textAlign: 'center' }}>
                 <div style={{
-                  width: '44px', height: '44px', borderRadius: '50%',
+                  width: '46px', height: '46px', borderRadius: '50%',
                   backgroundColor: '#fde9b8', margin: '0 auto 8px auto',
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
@@ -164,7 +157,7 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
             ) : (
               <div style={{ textAlign: 'center' }}>
                 <div style={{
-                  width: '44px', height: '44px', borderRadius: '50%',
+                  width: '46px', height: '46px', borderRadius: '50%',
                   backgroundColor: '#e2e6ea', margin: '0 auto 8px auto',
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
@@ -189,7 +182,7 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
             color: '#3d3852',
             fontWeight: '600',
             lineHeight: '1.4',
-            margin: '0 10px 14px 10px'
+            margin: '0 10px 18px 10px'
           }}>
             Buy {metalTab} daily, at your<br />
             convenience price @ Salem Jewels
@@ -201,14 +194,14 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
             className="btn-primary"
             style={{
               width: '100%',
-              height: '48px',
+              height: '50px',
               margin: '0 auto',
               display: 'block',
               borderRadius: '16px',
               backgroundColor: 'var(--primary-purple)',
               color: '#ffffff',
               fontWeight: '800',
-              fontSize: '15.5px',
+              fontSize: '16px',
               cursor: 'pointer',
               boxShadow: '0 6px 18px rgba(88, 60, 245, 0.35)',
               border: 'none'
