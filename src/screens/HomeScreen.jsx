@@ -71,7 +71,7 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
         <div style={{
           backgroundColor: '#ffffff',
           borderRadius: '24px',
-          padding: '24px 20px',
+          padding: '32px 20px 24px 20px',
           position: 'relative',
           boxShadow: '0 10px 30px rgba(0, 0, 0, 0.06)',
           width: '100%',
