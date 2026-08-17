@@ -77,138 +77,140 @@ export default function WithdrawScreen({ onNavigate }) {
       </header>
 
       {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
-      <main className="app-scroll-content" style={{ padding: '32px 16px 48px 16px', display: 'flex', flexDirection: 'column', gap: '22px' }}>
-        
-        {/* Gold Asset Card */}
-        <div style={{
-          backgroundColor: '#dcd0ff',
-          borderRadius: '24px',
-          padding: '24px 20px',
-          textAlign: 'center',
-          border: '1px solid #c9b8fc',
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
-          width: '100%',
-          boxSizing: 'border-box'
-        }}>
-          {/* 1. Asset Name (Centered) */}
-          <div style={{ fontSize: '20px', fontWeight: '800', color: '#1e1b2e', marginBottom: '8px' }}>
-            Gold
-          </div>
-
-          {/* 2. Balance Value (Large & Readable) */}
-          <div style={{ fontSize: '36px', fontWeight: '900', color: '#1e1b2e', marginBottom: '6px', letterSpacing: '-0.5px', lineHeight: '1.1' }}>
-            {holdings.goldGrams.toFixed(4)}
-          </div>
-
-          {/* 3. "Gram" Pill (Directly below balance) */}
+      <main className="app-scroll-content withdraw-cards-container">
+        {/* Unified Cards Group */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
+          {/* Gold Asset Card */}
           <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '4px 18px',
-            borderRadius: '16px',
-            backgroundColor: 'rgba(255, 255, 255, 0.6)',
-            border: '1px solid rgba(255, 255, 255, 0.8)',
-            fontSize: '13.5px',
-            fontWeight: '800',
-            color: '#33295c',
-            marginBottom: '22px'
+            backgroundColor: '#dcd0ff',
+            borderRadius: '24px',
+            padding: '24px 20px',
+            textAlign: 'center',
+            border: '1px solid #c9b8fc',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+            width: '100%',
+            boxSizing: 'border-box'
           }}>
-            Gram
-          </div>
+            {/* 1. Asset Name (Centered) */}
+            <div style={{ fontSize: '20px', fontWeight: '800', color: '#1e1b2e', marginBottom: '8px' }}>
+              Gold
+            </div>
 
-          {/* 4. Withdraw Action (Centered near lower part of card) */}
-          <button
-            type="button"
-            onClick={() => handleInitiateWithdraw('Gold')}
-            style={{
-              width: '100%',
-              height: '50px',
-              borderRadius: '16px',
-              border: isKycVerified ? 'none' : '1px solid #b2a2e0',
-              backgroundColor: isKycVerified ? 'var(--primary-purple)' : 'rgba(255, 255, 255, 0.5)',
-              color: isKycVerified ? '#ffffff' : '#5b5375',
-              fontSize: '16px',
-              fontWeight: '800',
-              display: 'flex',
+            {/* 2. Balance Value (Large & Readable) */}
+            <div style={{ fontSize: '36px', fontWeight: '900', color: '#1e1b2e', marginBottom: '6px', letterSpacing: '-0.5px', lineHeight: '1.1' }}>
+              {holdings.goldGrams.toFixed(4)}
+            </div>
+
+            {/* 3. "Gram" Pill (Directly below balance) */}
+            <div style={{
+              display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
-              cursor: 'pointer',
-              boxShadow: isKycVerified ? '0 6px 18px rgba(88, 60, 245, 0.35)' : 'none',
-              transition: 'all 0.2s ease'
-            }}
-            aria-label="Withdraw Gold"
-          >
-            <ArrowUp size={18} color={isKycVerified ? '#ffffff' : '#5b5375'} strokeWidth={2.5} />
-            <span>Withdraw</span>
-          </button>
-        </div>
-
-        {/* Silver Asset Card */}
-        <div style={{
-          backgroundColor: '#dcd0ff',
-          borderRadius: '24px',
-          padding: '24px 20px',
-          textAlign: 'center',
-          border: '1px solid #c9b8fc',
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
-          width: '100%',
-          boxSizing: 'border-box'
-        }}>
-          {/* 1. Asset Name (Centered) */}
-          <div style={{ fontSize: '20px', fontWeight: '800', color: '#1e1b2e', marginBottom: '8px' }}>
-            Silver
-          </div>
-
-          {/* 2. Balance Value (Large & Readable) */}
-          <div style={{ fontSize: '36px', fontWeight: '900', color: '#1e1b2e', marginBottom: '6px', letterSpacing: '-0.5px', lineHeight: '1.1' }}>
-            {holdings.silverGrams.toFixed(4)}
-          </div>
-
-          {/* 3. "Gram" Pill (Directly below balance) */}
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '4px 18px',
-            borderRadius: '16px',
-            backgroundColor: 'rgba(255, 255, 255, 0.6)',
-            border: '1px solid rgba(255, 255, 255, 0.8)',
-            fontSize: '13.5px',
-            fontWeight: '800',
-            color: '#33295c',
-            marginBottom: '22px'
-          }}>
-            Gram
-          </div>
-
-          {/* 4. Withdraw Action (Centered near lower part of card) */}
-          <button
-            type="button"
-            onClick={() => handleInitiateWithdraw('Silver')}
-            style={{
-              width: '100%',
-              height: '50px',
+              padding: '4px 18px',
               borderRadius: '16px',
-              border: isKycVerified ? 'none' : '1px solid #b2a2e0',
-              backgroundColor: isKycVerified ? 'var(--primary-purple)' : 'rgba(255, 255, 255, 0.5)',
-              color: isKycVerified ? '#ffffff' : '#5b5375',
-              fontSize: '16px',
+              backgroundColor: 'rgba(255, 255, 255, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.8)',
+              fontSize: '13.5px',
               fontWeight: '800',
-              display: 'flex',
+              color: '#33295c',
+              marginBottom: '22px'
+            }}>
+              Gram
+            </div>
+
+            {/* 4. Withdraw Action (Centered near lower part of card) */}
+            <button
+              type="button"
+              onClick={() => handleInitiateWithdraw('Gold')}
+              style={{
+                width: '100%',
+                height: '50px',
+                borderRadius: '16px',
+                border: isKycVerified ? 'none' : '1px solid #b2a2e0',
+                backgroundColor: isKycVerified ? 'var(--primary-purple)' : 'rgba(255, 255, 255, 0.5)',
+                color: isKycVerified ? '#ffffff' : '#5b5375',
+                fontSize: '16px',
+                fontWeight: '800',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                boxShadow: isKycVerified ? '0 6px 18px rgba(88, 60, 245, 0.35)' : 'none',
+                transition: 'all 0.2s ease'
+              }}
+              aria-label="Withdraw Gold"
+            >
+              <ArrowUp size={18} color={isKycVerified ? '#ffffff' : '#5b5375'} strokeWidth={2.5} />
+              <span>Withdraw</span>
+            </button>
+          </div>
+
+          {/* Silver Asset Card */}
+          <div style={{
+            backgroundColor: '#dcd0ff',
+            borderRadius: '24px',
+            padding: '24px 20px',
+            textAlign: 'center',
+            border: '1px solid #c9b8fc',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+            width: '100%',
+            boxSizing: 'border-box'
+          }}>
+            {/* 1. Asset Name (Centered) */}
+            <div style={{ fontSize: '20px', fontWeight: '800', color: '#1e1b2e', marginBottom: '8px' }}>
+              Silver
+            </div>
+
+            {/* 2. Balance Value (Large & Readable) */}
+            <div style={{ fontSize: '36px', fontWeight: '900', color: '#1e1b2e', marginBottom: '6px', letterSpacing: '-0.5px', lineHeight: '1.1' }}>
+              {holdings.silverGrams.toFixed(4)}
+            </div>
+
+            {/* 3. "Gram" Pill (Directly below balance) */}
+            <div style={{
+              display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
-              cursor: 'pointer',
-              boxShadow: isKycVerified ? '0 6px 18px rgba(88, 60, 245, 0.35)' : 'none',
-              transition: 'all 0.2s ease'
-            }}
-            aria-label="Withdraw Silver"
-          >
-            <ArrowUp size={18} color={isKycVerified ? '#ffffff' : '#5b5375'} strokeWidth={2.5} />
-            <span>Withdraw</span>
-          </button>
+              padding: '4px 18px',
+              borderRadius: '16px',
+              backgroundColor: 'rgba(255, 255, 255, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.8)',
+              fontSize: '13.5px',
+              fontWeight: '800',
+              color: '#33295c',
+              marginBottom: '22px'
+            }}>
+              Gram
+            </div>
+
+            {/* 4. Withdraw Action (Centered near lower part of card) */}
+            <button
+              type="button"
+              onClick={() => handleInitiateWithdraw('Silver')}
+              style={{
+                width: '100%',
+                height: '50px',
+                borderRadius: '16px',
+                border: isKycVerified ? 'none' : '1px solid #b2a2e0',
+                backgroundColor: isKycVerified ? 'var(--primary-purple)' : 'rgba(255, 255, 255, 0.5)',
+                color: isKycVerified ? '#ffffff' : '#5b5375',
+                fontSize: '16px',
+                fontWeight: '800',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                boxShadow: isKycVerified ? '0 6px 18px rgba(88, 60, 245, 0.35)' : 'none',
+                transition: 'all 0.2s ease'
+              }}
+              aria-label="Withdraw Silver"
+            >
+              <ArrowUp size={18} color={isKycVerified ? '#ffffff' : '#5b5375'} strokeWidth={2.5} />
+              <span>Withdraw</span>
+            </button>
+          </div>
         </div>
       </main>
 

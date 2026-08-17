@@ -590,3 +590,12 @@ textarea.profile-custom-input {
   border-top: 4px solid transparent;
 }
 
+/* Mode of Withdraw Screen Layout */
+.withdraw-cards-container {
+  padding: 44px 18px 60px 18px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+
