@@ -331,7 +331,7 @@ export default function CreateProfileScreen({ onNavigate }) {
               </div>
             </div>
 
-            {/* DOB (Fully Tappable Input & Calendar Icon triggers native Date Picker) */}
+            {/* DOB (Entire field & calendar icon opens native date picker with formatted DD/MM/YYYY) */}
             <div className="profile-form-row">
               <div className="profile-label-col">DOB</div>
               <div className="profile-colon-col">:</div>
@@ -345,48 +345,40 @@ export default function CreateProfileScreen({ onNavigate }) {
                   placeholder="DD/MM/YYYY"
                   value={formData.nomineeDob}
                   readOnly
-                  onClick={openDatePicker}
                   className="profile-custom-input"
                   style={{ paddingRight: '38px', cursor: 'pointer' }}
                 />
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openDatePicker();
-                  }}
+                <div
                   style={{
                     position: 'absolute',
-                    right: '6px',
+                    right: '12px',
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    background: 'transparent',
-                    border: 'none',
-                    padding: '6px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    cursor: 'pointer'
+                    pointerEvents: 'none',
+                    zIndex: 3
                   }}
-                  aria-label="Select Date"
                 >
                   <Calendar size={18} color="var(--primary-purple)" />
-                </button>
-                {/* Native Date Picker trigger */}
+                </div>
+                {/* Full-width transparent native Date input overlay */}
                 <input
                   ref={dateInputRef}
                   type="date"
                   onChange={handleDateChange}
                   style={{
                     position: 'absolute',
-                    opacity: 0,
-                    width: '100%',
-                    height: '100%',
                     top: 0,
                     left: 0,
-                    pointerEvents: 'none',
-                    zIndex: -1
+                    width: '100%',
+                    height: '100%',
+                    opacity: 0,
+                    cursor: 'pointer',
+                    zIndex: 4
                   }}
+                  aria-label="Select Date of Birth"
                 />
               </div>
             </div>
