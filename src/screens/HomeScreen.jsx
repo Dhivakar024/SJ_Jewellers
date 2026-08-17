@@ -3,8 +3,7 @@ import { useApp } from '../context/AppContext';
 import BottomNav from '../components/BottomNav';
 
 export default function HomeScreen({ onNavigate, onTogglePlus }) {
-  const { currentUser, goldRate, silverRate, holdings } = useApp();
-  // Default state: Gold must be selected when Home page loads
+  const { currentUser, goldRate, silverRate } = useApp();
   const [metalTab, setMetalTab] = useState('gold'); // 'gold' or 'silver'
 
   return (
@@ -59,7 +58,7 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
       <main 
         className="app-scroll-content" 
         style={{ 
-          padding: '0 14px 40px 14px', 
+          padding: '0 16px 40px 16px', 
           marginTop: '-18px',
           flex: '1 1 auto',
           minHeight: 0,
@@ -67,167 +66,11 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
           WebkitOverflowScrolling: 'touch'
         }}
       >
-        {/* Main Asset Card (Compact, 4 visible rounded corners, matching reference screenshot) */}
-        <div style={{
-          backgroundColor: '#ffffff',
-          borderRadius: '24px',
-          padding: '20px 16px',
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.06)',
-          width: 'calc(100% - 4px)',
-          margin: '0 auto',
-          boxSizing: 'border-box',
-          position: 'relative',
-          overflow: 'visible',
-          flexShrink: 0
-        }}>
-          {/* LOWEST PRICE Diagonal Corner Ribbon */}
-          <div className="lowest-price-ribbon">
-            LOWEST PRICE
-          </div>
-
-          {/* Gold / Silver Toggle Pills */}
-          <div style={{
-            backgroundColor: '#f1ecfe',
-            borderRadius: '30px',
-            padding: '4px',
-            display: 'flex',
-            margin: '0 auto 16px auto',
-            width: '230px'
-          }}>
-            <button
-              onClick={() => setMetalTab('gold')}
-              style={{
-                flex: 1,
-                padding: '9px 0',
-                borderRadius: '24px',
-                border: 'none',
-                backgroundColor: metalTab === 'gold' ? 'var(--primary-purple)' : 'transparent',
-                color: metalTab === 'gold' ? '#ffffff' : '#736d85',
-                fontWeight: '700',
-                fontSize: '14.5px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              Gold
-            </button>
-            <button
-              onClick={() => setMetalTab('silver')}
-              style={{
-                flex: 1,
-                padding: '9px 0',
-                borderRadius: '24px',
-                border: 'none',
-                backgroundColor: metalTab === 'silver' ? 'var(--primary-purple)' : 'transparent',
-                color: metalTab === 'silver' ? '#ffffff' : '#736d85',
-                fontWeight: '700',
-                fontSize: '14.5px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              Silver
-            </button>
-          </div>
-
-          {/* Balance Inner Card (Compact side-by-side Gold & Silver balances exactly like reference) */}
-          <div style={{
-            backgroundColor: '#f6f2ff',
-            borderRadius: '18px',
-            padding: '14px 12px 16px 12px',
-            textAlign: 'center',
-            marginBottom: '16px',
-            border: '1px solid #e8e2fa'
-          }}>
-            <div style={{ color: 'var(--primary-purple)', fontWeight: '700', fontSize: '13.5px', marginBottom: '12px' }}>
-              Your balance
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
-              {/* Gold Column */}
-              <div style={{ flex: 1, textAlign: 'center' }}>
-                <div style={{
-                  width: '42px', height: '42px', borderRadius: '50%',
-                  backgroundColor: '#fde9b8', margin: '0 auto 6px auto',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="#e5a415">
-                    <circle cx="12" cy="7" r="5" />
-                    <circle cx="12" cy="12" r="5" fill="#f5c242" />
-                    <circle cx="12" cy="17" r="5" fill="#e5a415" />
-                  </svg>
-                </div>
-                <div style={{ fontSize: '12.5px', color: '#736d85', fontWeight: '600' }}>Gold</div>
-                <div style={{ fontSize: '18px', fontWeight: '800', color: '#1c1829', marginTop: '2px' }}>
-                  {holdings.goldGrams.toFixed(metalTab === 'gold' ? 4 : 2)} gm
-                </div>
-              </div>
-
-              {/* Vertical Separator */}
-              <div style={{ width: '1px', height: '48px', backgroundColor: '#dcd4fa' }}></div>
-
-              {/* Silver Column */}
-              <div style={{ flex: 1, textAlign: 'center' }}>
-                <div style={{
-                  width: '42px', height: '42px', borderRadius: '50%',
-                  backgroundColor: '#e2e6ea', margin: '0 auto 6px auto',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="#a0aab4">
-                    <circle cx="12" cy="7" r="5" />
-                    <circle cx="12" cy="12" r="5" fill="#ccd3db" />
-                    <circle cx="12" cy="17" r="5" fill="#a0aab4" />
-                  </svg>
-                </div>
-                <div style={{ fontSize: '12.5px', color: '#736d85', fontWeight: '600' }}>Silver</div>
-                <div style={{ fontSize: '18px', fontWeight: '800', color: '#1c1829', marginTop: '2px' }}>
-                  {holdings.silverGrams.toFixed(4)} gm
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Subtitle Promo text */}
-          <div style={{
-            textAlign: 'center',
-            fontSize: '13.5px',
-            color: '#3d3852',
-            fontWeight: '600',
-            lineHeight: '1.4',
-            margin: '0 10px 16px 10px'
-          }}>
-            Buy {metalTab} daily, at your<br />
-            convenience price @ Salem Jewels
-          </div>
-
-          {/* Buy Now Button (Clean pill button matching reference screenshot) */}
-          <button
-            onClick={() => onNavigate(metalTab === 'gold' ? 'buy-gold' : 'buy-silver')}
-            style={{
-              width: '180px',
-              height: '46px',
-              margin: '0 auto',
-              display: 'block',
-              borderRadius: '14px',
-              border: '1.5px solid var(--primary-purple)',
-              backgroundColor: '#ede7fc',
-              color: 'var(--primary-purple)',
-              fontWeight: '800',
-              fontSize: '15px',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            Buy Now
-          </button>
-        </div>
-
         {/* Shop Card */}
         <div style={{
           backgroundColor: 'var(--primary-purple)',
           borderRadius: '24px',
           padding: '24px 20px',
-          marginTop: '20px',
           color: 'white',
           position: 'relative',
           overflow: 'hidden',
