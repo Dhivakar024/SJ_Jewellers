@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle2, ShieldCheck, Smartphone } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import BottomNav from '../components/BottomNav';
 
 export default function BuyNowScreen({ assetType = 'gold', onNavigate, onTogglePlus }) {
   const { goldRate, silverRate, addPurchaseTransaction } = useApp();
@@ -128,8 +129,8 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
         <h2>Buy Now</h2>
       </header>
 
-      {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
-      <main className="app-scroll-content" style={{ padding: '20px 18px 30px 18px' }}>
+      {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS, with padding for fixed bottom nav) */}
+      <main className="app-scroll-content" style={{ padding: '20px 18px 85px 18px' }}>
         {/* Live Price Box */}
         <div style={{
           backgroundColor: '#dcd0ff',
@@ -281,7 +282,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
             gap: '8px',
-            marginBottom: '32px'
+            marginBottom: '28px'
           }}>
             {rupeesPresets.map((amt) => {
               const isSelected = selectedQuickOption === amt;
@@ -335,7 +336,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
             gap: '8px',
-            marginBottom: '32px'
+            marginBottom: '28px'
           }}>
             {gramsPresets.map((gm, idx) => {
               const isSelected = selectedQuickOption === gm;
@@ -389,12 +390,12 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
           </div>
         )}
 
-        {/* Large Proceed Button near bottom of content area */}
+        {/* Large Proceed Button */}
         <button
           onClick={handleProceed}
           className="btn-primary"
           style={{
-            marginTop: '10px',
+            marginTop: '6px',
             marginBottom: '10px',
             boxShadow: '0 6px 18px rgba(88, 60, 245, 0.35)'
           }}
@@ -403,7 +404,14 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
         </button>
       </main>
 
-      {/* Mock Payment Gateway Modal Step */}
+      {/* 3. Fixed Bottom Navigation Bar (Active Tab = 'buy') */}
+      <BottomNav
+        activeTab="buy"
+        onSelectTab={(tab) => onNavigate(tab)}
+        onTogglePlus={onTogglePlus}
+      />
+
+      {/* 4. Mock Payment Gateway Modal Step */}
       {showConfirmModal && (
         <div className="modal-overlay" onClick={() => !isProcessing && setShowConfirmModal(false)}>
           <div className="bottom-sheet" onClick={(e) => e.stopPropagation()} style={{ padding: '28px 24px' }}>
