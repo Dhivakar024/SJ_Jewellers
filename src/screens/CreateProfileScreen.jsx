@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { LogOut, Calendar, ChevronDown, ArrowLeft } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Calendar, ChevronDown, ArrowLeft } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export default function CreateProfileScreen({ onNavigate }) {
-  const { currentUser, completeUserProfile, logoutUser } = useApp();
+  const { currentUser, completeUserProfile } = useApp();
   const isExistingCompletedUser = currentUser.profileCompleted === true;
+  const dateInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     name: currentUser.name || '',
@@ -29,6 +30,31 @@ export default function CreateProfileScreen({ onNavigate }) {
     setErrorMessage('');
   };
 
+  const handleDateChange = (e) => {
+    const val = e.target.value; // Format: YYYY-MM-DD
+    if (val) {
+      const [year, month, day] = val.split('-');
+      const formatted = `${day}/${month}/${year}`;
+      handleChange('nomineeDob', formatted);
+    }
+  };
+
+  const openDatePicker = () => {
+    if (dateInputRef.current) {
+      if (typeof dateInputRef.current.showPicker === 'function') {
+        try {
+          dateInputRef.current.showPicker();
+        } catch {
+          dateInputRef.current.focus();
+          dateInputRef.current.click();
+        }
+      } else {
+        dateInputRef.current.focus();
+        dateInputRef.current.click();
+      }
+    }
+  };
+
   const handleSkip = () => {
     if (!isExistingCompletedUser) {
       sessionStorage.setItem('sj_session_skipped_profile', 'true');
@@ -38,14 +64,9 @@ export default function CreateProfileScreen({ onNavigate }) {
     onNavigate('profile');
   };
 
-  const handleHeaderExit = () => {
-    if (isExistingCompletedUser) {
-      onNavigate('profile');
-    } else {
-      logoutUser();
-      sessionStorage.removeItem('sj_session_skipped_profile');
-      onNavigate('signin');
-    }
+  const handleHeaderBack = () => {
+    // Back navigation returns to Profile page without clearing authentication/session
+    onNavigate('profile');
   };
 
   const handleSubmit = (e) => {
@@ -89,26 +110,19 @@ export default function CreateProfileScreen({ onNavigate }) {
 
   return (
     <div className="app-screen-layout">
-      {/* 1. Fixed Top Header */}
-      <header className="top-header-bar" style={{ justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {isExistingCompletedUser && (
-            <button className="back-btn" onClick={() => onNavigate('profile')} aria-label="Back">
-              <ArrowLeft size={22} />
-            </button>
-          )}
-          <h2 style={{ fontSize: '24px', fontWeight: '800' }}>
-            {isExistingCompletedUser ? 'Edit Profile' : 'Create Profile'}
-          </h2>
-        </div>
-
+      {/* 1. Fixed Top Header (Clean Back Button + Title, NO logout icon) */}
+      <header className="top-header-bar" style={{ justifyContent: 'flex-start', gap: '14px' }}>
         <button
-          onClick={handleHeaderExit}
-          style={{ backgroundColor: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '4px' }}
-          aria-label="Exit"
+          className="back-btn"
+          onClick={handleHeaderBack}
+          aria-label="Back"
+          style={{ backgroundColor: 'transparent', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
         >
-          <LogOut size={24} />
+          <ArrowLeft size={24} />
         </button>
+        <h2 style={{ fontSize: '22px', fontWeight: '800', letterSpacing: '-0.2px' }}>
+          {isExistingCompletedUser ? 'Edit Profile' : 'Create Profile'}
+        </h2>
       </header>
 
       {/* 2. Middle Scrollable Content (Strict 3-Column Alignment: [Label] [:] [Input]) */}
@@ -317,20 +331,63 @@ export default function CreateProfileScreen({ onNavigate }) {
               </div>
             </div>
 
-            {/* DOB */}
+            {/* DOB (Fully Tappable Input & Calendar Icon triggers native Date Picker) */}
             <div className="profile-form-row">
               <div className="profile-label-col">DOB</div>
               <div className="profile-colon-col">:</div>
-              <div className="profile-input-col" style={{ position: 'relative' }}>
+              <div
+                className="profile-input-col"
+                style={{ position: 'relative', cursor: 'pointer' }}
+                onClick={openDatePicker}
+              >
                 <input
                   type="text"
                   placeholder="DD/MM/YYYY"
                   value={formData.nomineeDob}
-                  onChange={(e) => handleChange('nomineeDob', e.target.value)}
+                  readOnly
+                  onClick={openDatePicker}
                   className="profile-custom-input"
-                  style={{ paddingRight: '38px' }}
+                  style={{ paddingRight: '38px', cursor: 'pointer' }}
                 />
-                <Calendar size={18} color="var(--primary-purple)" style={{ position: 'absolute', right: '12px', top: '13px', pointerEvents: 'none' }} />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openDatePicker();
+                  }}
+                  style={{
+                    position: 'absolute',
+                    right: '6px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'transparent',
+                    border: 'none',
+                    padding: '6px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}
+                  aria-label="Select Date"
+                >
+                  <Calendar size={18} color="var(--primary-purple)" />
+                </button>
+                {/* Native Date Picker trigger */}
+                <input
+                  ref={dateInputRef}
+                  type="date"
+                  onChange={handleDateChange}
+                  style={{
+                    position: 'absolute',
+                    opacity: 0,
+                    width: '100%',
+                    height: '100%',
+                    top: 0,
+                    left: 0,
+                    pointerEvents: 'none',
+                    zIndex: -1
+                  }}
+                />
               </div>
             </div>
 

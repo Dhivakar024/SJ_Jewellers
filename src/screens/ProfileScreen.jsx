@@ -1,10 +1,11 @@
 import React from 'react';
-import { Pencil, LogOut, ShieldCheck, Hand, FileText, Phone, ChevronRight } from 'lucide-react';
+import { Pencil, UserPlus, LogOut, ShieldCheck, Hand, FileText, Phone, ChevronRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import BottomNav from '../components/BottomNav';
 
 export default function ProfileScreen({ onNavigate, onTogglePlus }) {
   const { currentUser, logoutUser } = useApp();
+  const isProfileCompleted = currentUser.profileCompleted === true;
 
   const getKycBadgeColor = () => {
     switch (currentUser.kycStatus) {
@@ -18,6 +19,7 @@ export default function ProfileScreen({ onNavigate, onTogglePlus }) {
   const kycColors = getKycBadgeColor();
 
   const handleLogout = () => {
+    // Explicit Logout ONLY from main Profile screen
     logoutUser();
     onNavigate('signin');
   };
@@ -26,18 +28,75 @@ export default function ProfileScreen({ onNavigate, onTogglePlus }) {
     <div className="app-screen-layout">
       {/* 1. Fixed Top Header */}
       <header className="top-header-bar" style={{ justifyContent: 'space-between' }}>
-        <h2 style={{ fontSize: '26px', fontWeight: '800' }}>Profile</h2>
+        <h2 style={{ fontSize: '24px', fontWeight: '800' }}>Profile</h2>
         <button
           onClick={() => onNavigate('create-profile')}
-          style={{ backgroundColor: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}
-          aria-label="Edit Profile"
+          style={{
+            backgroundColor: isProfileCompleted ? 'transparent' : '#ede7fc',
+            border: isProfileCompleted ? 'none' : '1px solid var(--primary-purple)',
+            color: isProfileCompleted ? 'white' : 'var(--primary-purple)',
+            borderRadius: isProfileCompleted ? '50%' : '14px',
+            padding: isProfileCompleted ? '6px' : '6px 12px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontWeight: '700',
+            fontSize: '13px'
+          }}
+          aria-label={isProfileCompleted ? 'Edit Profile' : 'Create Profile'}
         >
-          <Pencil size={24} />
+          {isProfileCompleted ? (
+            <Pencil size={22} color="white" />
+          ) : (
+            <>
+              <UserPlus size={16} />
+              <span>Create Profile</span>
+            </>
+          )}
         </button>
       </header>
 
       {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
       <main className="app-scroll-content" style={{ padding: '20px 18px 24px 18px' }}>
+        {/* Profile Incomplete Banner (for new / incomplete users) */}
+        {!isProfileCompleted && (
+          <div
+            onClick={() => onNavigate('create-profile')}
+            style={{
+              backgroundColor: '#ede7fc',
+              border: '1.5px solid var(--primary-purple)',
+              borderRadius: '16px',
+              padding: '14px 16px',
+              marginBottom: '18px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+              boxShadow: '0 2px 10px rgba(88, 60, 245, 0.12)'
+            }}
+          >
+            <div>
+              <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--primary-purple)' }}>
+                Create Profile
+              </div>
+              <div style={{ fontSize: '12px', color: '#5b5375', fontWeight: '600', marginTop: '2px' }}>
+                Complete your account & KYC details
+              </div>
+            </div>
+            <div style={{
+              backgroundColor: 'var(--primary-purple)',
+              color: 'white',
+              borderRadius: '20px',
+              padding: '6px 14px',
+              fontSize: '12px',
+              fontWeight: '800'
+            }}>
+              Fill Now
+            </div>
+          </div>
+        )}
+
         {/* User Avatar Card */}
         <div style={{ textAlign: 'center', padding: '10px 0 20px 0' }}>
           <div style={{
@@ -51,11 +110,11 @@ export default function ProfileScreen({ onNavigate, onTogglePlus }) {
           </div>
 
           <h3 style={{ fontSize: '22px', fontWeight: '800', color: '#1e1b2e' }}>
-            {currentUser.name}
+            {currentUser.name || 'New User'}
           </h3>
 
           <p style={{ fontSize: '15px', color: '#736d85', fontWeight: '600', marginTop: '2px' }}>
-            +91 {currentUser.mobile}
+            +91 {currentUser.mobile || '9876543210'}
           </p>
 
           <div style={{ marginTop: '10px' }}>
@@ -71,7 +130,7 @@ export default function ProfileScreen({ onNavigate, onTogglePlus }) {
               gap: '6px'
             }}>
               <ShieldCheck size={14} />
-              KYC: {currentUser.kycStatus}
+              KYC: {currentUser.kycStatus || 'Pending'}
             </span>
           </div>
         </div>
@@ -86,6 +145,25 @@ export default function ProfileScreen({ onNavigate, onTogglePlus }) {
           display: 'flex',
           flexDirection: 'column'
         }}>
+          {/* Create Profile / Edit Profile Menu Item */}
+          <div 
+            onClick={() => onNavigate('create-profile')}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '14px 6px', borderBottom: '1px solid #f3eeff', cursor: 'pointer'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '15px', fontWeight: '700', color: '#1e1b2e' }}>
+              {isProfileCompleted ? (
+                <Pencil size={20} color="var(--primary-purple)" />
+              ) : (
+                <UserPlus size={20} color="var(--primary-purple)" />
+              )}
+              <span>{isProfileCompleted ? 'Edit Profile' : 'Create Profile'}</span>
+            </div>
+            <ChevronRight size={18} color="#908ba6" />
+          </div>
+
           <div 
             onClick={() => onNavigate('withdraw')}
             style={{
@@ -129,7 +207,7 @@ export default function ProfileScreen({ onNavigate, onTogglePlus }) {
           </div>
         </div>
 
-        {/* Logout Button */}
+        {/* Logout Button (ONLY HERE) */}
         <button
           onClick={handleLogout}
           style={{
