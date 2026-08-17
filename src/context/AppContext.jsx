@@ -59,6 +59,36 @@ const INITIAL_TRANSACTIONS = [
     quantity: '0.0040g',
     amount: '51.50',
     status: 'Pending'
+  },
+  {
+    id: 'TXN-8540',
+    date: 'June 25, 2026',
+    time: '2:15 PM',
+    paymentMethod: 'UPI',
+    asset: 'Gold',
+    quantity: '0.1000g',
+    amount: '1,326.37',
+    status: 'Success'
+  },
+  {
+    id: 'TXN-8210',
+    date: 'June 18, 2026',
+    time: '11:20 AM',
+    paymentMethod: 'UPI',
+    asset: 'Gold',
+    quantity: '0.0500g',
+    amount: '663.18',
+    status: 'Failed'
+  },
+  {
+    id: 'TXN-8195',
+    date: 'June 12, 2026',
+    time: '9:45 AM',
+    paymentMethod: 'UPI',
+    asset: 'Silver',
+    quantity: '1.5000g',
+    amount: '397.50',
+    status: 'Failed'
   }
 ];
 
