@@ -259,7 +259,7 @@ export default function AdminUsers() {
               </div>
               <div style={{ fontSize: '13px', color: '#3b3252', display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: '#736d85' }}>Relationship:</span>
-                <strong>{selectedUser.relationship || 'Pending'}</strong>
+                <strong>{selectedUser.relationship === 'Other' && selectedUser.relationshipDetails ? `Other (${selectedUser.relationshipDetails})` : (selectedUser.relationship || 'Pending')}</strong>
               </div>
               <div style={{ fontSize: '13px', color: '#3b3252', display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: '#736d85' }}>Nominee Mobile:</span>

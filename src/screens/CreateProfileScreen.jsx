@@ -20,13 +20,21 @@ export default function CreateProfileScreen({ onNavigate }) {
     nomineeMobile: currentUser.nomineeMobile || '',
     nomineeDob: currentUser.nomineeDob || '',
     nomineeAddress: currentUser.nomineeAddress || '',
-    relationship: currentUser.relationship || ''
+    relationship: currentUser.relationship || '',
+    relationshipDetails: currentUser.relationshipDetails || ''
   });
 
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const updated = { ...prev, [field]: value };
+      // If changing away from Other, clear custom relationship details
+      if (field === 'relationship' && value !== 'Other') {
+        updated.relationshipDetails = '';
+      }
+      return updated;
+    });
     setErrorMessage('');
   };
 
@@ -56,7 +64,7 @@ export default function CreateProfileScreen({ onNavigate }) {
   };
 
   const handleSkip = () => {
-    if (!isExistingCompletedUser) {
+    if (!currentUser.profileCompleted) {
       sessionStorage.setItem('sj_session_skipped_profile', 'true');
       onNavigate('home');
       return;
@@ -95,6 +103,11 @@ export default function CreateProfileScreen({ onNavigate }) {
       return;
     }
 
+    if (formData.relationship === 'Other' && (!formData.relationshipDetails || !formData.relationshipDetails.trim())) {
+      setErrorMessage('Please enter your Relationship Details.');
+      return;
+    }
+
     completeUserProfile(formData);
     sessionStorage.removeItem('sj_session_skipped_profile');
     setErrorMessage('');
@@ -118,25 +131,25 @@ export default function CreateProfileScreen({ onNavigate }) {
           aria-label="Back"
           style={{ backgroundColor: 'transparent', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
         >
-          <ArrowLeft size={24} />
+          <ArrowLeft size={22} />
         </button>
-        <h2 style={{ fontSize: '22px', fontWeight: '800', letterSpacing: '-0.2px' }}>
+        <h2 style={{ fontSize: '20px', fontWeight: '800' }}>
           {isExistingCompletedUser ? 'Edit Profile' : 'Create Profile'}
         </h2>
       </header>
 
-      {/* 2. Middle Scrollable Content (Strict 3-Column Alignment: [Label] [:] [Input]) */}
-      <main className="app-scroll-content" style={{ padding: '18px 16px 60px 16px' }}>
+      {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
+      <main className="app-scroll-content" style={{ padding: '20px 18px 60px 18px' }}>
         {errorMessage && (
           <div style={{
             backgroundColor: '#fee2e2',
             border: '1px solid #ef4444',
             borderRadius: '14px',
-            padding: '12px 14px',
-            marginBottom: '16px',
-            fontSize: '13px',
-            fontWeight: '700',
-            color: '#dc2626'
+            padding: '12px 16px',
+            marginBottom: '18px',
+            color: '#dc2626',
+            fontSize: '13.5px',
+            fontWeight: '700'
           }}>
             {errorMessage}
           </div>
@@ -405,7 +418,7 @@ export default function CreateProfileScreen({ onNavigate }) {
               </div>
             </div>
 
-            {/* Relationship */}
+            {/* Relationship Dropdown with full options (Select, Spouse, Parent, Child, Sibling, Son, Daughter, Other) */}
             <div className="profile-form-row">
               <div className="profile-label-col">Relationship</div>
               <div className="profile-colon-col">:</div>
@@ -421,10 +434,30 @@ export default function CreateProfileScreen({ onNavigate }) {
                   <option value="Parent">Parent</option>
                   <option value="Child">Child</option>
                   <option value="Sibling">Sibling</option>
+                  <option value="Son">Son</option>
+                  <option value="Daughter">Daughter</option>
+                  <option value="Other">Other</option>
                 </select>
                 <ChevronDown size={18} color="#2c2642" style={{ position: 'absolute', right: '12px', top: '13px', pointerEvents: 'none' }} />
               </div>
             </div>
+
+            {/* Relationship Details Input (Shown only when 'Other' is selected) */}
+            {formData.relationship === 'Other' && (
+              <div className="profile-form-row">
+                <div className="profile-label-col">Relationship Details</div>
+                <div className="profile-colon-col">:</div>
+                <div className="profile-input-col">
+                  <input
+                    type="text"
+                    placeholder="Enter relationship"
+                    value={formData.relationshipDetails}
+                    onChange={(e) => handleChange('relationshipDetails', e.target.value)}
+                    className="profile-custom-input"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Action buttons */}

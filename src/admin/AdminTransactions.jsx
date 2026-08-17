@@ -81,7 +81,7 @@ export default function AdminTransactions() {
 
         {/* Status Filter */}
         <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '2px' }}>
-          {['All', 'Success', 'Pending', 'Failed'].map((opt) => (
+          {['All', 'Success', 'Pending', 'Processing', 'Cancelled', 'Failed'].map((opt) => (
             <button
               key={opt}
               onClick={() => setFilterStatus(opt)}

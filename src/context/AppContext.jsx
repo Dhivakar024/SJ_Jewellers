@@ -31,14 +31,54 @@ const INITIAL_HOLDINGS = {
 
 const INITIAL_TRANSACTIONS = [
   {
-    id: 'TXN-9011',
-    date: 'August 3, 2026',
-    time: '5:00 AM',
+    id: 'TXN-9501',
+    date: 'August 17, 2026',
+    time: '11:45 AM',
+    paymentMethod: 'UPI',
+    asset: 'Gold',
+    quantity: '0.0075g',
+    amount: '103.00',
+    status: 'Success'
+  },
+  {
+    id: 'TXN-9500',
+    date: 'August 17, 2026',
+    time: '9:30 AM',
+    paymentMethod: 'UPI',
+    asset: 'Gold',
+    quantity: '0.0377g',
+    amount: '515.00',
+    status: 'Processing'
+  },
+  {
+    id: 'TXN-9420',
+    date: 'August 16, 2026',
+    time: '4:15 PM',
     paymentMethod: 'UPI',
     asset: 'Silver',
-    quantity: '0.0377g',
-    amount: '10.30',
+    quantity: '0.9434g',
+    amount: '257.50',
     status: 'Success'
+  },
+  {
+    id: 'TXN-9380',
+    date: 'August 15, 2026',
+    time: '2:10 PM',
+    paymentMethod: 'UPI',
+    asset: 'Gold',
+    quantity: '0.0075g',
+    amount: '103.00',
+    status: 'Cancelled'
+  },
+  {
+    id: 'TXN-9350',
+    date: 'August 15, 2026',
+    time: '10:00 AM',
+    paymentMethod: 'UPI',
+    asset: 'Silver',
+    quantity: '0.3774g',
+    amount: '103.00',
+    status: 'Failed'
   },
   {
     id: 'TXN-9010',
@@ -51,16 +91,6 @@ const INITIAL_TRANSACTIONS = [
     status: 'Pending'
   },
   {
-    id: 'TXN-8542',
-    date: 'June 27, 2026',
-    time: '10:55 AM',
-    paymentMethod: 'UPI',
-    asset: 'Gold',
-    quantity: '0.0040g',
-    amount: '51.50',
-    status: 'Pending'
-  },
-  {
     id: 'TXN-8540',
     date: 'June 25, 2026',
     time: '2:15 PM',
@@ -69,26 +99,6 @@ const INITIAL_TRANSACTIONS = [
     quantity: '0.1000g',
     amount: '1,326.37',
     status: 'Success'
-  },
-  {
-    id: 'TXN-8210',
-    date: 'June 18, 2026',
-    time: '11:20 AM',
-    paymentMethod: 'UPI',
-    asset: 'Gold',
-    quantity: '0.0500g',
-    amount: '663.18',
-    status: 'Failed'
-  },
-  {
-    id: 'TXN-8195',
-    date: 'June 12, 2026',
-    time: '9:45 AM',
-    paymentMethod: 'UPI',
-    asset: 'Silver',
-    quantity: '1.5000g',
-    amount: '397.50',
-    status: 'Failed'
   }
 ];
 

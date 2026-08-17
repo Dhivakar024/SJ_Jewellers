@@ -57,7 +57,7 @@ export default function TransactionHistoryScreen({ onNavigate, onTogglePlus }) {
       if (activeAsset !== 'All' && item.asset.toLowerCase() !== activeAsset.toLowerCase()) {
         return false;
       }
-      // 2. Status Filter
+      // 2. Status Filter (Success, Pending, Processing, Cancelled, Failed)
       if (activeStatus !== 'All' && item.status.toLowerCase() !== activeStatus.toLowerCase()) {
         return false;
       }
@@ -68,6 +68,104 @@ export default function TransactionHistoryScreen({ onNavigate, onTogglePlus }) {
       return true;
     });
   }, [transactions, activeAsset, activeStatus, activePaymentMethod]);
+
+  // Group filtered transactions by Date (TODAY, YESTERDAY, Older dates)
+  const groupedTransactions = useMemo(() => {
+    const getGroupHeader = (dateStr) => {
+      const normalized = (dateStr || '').trim();
+      const now = new Date();
+      const todayFormatted = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayFormatted = yesterday.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+      if (normalized === 'August 17, 2026' || normalized === todayFormatted) {
+        return {
+          label: 'TODAY',
+          sub: normalized
+        };
+      }
+      if (normalized === 'August 16, 2026' || normalized === yesterdayFormatted) {
+        return {
+          label: 'YESTERDAY',
+          sub: normalized
+        };
+      }
+      return {
+        label: normalized.toUpperCase(),
+        sub: null
+      };
+    };
+
+    const groups = [];
+    const dateMap = new Map();
+
+    filteredTransactions.forEach((txn) => {
+      const dateKey = txn.date || 'Other';
+      if (!dateMap.has(dateKey)) {
+        dateMap.set(dateKey, []);
+      }
+      dateMap.get(dateKey).push(txn);
+    });
+
+    dateMap.forEach((items, dateKey) => {
+      groups.push({
+        dateKey,
+        header: getGroupHeader(dateKey),
+        items
+      });
+    });
+
+    return groups;
+  }, [filteredTransactions]);
+
+  const renderStatusBadge = (status) => {
+    switch (status) {
+      case 'Success':
+        return (
+          <span style={{
+            backgroundColor: '#d1fae5', color: '#059669',
+            fontSize: '11px', fontWeight: '800', padding: '2px 9px', borderRadius: '12px'
+          }}>Success</span>
+        );
+      case 'Pending':
+        return (
+          <span style={{
+            backgroundColor: '#fef3c7', color: '#d97706',
+            fontSize: '11px', fontWeight: '800', padding: '2px 9px', borderRadius: '12px'
+          }}>Pending</span>
+        );
+      case 'Processing':
+        return (
+          <span style={{
+            backgroundColor: '#e0f2fe', color: '#0284c7',
+            fontSize: '11px', fontWeight: '800', padding: '2px 9px', borderRadius: '12px'
+          }}>Processing</span>
+        );
+      case 'Cancelled':
+        return (
+          <span style={{
+            backgroundColor: '#f1f5f9', color: '#64748b',
+            fontSize: '11px', fontWeight: '800', padding: '2px 9px', borderRadius: '12px'
+          }}>Cancelled</span>
+        );
+      case 'Failed':
+        return (
+          <span style={{
+            backgroundColor: '#fee2e2', color: '#dc2626',
+            fontSize: '11px', fontWeight: '800', padding: '2px 9px', borderRadius: '12px'
+          }}>Failed</span>
+        );
+      default:
+        return (
+          <span style={{
+            backgroundColor: '#ede7fc', color: 'var(--primary-purple)',
+            fontSize: '11px', fontWeight: '800', padding: '2px 9px', borderRadius: '12px'
+          }}>{status}</span>
+        );
+    }
+  };
 
   return (
     <div className="app-screen-layout">
@@ -117,8 +215,8 @@ export default function TransactionHistoryScreen({ onNavigate, onTogglePlus }) {
         </button>
       </header>
 
-      {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
-      <main className="app-scroll-content" style={{ padding: '18px 16px 60px 16px' }}>
+      {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS, with padding for fixed bottom nav) */}
+      <main className="app-scroll-content" style={{ padding: '18px 16px 85px 16px' }}>
         {/* Active Filter Chips Bar (shown if filtered) */}
         {hasActiveFilters && (
           <div style={{
@@ -220,71 +318,79 @@ export default function TransactionHistoryScreen({ onNavigate, onTogglePlus }) {
             )}
           </div>
         ) : (
-          /* Transaction Cards List */
-          <div style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '20px',
-            padding: '16px',
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '18px'
-          }}>
-            {filteredTransactions.map((item) => (
-              <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  {/* Icon Circle */}
-                  <div style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '50%',
-                    backgroundColor: item.status === 'Failed' ? '#fee2e2' : '#e6f7ef',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0
-                  }}>
-                    {item.paymentMethod === 'Card' ? (
-                      <CreditCard size={20} color={item.status === 'Failed' ? '#dc2626' : '#10b981'} />
-                    ) : item.paymentMethod === 'NetBanking' ? (
-                      <Building2 size={20} color={item.status === 'Failed' ? '#dc2626' : '#10b981'} />
-                    ) : (
-                      <Smartphone size={20} color={item.status === 'Failed' ? '#dc2626' : '#10b981'} />
-                    )}
-                  </div>
-
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '15.5px', fontWeight: '800', color: '#1e1b2e' }}>
-                        {item.paymentMethod || 'UPI'}
-                      </span>
-                      {item.status === 'Success' && (
-                        <span style={{
-                          backgroundColor: '#d1fae5', color: '#059669',
-                          fontSize: '11px', fontWeight: '800', padding: '2px 9px', borderRadius: '12px'
-                        }}>Success</span>
-                      )}
-                      {item.status === 'Pending' && (
-                        <span style={{
-                          backgroundColor: '#fef3c7', color: '#d97706',
-                          fontSize: '11px', fontWeight: '800', padding: '2px 9px', borderRadius: '12px'
-                        }}>Pending</span>
-                      )}
-                      {item.status === 'Failed' && (
-                        <span style={{
-                          backgroundColor: '#fee2e2', color: '#dc2626',
-                          fontSize: '11px', fontWeight: '800', padding: '2px 9px', borderRadius: '12px'
-                        }}>Failed</span>
-                      )}
+          /* Grouped Transactions List by Date */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {groupedTransactions.map((group, gIdx) => (
+              <div key={group.dateKey || gIdx}>
+                {/* Date Group Heading */}
+                <div style={{ marginBottom: '10px', paddingLeft: '4px' }}>
+                  {group.header.sub ? (
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: '900', color: 'var(--primary-purple)', letterSpacing: '0.4px' }}>
+                        {group.header.label}
+                      </div>
+                      <div style={{ fontSize: '12px', fontWeight: '700', color: '#736d85', marginTop: '1px' }}>
+                        {group.header.sub}
+                      </div>
                     </div>
-                    <div style={{ fontSize: '12.5px', color: '#827a9e', fontWeight: '600', marginTop: '3px' }}>
-                      {item.date} · {item.asset} · {item.quantity}
+                  ) : (
+                    <div style={{ fontSize: '13px', fontWeight: '900', color: '#4a3e68', letterSpacing: '0.4px' }}>
+                      {group.header.label}
                     </div>
-                  </div>
+                  )}
                 </div>
 
-                <div style={{ fontSize: '17px', fontWeight: '900', color: '#1e1b2e', textAlign: 'right', flexShrink: 0 }}>
-                  ₹ {item.amount}
+                {/* Group Card Container */}
+                <div style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: '20px',
+                  padding: '16px',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '16px'
+                }}>
+                  {group.items.map((item) => (
+                    <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                        {/* Icon Circle */}
+                        <div style={{
+                          width: '44px',
+                          height: '44px',
+                          borderRadius: '50%',
+                          backgroundColor: item.status === 'Failed' ? '#fee2e2' : item.status === 'Cancelled' ? '#f1f5f9' : item.status === 'Processing' ? '#e0f2fe' : item.status === 'Pending' ? '#fef3c7' : '#e6f7ef',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}>
+                          {item.paymentMethod === 'Card' ? (
+                            <CreditCard size={20} color={item.status === 'Failed' ? '#dc2626' : item.status === 'Cancelled' ? '#64748b' : item.status === 'Processing' ? '#0284c7' : '#10b981'} />
+                          ) : item.paymentMethod === 'NetBanking' ? (
+                            <Building2 size={20} color={item.status === 'Failed' ? '#dc2626' : item.status === 'Cancelled' ? '#64748b' : item.status === 'Processing' ? '#0284c7' : '#10b981'} />
+                          ) : (
+                            <Smartphone size={20} color={item.status === 'Failed' ? '#dc2626' : item.status === 'Cancelled' ? '#64748b' : item.status === 'Processing' ? '#0284c7' : '#10b981'} />
+                          )}
+                        </div>
+
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '15.5px', fontWeight: '800', color: '#1e1b2e' }}>
+                              {item.paymentMethod || 'UPI'}
+                            </span>
+                            {renderStatusBadge(item.status)}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#827a9e', fontWeight: '600', marginTop: '3px' }}>
+                            {item.asset} · {item.quantity} · {item.time || item.id}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ fontSize: '17px', fontWeight: '900', color: '#1e1b2e', textAlign: 'right', flexShrink: 0 }}>
+                        ₹ {item.amount}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
@@ -365,13 +471,13 @@ export default function TransactionHistoryScreen({ onNavigate, onTogglePlus }) {
               </div>
             </div>
 
-            {/* Category 2: STATUS */}
+            {/* Category 2: STATUS (All, Success, Pending, Processing, Cancelled, Failed) */}
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '800', color: '#2c2642', marginBottom: '10px' }}>
                 STATUS
               </label>
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                {['All', 'Success', 'Pending', 'Failed'].map((opt) => (
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {['All', 'Success', 'Pending', 'Processing', 'Cancelled', 'Failed'].map((opt) => (
                   <button
                     key={opt}
                     type="button"

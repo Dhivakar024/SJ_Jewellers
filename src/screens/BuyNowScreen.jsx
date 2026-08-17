@@ -26,6 +26,11 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
+  // Dynamic GST & Total calculations
+  const rawAmount = parseFloat(rupeesVal || '0');
+  const gstAmount = rawAmount * 0.03;
+  const totalAmountWithGst = rawAmount + gstAmount;
+
   // Recalculate if assetType or ratePerGram changes
   useEffect(() => {
     if (mode === 'rupees') {
@@ -104,10 +109,10 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
       setIsProcessing(false);
       setPaymentSuccess(true);
       
-      // Update global context state
+      // Update global context state with total amount including GST
       addPurchaseTransaction({
         asset: isGold ? 'Gold' : 'Silver',
-        amount: rupeesVal,
+        amount: totalAmountWithGst.toFixed(2),
         quantity: `${gramsVal}g`,
         paymentMethod: 'UPI'
       });
@@ -411,7 +416,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
         onTogglePlus={onTogglePlus}
       />
 
-      {/* 4. Mock Payment Gateway Modal Step */}
+      {/* 4. Mock Payment Gateway Modal Step with Dynamic 3% GST */}
       {showConfirmModal && (
         <div className="modal-overlay" onClick={() => !isProcessing && setShowConfirmModal(false)}>
           <div className="bottom-sheet" onClick={(e) => e.stopPropagation()} style={{ padding: '28px 24px' }}>
@@ -450,7 +455,12 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#5b5375', fontWeight: '600' }}>
                     <span>Amount</span>
-                    <span style={{ fontWeight: '800', color: '#1e1b2e' }}>₹ {rupeesVal}</span>
+                    <span style={{ fontWeight: '800', color: '#1e1b2e' }}>₹ {rawAmount.toFixed(2)}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#5b5375', fontWeight: '600' }}>
+                    <span>GST (3%)</span>
+                    <span style={{ fontWeight: '800', color: '#1e1b2e' }}>₹ {gstAmount.toFixed(2)}</span>
                   </div>
 
                   <div style={{ height: '1px', backgroundColor: '#dcd4fa', margin: '4px 0' }}></div>
@@ -458,7 +468,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: '800' }}>
                     <span style={{ color: '#1e1b2e' }}>Total Amount</span>
                     <span style={{ color: 'var(--primary-purple)', fontSize: '20px' }}>
-                      ₹ {parseFloat(rupeesVal || '0').toFixed(2)}
+                      ₹ {totalAmountWithGst.toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -529,7 +539,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
                   Payment Successful !
                 </h3>
                 <p style={{ fontSize: '15px', color: '#5b5375', fontWeight: '700', marginBottom: '16px' }}>
-                  Purchased {gramsVal} gm of {isGold ? 'Gold' : 'Silver'} for ₹ {rupeesVal}
+                  Purchased {gramsVal} gm of {isGold ? 'Gold' : 'Silver'} for ₹ {totalAmountWithGst.toFixed(2)}
                 </p>
                 <div style={{
                   display: 'inline-block',
