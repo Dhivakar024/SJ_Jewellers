@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { ArrowLeft, CheckCircle2, ShieldCheck, CreditCard, Smartphone, Building2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, CheckCircle2, ShieldCheck, Smartphone } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import BottomNav from '../components/BottomNav';
 
 export default function BuyNowScreen({ assetType = 'gold', onNavigate, onTogglePlus }) {
   const { goldRate, silverRate, addPurchaseTransaction } = useApp();
@@ -9,31 +8,83 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
   const ratePerGram = isGold ? goldRate : silverRate;
 
   const [mode, setMode] = useState('rupees'); // 'rupees' or 'grams'
-  const [rupeesVal, setRupeesVal] = useState('2000');
-  const [gramsVal, setGramsVal] = useState(isGold ? (2000 / goldRate).toFixed(4) : (2000 / silverRate).toFixed(4));
+  
+  // Reusable selected quick option state
+  const [selectedQuickOption, setSelectedQuickOption] = useState('100');
+
+  // Presets definition
+  const rupeesPresets = ['50', '100', '150', '200'];
+  const gramsPresets = isGold 
+    ? ['0.0050', '0.0100', '0.0200', '0.0500'] 
+    : ['1.00', '5.00', '10.00', '25.00'];
+
+  const [rupeesVal, setRupeesVal] = useState('100');
+  const [gramsVal, setGramsVal] = useState((100 / ratePerGram).toFixed(4));
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState('UPI');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
+  // Recalculate if assetType or ratePerGram changes
+  useEffect(() => {
+    if (mode === 'rupees') {
+      const num = parseFloat(rupeesVal) || 100;
+      setGramsVal((num / ratePerGram).toFixed(4));
+    } else {
+      const gm = parseFloat(gramsVal) || (isGold ? 0.01 : 5);
+      setRupeesVal((gm * ratePerGram).toFixed(2));
+    }
+  }, [assetType, ratePerGram]);
+
   const handleRupeesChange = (val) => {
     setRupeesVal(val);
     const num = parseFloat(val) || 0;
     setGramsVal((num / ratePerGram).toFixed(4));
+    if (rupeesPresets.includes(val)) {
+      setSelectedQuickOption(val);
+    } else {
+      setSelectedQuickOption(null);
+    }
   };
 
   const handleGramsChange = (val) => {
     setGramsVal(val);
     const num = parseFloat(val) || 0;
     setRupeesVal((num * ratePerGram).toFixed(2));
+    if (gramsPresets.includes(val)) {
+      setSelectedQuickOption(val);
+    } else {
+      setSelectedQuickOption(null);
+    }
   };
 
   const handleSelectPresetRupees = (amt) => {
-    handleRupeesChange(amt.toString());
+    setSelectedQuickOption(amt);
+    setRupeesVal(amt);
+    const num = parseFloat(amt) || 0;
+    setGramsVal((num / ratePerGram).toFixed(4));
   };
 
   const handleSelectPresetGrams = (gm) => {
-    handleGramsChange(gm.toString());
+    setSelectedQuickOption(gm);
+    setGramsVal(gm);
+    const num = parseFloat(gm) || 0;
+    setRupeesVal((num * ratePerGram).toFixed(2));
+  };
+
+  const handleSwitchMode = (newMode) => {
+    setMode(newMode);
+    if (newMode === 'rupees') {
+      const defaultAmt = '100';
+      setSelectedQuickOption(defaultAmt);
+      setRupeesVal(defaultAmt);
+      setGramsVal((parseFloat(defaultAmt) / ratePerGram).toFixed(4));
+    } else {
+      const defaultGm = isGold ? '0.0100' : '5.00';
+      setSelectedQuickOption(defaultGm);
+      setGramsVal(defaultGm);
+      setRupeesVal((parseFloat(defaultGm) * ratePerGram).toFixed(2));
+    }
   };
 
   const handleProceed = () => {
@@ -54,25 +105,18 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
       
       // Update global context state
       addPurchaseTransaction({
-        asset: assetType,
+        asset: isGold ? 'Gold' : 'Silver',
         amount: rupeesVal,
-        grams: gramsVal,
-        paymentMethod: selectedMethod
+        quantity: `${gramsVal}g`,
+        paymentMethod: 'UPI'
       });
 
       setTimeout(() => {
         setShowConfirmModal(false);
         onNavigate('transactions');
-      }, 1800);
-    }, 1200);
+      }, 1500);
+    }, 1000);
   };
-
-  const rupeesPresets = ['50', '100', '150'];
-  const gramsPresets = isGold 
-    ? ['0.0038', '0.0075', '0.0113'] 
-    : ['0.1887', '0.3774', '0.5660'];
-
-  const popularGrams = isGold ? '0.0151' : '0.7547';
 
   return (
     <div className="app-screen-layout">
@@ -130,7 +174,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
           marginBottom: '24px'
         }}>
           <button
-            onClick={() => { setMode('rupees'); handleRupeesChange('2000'); }}
+            onClick={() => handleSwitchMode('rupees')}
             style={{
               flex: 1,
               height: '46px',
@@ -156,7 +200,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
           </button>
 
           <button
-            onClick={() => { setMode('grams'); handleGramsChange(isGold ? '0.1508' : '7.5472'); }}
+            onClick={() => handleSwitchMode('grams')}
             style={{
               flex: 1,
               height: '46px',
@@ -217,7 +261,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
               value={gramsVal}
               onChange={(e) => handleGramsChange(e.target.value)}
               style={{
-                width: '80px',
+                width: '90px',
                 border: 'none',
                 outline: 'none',
                 fontSize: '16px',
@@ -231,122 +275,117 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
           </div>
         </div>
 
-        {/* Quick Amount Preset Chips */}
+        {/* Quick Amount Preset Chips (Highlighted with Proceed button purple when selected) */}
         {mode === 'rupees' ? (
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '32px' }}>
-            {rupeesPresets.map((amt) => (
-              <button
-                key={amt}
-                onClick={() => handleSelectPresetRupees(amt)}
-                style={{
-                  flex: 1,
-                  height: '52px',
-                  borderRadius: '16px',
-                  border: '1px solid var(--primary-purple)',
-                  backgroundColor: '#ede7fc',
-                  color: 'var(--primary-purple)',
-                  fontSize: '16px',
-                  fontWeight: '700',
-                  cursor: 'pointer'
-                }}
-              >
-                ₹ {amt}
-              </button>
-            ))}
-
-            {/* Popular 200 Chip */}
-            <div style={{ width: '100%', marginTop: '4px' }}>
-              <div style={{ position: 'relative', width: '140px' }}>
-                <button
-                  onClick={() => handleSelectPresetRupees('200')}
-                  style={{
-                    width: '100%',
-                    height: '52px',
-                    borderRadius: '16px',
-                    border: '1px solid var(--primary-purple)',
-                    backgroundColor: '#ede7fc',
-                    color: 'var(--primary-purple)',
-                    fontSize: '16px',
-                    fontWeight: '700',
-                    cursor: 'pointer'
-                  }}
-                >
-                  ₹ 200
-                </button>
-                <span style={{
-                  position: 'absolute',
-                  bottom: '-8px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  backgroundColor: '#ffd000',
-                  color: '#000',
-                  fontSize: '10px',
-                  fontWeight: '900',
-                  padding: '2px 8px',
-                  borderRadius: '6px'
-                }}>
-                  Popular
-                </span>
-              </div>
-            </div>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '8px',
+            marginBottom: '32px'
+          }}>
+            {rupeesPresets.map((amt) => {
+              const isSelected = selectedQuickOption === amt;
+              return (
+                <div key={amt} style={{ position: 'relative' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectPresetRupees(amt)}
+                    style={{
+                      width: '100%',
+                      height: '52px',
+                      borderRadius: '14px',
+                      border: isSelected ? '1.5px solid var(--primary-purple)' : '1px solid var(--primary-purple)',
+                      backgroundColor: isSelected ? 'var(--primary-purple)' : '#ede7fc',
+                      color: isSelected ? '#ffffff' : 'var(--primary-purple)',
+                      fontSize: '15px',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      boxShadow: isSelected ? '0 4px 14px rgba(88, 60, 245, 0.35)' : 'none',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    ₹ {amt}
+                  </button>
+                  {amt === '200' && (
+                    <span style={{
+                      position: 'absolute',
+                      top: '-8px',
+                      right: '-4px',
+                      backgroundColor: '#ffd000',
+                      color: '#000',
+                      fontSize: '9px',
+                      fontWeight: '900',
+                      padding: '1px 6px',
+                      borderRadius: '6px',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+                      pointerEvents: 'none'
+                    }}>
+                      Popular
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         ) : (
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '32px' }}>
-            {gramsPresets.map((gm) => (
-              <button
-                key={gm}
-                onClick={() => handleSelectPresetGrams(gm)}
-                style={{
-                  flex: 1,
-                  height: '54px',
-                  borderRadius: '16px',
-                  border: '1px solid var(--primary-purple)',
-                  backgroundColor: '#ede7fc',
-                  color: 'var(--primary-purple)',
-                  fontSize: '14px',
-                  fontWeight: '700',
-                  cursor: 'pointer'
-                }}
-              >
-                {gm}<br /><span style={{ fontSize: '11px', fontWeight: '600' }}>gm</span>
-              </button>
-            ))}
-
-            {/* Popular Grams Chip */}
-            <div style={{ width: '100%', marginTop: '4px' }}>
-              <div style={{ position: 'relative', width: '140px' }}>
-                <button
-                  onClick={() => handleSelectPresetGrams(popularGrams)}
-                  style={{
-                    width: '100%',
-                    height: '54px',
-                    borderRadius: '16px',
-                    border: '1px solid var(--primary-purple)',
-                    backgroundColor: '#ede7fc',
-                    color: 'var(--primary-purple)',
-                    fontSize: '14px',
-                    fontWeight: '700',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {popularGrams} gm
-                </button>
-                <span style={{
-                  position: 'absolute',
-                  bottom: '-8px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  backgroundColor: '#ffd000',
-                  color: '#000',
-                  fontSize: '10px',
-                  fontWeight: '900',
-                  padding: '2px 8px',
-                  borderRadius: '6px'
-                }}>
-                  Popular
-                </span>
-              </div>
-            </div>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '8px',
+            marginBottom: '32px'
+          }}>
+            {gramsPresets.map((gm, idx) => {
+              const isSelected = selectedQuickOption === gm;
+              return (
+                <div key={gm} style={{ position: 'relative' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectPresetGrams(gm)}
+                    style={{
+                      width: '100%',
+                      height: '52px',
+                      borderRadius: '14px',
+                      border: isSelected ? '1.5px solid var(--primary-purple)' : '1px solid var(--primary-purple)',
+                      backgroundColor: isSelected ? 'var(--primary-purple)' : '#ede7fc',
+                      color: isSelected ? '#ffffff' : 'var(--primary-purple)',
+                      fontSize: '13px',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      boxShadow: isSelected ? '0 4px 14px rgba(88, 60, 245, 0.35)' : 'none',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      lineHeight: '1.2'
+                    }}
+                  >
+                    <span>{gm}</span>
+                    <span style={{ fontSize: '11px', opacity: 0.9 }}>gm</span>
+                  </button>
+                  {idx === gramsPresets.length - 1 && (
+                    <span style={{
+                      position: 'absolute',
+                      top: '-8px',
+                      right: '-4px',
+                      backgroundColor: '#ffd000',
+                      color: '#000',
+                      fontSize: '9px',
+                      fontWeight: '900',
+                      padding: '1px 6px',
+                      borderRadius: '6px',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+                      pointerEvents: 'none'
+                    }}>
+                      Popular
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -355,7 +394,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
           onClick={handleProceed}
           className="btn-primary"
           style={{
-            marginTop: '20px',
+            marginTop: '10px',
             marginBottom: '10px',
             boxShadow: '0 6px 18px rgba(88, 60, 245, 0.35)'
           }}
@@ -488,25 +527,18 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
                   display: 'inline-block',
                   backgroundColor: '#e6f7ef',
                   color: '#059669',
-                  padding: '6px 16px',
+                  padding: '8px 18px',
                   borderRadius: '20px',
-                  fontSize: '13px',
+                  fontSize: '14px',
                   fontWeight: '800'
                 }}>
-                  Holdings & Transactions Updated
+                  Added to Your Holdings
                 </div>
               </div>
             )}
           </div>
         </div>
       )}
-
-      {/* 3. Fixed Bottom Navigation */}
-      <BottomNav
-        activeTab="buy"
-        onSelectTab={(tab) => onNavigate(tab)}
-        onTogglePlus={onTogglePlus}
-      />
     </div>
   );
 }
