@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
-import { ArrowLeft, AlertTriangle, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, ShieldCheck, CheckCircle2, ArrowUp } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export default function WithdrawScreen({ onNavigate }) {
-  const { currentUser, holdings, submitKycRequest, requestWithdrawal } = useApp();
-  const [showKycModal, setShowKycModal] = useState(currentUser.kycStatus !== 'Verified');
+  const { currentUser, holdings, goldRate, silverRate, submitKycRequest, requestWithdrawal } = useApp();
+  
+  // Persistent KYC verification state check
+  const isKycVerified = currentUser.kycStatus === 'Verified';
+
+  const [showKycModal, setShowKycModal] = useState(false);
   const [showKycForm, setShowKycForm] = useState(false);
-  const [pan, setPan] = useState('');
-  const [aadhar, setAadhar] = useState('');
+  const [pan, setPan] = useState(currentUser.pan || '');
+  const [aadhar, setAadhar] = useState(currentUser.aadhar || '');
 
   const [withdrawAsset, setWithdrawAsset] = useState('Gold');
   const [withdrawGrams, setWithdrawGrams] = useState('');
@@ -27,11 +31,12 @@ export default function WithdrawScreen({ onNavigate }) {
   };
 
   const handleInitiateWithdraw = (asset) => {
-    if (currentUser.kycStatus !== 'Verified') {
+    if (!isKycVerified) {
       setShowKycModal(true);
       return;
     }
     setWithdrawAsset(asset);
+    setWithdrawGrams('');
     setShowWithdrawForm(true);
   };
 
@@ -41,14 +46,16 @@ export default function WithdrawScreen({ onNavigate }) {
     const maxGrams = withdrawAsset === 'Gold' ? holdings.goldGrams : holdings.silverGrams;
 
     if (g <= 0 || g > maxGrams) {
-      alert(`Please enter a valid gram quantity (Max available: ${maxGrams} gm).`);
+      alert(`Please enter a valid gram quantity (Max available: ${maxGrams.toFixed(4)} gm).`);
       return;
     }
+
+    const currentRate = withdrawAsset === 'Gold' ? (goldRate || 13263.65) : (silverRate || 265.00);
 
     requestWithdrawal({
       asset: withdrawAsset,
       quantity: `${g.toFixed(4)} gm`,
-      amount: withdrawAsset === 'Gold' ? `₹ ${(g * 13263.65).toFixed(2)}` : `₹ ${(g * 265.00).toFixed(2)}`
+      amount: `₹ ${(g * currentRate).toFixed(2)}`
     });
 
     setWithdrawSuccess(true);
@@ -63,103 +70,124 @@ export default function WithdrawScreen({ onNavigate }) {
     <div className="app-screen-layout">
       {/* 1. Fixed Top Header */}
       <header className="top-header-bar">
-        <button className="back-btn" onClick={() => onNavigate('home')} aria-label="Back">
+        <button className="back-btn" onClick={() => onNavigate('profile')} aria-label="Back">
           <ArrowLeft size={22} />
         </button>
         <h2>Mode of Withdraw</h2>
       </header>
 
       {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
-      <main className="app-scroll-content" style={{ padding: '20px 18px', gap: '20px' }}>
-        {/* Gold Box */}
+      <main className="app-scroll-content" style={{ padding: '20px 18px 40px 18px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        
+        {/* Gold Asset Card */}
         <div style={{
           backgroundColor: '#c4b5fd',
           borderRadius: '22px',
-          padding: '20px',
+          padding: '24px 20px',
           textAlign: 'center',
-          border: '1px solid #a78bfa'
+          border: '1px solid #a78bfa',
+          boxShadow: '0 4px 14px rgba(0, 0, 0, 0.04)'
         }}>
-          <div style={{ fontSize: '18px', fontWeight: '800', color: '#1e1b2e', marginBottom: '16px' }}>Gold</div>
-          <div style={{ fontSize: '32px', fontWeight: '900', color: '#1e1b2e', marginBottom: '8px' }}>
+          <div style={{ fontSize: '19px', fontWeight: '800', color: '#1e1b2e', marginBottom: '14px' }}>
+            Gold
+          </div>
+          <div style={{ fontSize: '34px', fontWeight: '900', color: '#1e1b2e', marginBottom: '8px', letterSpacing: '-0.5px' }}>
             {holdings.goldGrams.toFixed(4)}
           </div>
           <div style={{
             display: 'inline-block',
-            padding: '4px 14px',
+            padding: '4px 16px',
             borderRadius: '16px',
-            backgroundColor: 'rgba(255,255,255,0.4)',
+            backgroundColor: 'rgba(255, 255, 255, 0.45)',
             fontSize: '13px',
-            fontWeight: '700',
+            fontWeight: '800',
             color: '#33295c',
-            marginBottom: '20px'
+            marginBottom: '22px'
           }}>
             Gram
           </div>
+
+          {/* KYC Based Withdraw Button */}
           <button
+            type="button"
             onClick={() => handleInitiateWithdraw('Gold')}
             style={{
               width: '100%',
-              height: '48px',
-              borderRadius: '14px',
-              border: 'none',
-              backgroundColor: 'transparent',
-              color: '#1e1b2e',
+              height: '50px',
+              borderRadius: '16px',
+              border: isKycVerified ? 'none' : '1px solid #b2a2e0',
+              backgroundColor: isKycVerified ? 'var(--primary-purple)' : 'rgba(255, 255, 255, 0.5)',
+              color: isKycVerified ? '#ffffff' : '#5b5375',
               fontSize: '16px',
               fontWeight: '800',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px',
-              cursor: 'pointer'
+              gap: '8px',
+              cursor: isKycVerified ? 'pointer' : 'pointer',
+              boxShadow: isKycVerified ? '0 4px 14px rgba(88, 60, 245, 0.35)' : 'none',
+              transition: 'all 0.2s ease'
             }}
+            aria-label="Withdraw Gold"
           >
-            <span>↑ Withdraw</span>
+            <ArrowUp size={18} color={isKycVerified ? '#ffffff' : '#5b5375'} />
+            <span>Withdraw</span>
           </button>
         </div>
 
-        {/* Silver Box */}
+        {/* Silver Asset Card */}
         <div style={{
           backgroundColor: '#c4b5fd',
           borderRadius: '22px',
-          padding: '20px',
+          padding: '24px 20px',
           textAlign: 'center',
-          border: '1px solid #a78bfa'
+          border: '1px solid #a78bfa',
+          boxShadow: '0 4px 14px rgba(0, 0, 0, 0.04)'
         }}>
-          <div style={{ fontSize: '18px', fontWeight: '800', color: '#1e1b2e', marginBottom: '16px' }}>Silver</div>
-          <div style={{ fontSize: '32px', fontWeight: '900', color: '#1e1b2e', marginBottom: '8px' }}>
+          <div style={{ fontSize: '19px', fontWeight: '800', color: '#1e1b2e', marginBottom: '14px' }}>
+            Silver
+          </div>
+          <div style={{ fontSize: '34px', fontWeight: '900', color: '#1e1b2e', marginBottom: '8px', letterSpacing: '-0.5px' }}>
             {holdings.silverGrams.toFixed(4)}
           </div>
           <div style={{
             display: 'inline-block',
-            padding: '4px 14px',
+            padding: '4px 16px',
             borderRadius: '16px',
-            backgroundColor: 'rgba(255,255,255,0.4)',
+            backgroundColor: 'rgba(255, 255, 255, 0.45)',
             fontSize: '13px',
-            fontWeight: '700',
+            fontWeight: '800',
             color: '#33295c',
-            marginBottom: '20px'
+            marginBottom: '22px'
           }}>
             Gram
           </div>
+
+          {/* KYC Based Withdraw Button */}
           <button
+            type="button"
             onClick={() => handleInitiateWithdraw('Silver')}
             style={{
               width: '100%',
-              height: '48px',
-              borderRadius: '14px',
-              border: 'none',
-              backgroundColor: 'transparent',
-              color: '#1e1b2e',
+              height: '50px',
+              borderRadius: '16px',
+              border: isKycVerified ? 'none' : '1px solid #b2a2e0',
+              backgroundColor: isKycVerified ? 'var(--primary-purple)' : 'rgba(255, 255, 255, 0.5)',
+              color: isKycVerified ? '#ffffff' : '#5b5375',
               fontSize: '16px',
               fontWeight: '800',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px',
-              cursor: 'pointer'
+              gap: '8px',
+              cursor: isKycVerified ? 'pointer' : 'pointer',
+              boxShadow: isKycVerified ? '0 4px 14px rgba(88, 60, 245, 0.35)' : 'none',
+              transition: 'all 0.2s ease'
             }}
+            aria-label="Withdraw Silver"
           >
-            <span>↑ Withdraw</span>
+            <ArrowUp size={18} color={isKycVerified ? '#ffffff' : '#5b5375'} />
+            <span>Withdraw</span>
           </button>
         </div>
       </main>
@@ -179,7 +207,7 @@ export default function WithdrawScreen({ onNavigate }) {
             <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#1e1b2e' }}>Verify KYC</h2>
 
             <p style={{ fontSize: '14px', color: '#6c727f', fontWeight: '500', lineHeight: '1.4', margin: '8px 0 24px 0' }}>
-              In order to withdraw gold, you need to complete<br />your KYC verification
+              In order to withdraw assets, you need to complete<br />your KYC verification.
             </p>
 
             <button
@@ -278,7 +306,7 @@ export default function WithdrawScreen({ onNavigate }) {
                     <input
                       type="text"
                       className="custom-input"
-                      placeholder={`Max available: ${withdrawAsset === 'Gold' ? holdings.goldGrams : holdings.silverGrams} gm`}
+                      placeholder={`Max available: ${(withdrawAsset === 'Gold' ? holdings.goldGrams : holdings.silverGrams).toFixed(4)} gm`}
                       value={withdrawGrams}
                       onChange={(e) => setWithdrawGrams(e.target.value)}
                     />
