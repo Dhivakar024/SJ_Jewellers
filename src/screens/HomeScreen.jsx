@@ -8,18 +8,18 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
 
   return (
     <div className="app-screen-layout">
-      {/* 1. Fixed Top Header Banner */}
+      {/* 1. Fixed Top Header Banner (Compact, natural height) */}
       <header style={{
         backgroundColor: 'var(--primary-purple)',
-        padding: '24px 20px 36px 20px',
+        padding: '18px 20px',
         color: 'white',
         flexShrink: 0,
         zIndex: 20
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div style={{ fontSize: '15px', fontWeight: '500', opacity: 0.9 }}>Hello,</div>
-            <div style={{ fontSize: '28px', fontWeight: '800', marginTop: '2px', letterSpacing: '-0.5px' }}>
+            <div style={{ fontSize: '26px', fontWeight: '800', marginTop: '2px', letterSpacing: '-0.5px' }}>
               {currentUser.name} !
             </div>
           </div>
@@ -54,12 +54,11 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
         </div>
       </header>
 
-      {/* 2. Middle Scrollable Content Area (ONLY THIS SCROLLS) */}
+      {/* 2. Middle Scrollable Content Area (Starts immediately below header) */}
       <main 
         className="app-scroll-content" 
         style={{ 
-          padding: '0 16px 40px 16px', 
-          marginTop: '-18px',
+          padding: '20px 16px 40px 16px', 
           flex: '1 1 auto',
           minHeight: 0,
           overflowY: 'auto',
