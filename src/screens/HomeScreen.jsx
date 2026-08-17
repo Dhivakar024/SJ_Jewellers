@@ -4,6 +4,7 @@ import BottomNav from '../components/BottomNav';
 
 export default function HomeScreen({ onNavigate, onTogglePlus }) {
   const { currentUser, goldRate, silverRate, holdings } = useApp();
+  // Default state: Gold must be selected when Home page loads
   const [metalTab, setMetalTab] = useState('gold'); // 'gold' or 'silver'
 
   return (
@@ -75,7 +76,8 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
           boxShadow: '0 10px 30px rgba(0, 0, 0, 0.06)',
           width: '100%',
           boxSizing: 'border-box',
-          flexShrink: 0
+          flexShrink: 0,
+          overflow: 'visible'
         }}>
           {/* LOWEST PRICE Diagonal Corner Ribbon */}
           <div className="lowest-price-ribbon">
@@ -127,59 +129,54 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
             </button>
           </div>
 
-          {/* Balance Inner Card */}
+          {/* Balance Inner Card (Shows ONLY the selected asset balance) */}
           <div style={{
             backgroundColor: '#f6f2ff',
             borderRadius: '18px',
-            padding: '16px 12px 20px 12px',
+            padding: '20px 16px',
             textAlign: 'center'
           }}>
-            <div style={{ color: 'var(--primary-purple)', fontWeight: '700', fontSize: '14px', marginBottom: '14px' }}>
+            <div style={{ color: 'var(--primary-purple)', fontWeight: '700', fontSize: '14px', marginBottom: '12px' }}>
               Your balance
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
-              {/* Gold Balance */}
-              <div style={{ flex: 1, textAlign: 'center' }}>
+            {metalTab === 'gold' ? (
+              <div style={{ textAlign: 'center' }}>
                 <div style={{
-                  width: '42px', height: '42px', borderRadius: '50%',
-                  backgroundColor: '#fde9b8', margin: '0 auto 6px auto',
+                  width: '46px', height: '46px', borderRadius: '50%',
+                  backgroundColor: '#fde9b8', margin: '0 auto 8px auto',
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="#e5a415">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="#e5a415">
                     <circle cx="12" cy="7" r="5" />
                     <circle cx="12" cy="12" r="5" fill="#f5c242" />
                     <circle cx="12" cy="17" r="5" fill="#e5a415" />
                   </svg>
                 </div>
-                <div style={{ fontSize: '12px', color: '#736d85', fontWeight: '600' }}>Gold</div>
-                <div style={{ fontSize: '17px', fontWeight: '800', color: '#1c1829', marginTop: '2px' }}>
+                <div style={{ fontSize: '14px', color: '#736d85', fontWeight: '700' }}>Gold</div>
+                <div style={{ fontSize: '24px', fontWeight: '900', color: '#1c1829', marginTop: '4px' }}>
                   {holdings.goldGrams.toFixed(4)} gm
                 </div>
               </div>
-
-              {/* Vertical Separator */}
-              <div style={{ width: '1px', height: '50px', backgroundColor: '#dcd4fa' }}></div>
-
-              {/* Silver Balance */}
-              <div style={{ flex: 1, textAlign: 'center' }}>
+            ) : (
+              <div style={{ textAlign: 'center' }}>
                 <div style={{
-                  width: '42px', height: '42px', borderRadius: '50%',
-                  backgroundColor: '#e2e6ea', margin: '0 auto 6px auto',
+                  width: '46px', height: '46px', borderRadius: '50%',
+                  backgroundColor: '#e2e6ea', margin: '0 auto 8px auto',
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="#a0aab4">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="#a0aab4">
                     <circle cx="12" cy="7" r="5" />
                     <circle cx="12" cy="12" r="5" fill="#ccd3db" />
                     <circle cx="12" cy="17" r="5" fill="#a0aab4" />
                   </svg>
                 </div>
-                <div style={{ fontSize: '12px', color: '#736d85', fontWeight: '600' }}>Silver</div>
-                <div style={{ fontSize: '17px', fontWeight: '800', color: '#1c1829', marginTop: '2px' }}>
+                <div style={{ fontSize: '14px', color: '#736d85', fontWeight: '700' }}>Silver</div>
+                <div style={{ fontSize: '24px', fontWeight: '900', color: '#1c1829', marginTop: '4px' }}>
                   {holdings.silverGrams.toFixed(4)} gm
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Subtitle Promo text */}
@@ -195,21 +192,23 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
             convenience price @ Salem Jewels
           </div>
 
-          {/* Buy Now Button inside card */}
+          {/* Buy Now Primary CTA Button */}
           <button
             onClick={() => onNavigate(metalTab === 'gold' ? 'buy-gold' : 'buy-silver')}
+            className="btn-primary"
             style={{
-              width: '180px',
-              height: '48px',
+              width: '100%',
+              height: '52px',
               margin: '0 auto',
               display: 'block',
-              borderRadius: '14px',
-              border: '1.5px solid var(--primary-purple)',
-              backgroundColor: '#f3eeff',
-              color: 'var(--primary-purple)',
+              borderRadius: '16px',
+              backgroundColor: 'var(--primary-purple)',
+              color: '#ffffff',
               fontWeight: '800',
               fontSize: '16px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              boxShadow: '0 6px 18px rgba(88, 60, 245, 0.35)',
+              border: 'none'
             }}
           >
             Buy Now
