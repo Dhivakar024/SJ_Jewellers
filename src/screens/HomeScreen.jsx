@@ -77,21 +77,8 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
           boxSizing: 'border-box',
           flexShrink: 0
         }}>
-          {/* LOWEST PRICE Ribbon */}
-          <div style={{
-            position: 'absolute',
-            top: '18px',
-            left: '-10px',
-            backgroundColor: 'var(--orange-ribbon)',
-            color: 'white',
-            fontSize: '10px',
-            fontWeight: '800',
-            padding: '4px 14px',
-            borderRadius: '0 8px 8px 0',
-            letterSpacing: '0.5px',
-            boxShadow: '0 2px 6px rgba(255, 122, 0, 0.4)',
-            zIndex: 5
-          }}>
+          {/* LOWEST PRICE Diagonal Corner Ribbon */}
+          <div className="lowest-price-ribbon">
             LOWEST PRICE
           </div>
 

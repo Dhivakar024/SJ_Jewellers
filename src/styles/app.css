@@ -548,3 +548,44 @@ textarea.profile-custom-input {
   box-shadow: 0 4px 12px rgba(88, 60, 245, 0.28);
 }
 
+/* Home Page Diagonal LOWEST PRICE Ribbon */
+.lowest-price-ribbon {
+  position: absolute;
+  left: -32px;
+  top: 18px;
+  width: 145px;
+  height: 32px;
+  background: linear-gradient(90deg, #FF8A00, #FF6A00);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-45deg);
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  z-index: 10;
+  box-shadow: 0 4px 14px rgba(255, 106, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  overflow: visible;
+}
+
+.lowest-price-ribbon::after {
+  content: "";
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  border-left: 5px solid #C85A00;
+  border-top: 5px solid transparent;
+}
+
+.lowest-price-ribbon::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  bottom: -5px;
+  border-right: 5px solid #C85A00;
+  border-top: 5px solid transparent;
+}
+
