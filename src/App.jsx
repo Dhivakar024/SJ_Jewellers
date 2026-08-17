@@ -15,17 +15,15 @@ import HoldingsScreen from './screens/HoldingsScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import CreateProfileScreen from './screens/CreateProfileScreen';
 
-// Admin Components
+// Mobile Admin Components
 import AdminLayout from './admin/AdminLayout';
 import AdminLogin from './admin/AdminLogin';
 import AdminDashboard from './admin/AdminDashboard';
 import AdminUsers from './admin/AdminUsers';
 import AdminKyc from './admin/AdminKyc';
 import AdminTransactions from './admin/AdminTransactions';
-import AdminPayments from './admin/AdminPayments';
 import AdminWithdrawals from './admin/AdminWithdrawals';
 import AdminRates from './admin/AdminRates';
-import AdminSettings from './admin/AdminSettings';
 
 import './styles/app.css';
 
@@ -35,7 +33,7 @@ function MainContent() {
     return window.location.hash.startsWith('#admin') ? 'admin' : 'user';
   });
   
-  // App startup MUST ALWAYS start at Sign In / Sign Up
+  // Customer App startup MUST ALWAYS start at Sign In / Sign Up
   const [userScreen, setUserScreen] = useState(() => {
     const rawRoute = window.location.hash.replace(/^#\/?/, '').toLowerCase();
     if (rawRoute === 'signup') return 'signup';
@@ -62,6 +60,8 @@ function MainContent() {
           setUserScreen('signup');
         } else if (hash === 'forgot-username') {
           setUserScreen('forgot-username');
+        } else if (hash === 'admin-login') {
+          setViewMode('admin');
         } else {
           setUserScreen('signin');
           window.location.hash = 'signin';
@@ -89,7 +89,7 @@ function MainContent() {
     };
   }, [currentUser]);
 
-  // Auth Guard: Enforce Sign In on app open / unauthenticated state
+  // Auth Guard: Enforce Sign In on customer app open / unauthenticated state
   useEffect(() => {
     if (viewMode === 'user') {
       if (!currentUser || !currentUser.isAuthenticated) {
@@ -102,6 +102,13 @@ function MainContent() {
   }, [currentUser, viewMode, userScreen]);
 
   const handleUserNavigate = (screen) => {
+    if (screen === 'admin-login') {
+      setViewMode('admin');
+      window.location.hash = 'admin';
+      setIsActionSheetOpen(false);
+      return;
+    }
+
     // If not authenticated, only allow auth screens
     if (!currentUser || !currentUser.isAuthenticated) {
       if (screen === 'signup' || screen === 'forgot-username' || screen === 'signin') {
@@ -122,49 +129,64 @@ function MainContent() {
 
   return (
     <div className="app-root-container">
-      {/* User Mobile Application */}
-      {viewMode === 'user' ? (
-        <MobileContainer>
-          {userScreen === 'signin' && <SignInScreen onNavigate={handleUserNavigate} />}
-          {userScreen === 'signup' && <SignUpScreen onNavigate={handleUserNavigate} />}
-          {userScreen === 'forgot-username' && <ForgotUsernameScreen onNavigate={handleUserNavigate} />}
-          {userScreen === 'home' && <HomeScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
-          {(userScreen === 'buy' || userScreen === 'buy-gold') && (
-            <BuyNowScreen assetType="gold" onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />
-          )}
-          {userScreen === 'buy-silver' && (
-            <BuyNowScreen assetType="silver" onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />
-          )}
-          {userScreen === 'withdraw' && <WithdrawScreen onNavigate={handleUserNavigate} />}
-          {userScreen === 'transactions' && <TransactionHistoryScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
-          {userScreen === 'contact' && <ContactUsScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
-          {userScreen === 'holdings' && <HoldingsScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
-          {userScreen === 'profile' && <ProfileScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
-          {userScreen === 'create-profile' && <CreateProfileScreen onNavigate={handleUserNavigate} />}
+      <MobileContainer>
+        {/* 1. Customer Flow */}
+        {viewMode === 'user' ? (
+          <>
+            {userScreen === 'signin' && <SignInScreen onNavigate={handleUserNavigate} />}
+            {userScreen === 'signup' && <SignUpScreen onNavigate={handleUserNavigate} />}
+            {userScreen === 'forgot-username' && <ForgotUsernameScreen onNavigate={handleUserNavigate} />}
+            {userScreen === 'home' && <HomeScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
+            {(userScreen === 'buy' || userScreen === 'buy-gold') && (
+              <BuyNowScreen assetType="gold" onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />
+            )}
+            {userScreen === 'buy-silver' && (
+              <BuyNowScreen assetType="silver" onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />
+            )}
+            {userScreen === 'withdraw' && <WithdrawScreen onNavigate={handleUserNavigate} />}
+            {userScreen === 'transactions' && <TransactionHistoryScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
+            {userScreen === 'contact' && <ContactUsScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
+            {userScreen === 'holdings' && <HoldingsScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
+            {userScreen === 'profile' && <ProfileScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
+            {userScreen === 'create-profile' && <CreateProfileScreen onNavigate={handleUserNavigate} />}
 
-          {/* Floating Action Menu (Page 9 overlay) */}
-          <ActionSheet
-            isOpen={isActionSheetOpen}
-            onClose={() => setIsActionSheetOpen(false)}
-            onNavigate={handleUserNavigate}
-          />
-        </MobileContainer>
-      ) : (
-        !adminAuth.isAuthenticated ? (
-          <AdminLogin onSwitchToUserApp={() => { setViewMode('user'); window.location.hash = 'signin'; }} />
+            {/* Floating Action Menu */}
+            <ActionSheet
+              isOpen={isActionSheetOpen}
+              onClose={() => setIsActionSheetOpen(false)}
+              onNavigate={handleUserNavigate}
+            />
+          </>
         ) : (
-          <AdminLayout activeTab={adminTab} onSelectTab={setAdminTab} onSwitchToUserApp={() => { setViewMode('user'); window.location.hash = 'signin'; }}>
-            {adminTab === 'dashboard' && <AdminDashboard onSelectTab={setAdminTab} />}
-            {adminTab === 'users' && <AdminUsers />}
-            {adminTab === 'kyc' && <AdminKyc />}
-            {adminTab === 'transactions' && <AdminTransactions />}
-            {adminTab === 'payments' && <AdminPayments />}
-            {adminTab === 'withdrawals' && <AdminWithdrawals />}
-            {adminTab === 'rates' && <AdminRates />}
-            {adminTab === 'settings' && <AdminSettings />}
-          </AdminLayout>
-        )
-      )}
+          /* 2. Admin Flow */
+          !adminAuth.isAuthenticated ? (
+            <AdminLogin
+              onSwitchToUserApp={() => {
+                setViewMode('user');
+                setUserScreen('signin');
+                window.location.hash = 'signin';
+              }}
+            />
+          ) : (
+            <AdminLayout
+              activeTab={adminTab}
+              onSelectTab={setAdminTab}
+              onSwitchToUserApp={() => {
+                setViewMode('user');
+                setUserScreen('signin');
+                window.location.hash = 'signin';
+              }}
+            >
+              {adminTab === 'dashboard' && <AdminDashboard onSelectTab={setAdminTab} />}
+              {adminTab === 'users' && <AdminUsers />}
+              {adminTab === 'kyc' && <AdminKyc />}
+              {adminTab === 'transactions' && <AdminTransactions />}
+              {adminTab === 'withdrawals' && <AdminWithdrawals />}
+              {adminTab === 'rates' && <AdminRates />}
+            </AdminLayout>
+          )
+        )}
+      </MobileContainer>
     </div>
   );
 }

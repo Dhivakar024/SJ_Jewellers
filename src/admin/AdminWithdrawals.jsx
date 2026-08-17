@@ -1,82 +1,200 @@
-import React from 'react';
-import { Hand, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Hand, CheckCircle2, XCircle, Clock, CheckCheck, Coins } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export default function AdminWithdrawals() {
   const { withdrawals, updateWithdrawalStatus } = useApp();
+  const [filter, setFilter] = useState('All');
+
+  const filteredList = withdrawals.filter((w) => {
+    if (filter === 'All') return true;
+    return w.status.toLowerCase() === filter.toLowerCase();
+  });
+
+  const handleStatusChange = (id, newStatus) => {
+    updateWithdrawalStatus(id, newStatus);
+  };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <div style={{ fontSize: '14px', color: '#94a3b8', fontWeight: '600' }}>
-        Manage metal withdrawal requests submitted by users
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      
+      {/* 1. Filter Pills */}
+      <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
+        {['All', 'Pending', 'Processing', 'Approved', 'Completed', 'Rejected'].map((opt) => (
+          <button
+            key={opt}
+            onClick={() => setFilter(opt)}
+            className={`filter-chip ${filter === opt ? 'active' : ''}`}
+            style={{ flexShrink: 0, padding: '5px 12px', fontSize: '12px' }}
+          >
+            {opt}
+          </button>
+        ))}
       </div>
 
-      <div style={{
-        backgroundColor: '#171427',
-        borderRadius: '20px',
-        border: '1px solid #2d2645',
-        overflow: 'hidden'
-      }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
-          <thead>
-            <tr style={{ backgroundColor: '#100d1c', color: '#94a3b8', borderBottom: '1px solid #2d2645' }}>
-              <th style={{ padding: '16px 20px', fontWeight: '700' }}>Withdrawal ID</th>
-              <th style={{ padding: '16px 20px', fontWeight: '700' }}>User</th>
-              <th style={{ padding: '16px 20px', fontWeight: '700' }}>Asset</th>
-              <th style={{ padding: '16px 20px', fontWeight: '700' }}>Quantity</th>
-              <th style={{ padding: '16px 20px', fontWeight: '700' }}>Value</th>
-              <th style={{ padding: '16px 20px', fontWeight: '700' }}>Requested Date</th>
-              <th style={{ padding: '16px 20px', fontWeight: '700' }}>Status</th>
-              <th style={{ padding: '16px 20px', fontWeight: '700' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {withdrawals.length === 0 ? (
-              <tr>
-                <td colSpan={8} style={{ padding: '30px', textAlign: 'center', color: '#94a3b8' }}>
-                  No withdrawal requests recorded.
-                </td>
-              </tr>
-            ) : (
-              withdrawals.map((w) => (
-                <tr key={w.id} style={{ borderBottom: '1px solid #231e36', color: '#e2e8f0' }}>
-                  <td style={{ padding: '16px 20px', fontWeight: '800', color: '#a78bfa' }}>{w.id}</td>
-                  <td style={{ padding: '16px 20px', fontWeight: '700' }}>{w.userName}</td>
-                  <td style={{ padding: '16px 20px', fontWeight: '700' }}>
-                    <span style={{ color: w.asset === 'Gold' ? '#ffd000' : '#cbd5e1' }}>{w.asset}</span>
-                  </td>
-                  <td style={{ padding: '16px 20px', fontWeight: '700' }}>{w.quantity}</td>
-                  <td style={{ padding: '16px 20px', fontWeight: '800' }}>{w.amount}</td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8' }}>{w.date}</td>
-                  <td style={{ padding: '16px 20px' }}>
-                    <span style={{
-                      backgroundColor: w.status === 'Completed' ? '#064e3b' : w.status === 'Processing' ? '#0284c7' : w.status === 'Rejected' ? '#7f1d1d' : '#78350f',
-                      color: w.status === 'Completed' ? '#34d399' : w.status === 'Processing' ? '#38bdf8' : w.status === 'Rejected' ? '#f87171' : '#fbbf24',
-                      padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700'
-                    }}>
-                      {w.status}
-                    </span>
-                  </td>
-                  <td style={{ padding: '16px 20px' }}>
-                    <select
-                      value={w.status}
-                      onChange={(e) => updateWithdrawalStatus(w.id, e.target.value)}
+      {/* 2. Withdrawals List */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {filteredList.length === 0 ? (
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '20px',
+            padding: '36px 20px',
+            textAlign: 'center',
+            color: '#7e7694'
+          }}>
+            <Hand size={36} color="#c4b5fd" style={{ margin: '0 auto 10px auto' }} />
+            <h4 style={{ fontSize: '16px', fontWeight: '800', color: '#1e1b2e', marginBottom: '4px' }}>
+              No withdrawal requests
+            </h4>
+            <p style={{ fontSize: '12.5px', color: '#736d85' }}>
+              There are no {filter.toLowerCase()} withdrawal requests.
+            </p>
+          </div>
+        ) : (
+          filteredList.map((w) => {
+            const isCompleted = w.status === 'Completed';
+            const isPending = w.status === 'Pending' || w.status === 'Processing';
+            const isApproved = w.status === 'Approved';
+            const isRejected = w.status === 'Rejected';
+
+            return (
+              <div
+                key={w.id}
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: '20px',
+                  padding: '16px',
+                  border: '1px solid #e8e2fa',
+                  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px'
+                }}
+              >
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ fontSize: '15.5px', fontWeight: '800', color: '#1e1b2e' }}>
+                      {w.userName || 'Customer'}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#736d85', fontWeight: '600' }}>
+                      {w.id} · {w.date}
+                    </div>
+                  </div>
+
+                  <span style={{
+                    fontSize: '11px',
+                    fontWeight: '800',
+                    padding: '3px 8px',
+                    borderRadius: '8px',
+                    backgroundColor: isCompleted ? '#d1fae5' : isApproved ? '#e0f2fe' : isPending ? '#fef3c7' : '#fee2e2',
+                    color: isCompleted ? '#059669' : isApproved ? '#0284c7' : isPending ? '#d97706' : '#dc2626'
+                  }}>
+                    {w.status}
+                  </span>
+                </div>
+
+                {/* Details Box */}
+                <div style={{
+                  padding: '10px 12px',
+                  backgroundColor: '#f9f7ff',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  color: '#3b3252'
+                }}>
+                  <div>
+                    <span style={{ color: '#736d85' }}>Asset: </span>
+                    <strong>{w.asset} ({w.quantity})</strong>
+                  </div>
+                  <div style={{ fontSize: '15px', fontWeight: '900', color: 'var(--primary-purple)' }}>
+                    {w.amount}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                {isPending && (
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '2px' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleStatusChange(w.id, 'Rejected')}
                       style={{
-                        backgroundColor: '#2d2447', color: '#ffffff', border: '1px solid #583cf5',
-                        borderRadius: '8px', padding: '4px 8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer'
+                        flex: 1,
+                        height: '38px',
+                        borderRadius: '12px',
+                        border: 'none',
+                        backgroundColor: '#fee2e2',
+                        color: '#dc2626',
+                        fontSize: '12.5px',
+                        fontWeight: '800',
+                        cursor: 'pointer'
                       }}
                     >
-                      <option value="Pending">Pending</option>
-                      <option value="Processing">Processing</option>
-                      <option value="Completed">Completed</option>
-                      <option value="Rejected">Rejected</option>
-                    </select>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                      Reject
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleStatusChange(w.id, 'Approved')}
+                      style={{
+                        flex: 1,
+                        height: '38px',
+                        borderRadius: '12px',
+                        border: 'none',
+                        backgroundColor: '#e0f2fe',
+                        color: '#0284c7',
+                        fontSize: '12.5px',
+                        fontWeight: '800',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleStatusChange(w.id, 'Completed')}
+                      style={{
+                        flex: 1.2,
+                        height: '38px',
+                        borderRadius: '12px',
+                        border: 'none',
+                        backgroundColor: '#10b981',
+                        color: '#ffffff',
+                        fontSize: '12.5px',
+                        fontWeight: '800',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Complete
+                    </button>
+                  </div>
+                )}
+
+                {isApproved && (
+                  <button
+                    type="button"
+                    onClick={() => handleStatusChange(w.id, 'Completed')}
+                    style={{
+                      width: '100%',
+                      height: '38px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      backgroundColor: '#10b981',
+                      color: '#ffffff',
+                      fontSize: '13px',
+                      fontWeight: '800',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Mark as Completed
+                  </button>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

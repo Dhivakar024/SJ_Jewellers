@@ -1,150 +1,275 @@
 import React, { useState } from 'react';
-import { Search, ShieldCheck, Lock, Unlock, Eye } from 'lucide-react';
+import { Search, User, ShieldCheck, ChevronRight, X, Phone, Mail, MapPin, CreditCard, Building } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export default function AdminUsers() {
-  const { usersList, toggleBlockUser } = useApp();
+  const { usersList } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
 
-  const filteredUsers = usersList.filter((u) => 
-    u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.mobile.includes(searchTerm) ||
-    u.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = usersList.filter((u) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      (u.name || '').toLowerCase().includes(term) ||
+      (u.mobile || '').includes(term) ||
+      (u.email || '').toLowerCase().includes(term)
+    );
+  });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Search & Actions Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ position: 'relative', width: '320px' }}>
-          <input
-            type="text"
-            placeholder="Search users by name, mobile, email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {/* 1. Search Bar */}
+      <div style={{ position: 'relative' }}>
+        <input
+          type="text"
+          placeholder="Search by name, mobile, email..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="profile-custom-input"
+          style={{ paddingLeft: '40px', backgroundColor: '#ffffff' }}
+        />
+        <Search size={18} color="#7e7694" style={{ position: 'absolute', left: '14px', top: '13px' }} />
+        {searchTerm && (
+          <button
+            onClick={() => setSearchTerm('')}
             style={{
-              width: '100%', height: '44px', borderRadius: '12px', border: '1px solid #2d2645',
-              backgroundColor: '#171427', padding: '0 14px 0 40px', fontSize: '13px', color: '#ffffff', outline: 'none'
+              position: 'absolute',
+              right: '12px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: 'transparent',
+              border: 'none',
+              color: '#7e7694',
+              cursor: 'pointer'
             }}
-          />
-          <Search size={18} color="#64748b" style={{ position: 'absolute', left: '12px', top: '13px' }} />
-        </div>
-
-        <div style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '600' }}>
-          Showing <strong>{filteredUsers.length}</strong> registered users
-        </div>
+          >
+            <X size={16} />
+          </button>
+        )}
       </div>
 
-      {/* Users Table */}
-      <div style={{
-        backgroundColor: '#171427',
-        borderRadius: '20px',
-        border: '1px solid #2d2645',
-        overflow: 'hidden'
-      }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
-          <thead>
-            <tr style={{ backgroundColor: '#100d1c', color: '#94a3b8', borderBottom: '1px solid #2d2645' }}>
-              <th style={{ padding: '16px 20px', fontWeight: '700' }}>User ID</th>
-              <th style={{ padding: '16px 20px', fontWeight: '700' }}>Name</th>
-              <th style={{ padding: '16px 20px', fontWeight: '700' }}>Mobile</th>
-              <th style={{ padding: '16px 20px', fontWeight: '700' }}>Email</th>
-              <th style={{ padding: '16px 20px', fontWeight: '700' }}>Gold Bal</th>
-              <th style={{ padding: '16px 20px', fontWeight: '700' }}>Silver Bal</th>
-              <th style={{ padding: '16px 20px', fontWeight: '700' }}>KYC Status</th>
-              <th style={{ padding: '16px 20px', fontWeight: '700' }}>Status</th>
-              <th style={{ padding: '16px 20px', fontWeight: '700' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.map((u) => (
-              <tr key={u.id} style={{ borderBottom: '1px solid #231e36', color: '#e2e8f0' }}>
-                <td style={{ padding: '16px 20px', fontWeight: '800', color: '#a78bfa' }}>{u.id}</td>
-                <td style={{ padding: '16px 20px', fontWeight: '700' }}>{u.name}</td>
-                <td style={{ padding: '16px 20px' }}>{u.mobile}</td>
-                <td style={{ padding: '16px 20px', color: '#94a3b8' }}>{u.email}</td>
-                <td style={{ padding: '16px 20px', fontWeight: '700', color: '#ffd000' }}>{u.goldGrams.toFixed(4)} gm</td>
-                <td style={{ padding: '16px 20px', fontWeight: '700', color: '#cbd5e1' }}>{u.silverGrams.toFixed(4)} gm</td>
-                <td style={{ padding: '16px 20px' }}>
-                  <span style={{
-                    backgroundColor: u.kycStatus === 'Verified' ? '#064e3b' : u.kycStatus === 'Rejected' ? '#7f1d1d' : '#78350f',
-                    color: u.kycStatus === 'Verified' ? '#34d399' : u.kycStatus === 'Rejected' ? '#f87171' : '#fbbf24',
-                    padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700'
-                  }}>
-                    {u.kycStatus}
-                  </span>
-                </td>
-                <td style={{ padding: '16px 20px' }}>
-                  <span style={{
-                    backgroundColor: u.status === 'Active' ? 'rgba(52, 211, 153, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                    color: u.status === 'Active' ? '#34d399' : '#f87171',
-                    padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700'
-                  }}>
-                    {u.status}
-                  </span>
-                </td>
-                <td style={{ padding: '16px 20px' }}>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      onClick={() => setSelectedUser(u)}
-                      style={{
-                        backgroundColor: '#2d2447', border: '1px solid #583cf5', color: '#ffffff',
-                        padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
-                      }}
-                    >
-                      <Eye size={14} />
-                      <span>View</span>
-                    </button>
-                    <button
-                      onClick={() => toggleBlockUser(u.id)}
-                      style={{
-                        backgroundColor: u.status === 'Active' ? 'rgba(239,68,68,0.2)' : 'rgba(52,211,153,0.2)',
-                        border: 'none',
-                        color: u.status === 'Active' ? '#f87171' : '#34d399',
-                        padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
-                      }}
-                    >
-                      {u.status === 'Active' ? <Lock size={14} /> : <Unlock size={14} />}
-                      <span>{u.status === 'Active' ? 'Block' : 'Unblock'}</span>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* User Details Modal View */}
-      {selectedUser && (
-        <div className="modal-overlay" onClick={() => setSelectedUser(null)}>
+      {/* 2. User Cards List */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {filteredUsers.length === 0 ? (
           <div style={{
-            backgroundColor: '#171427', borderRadius: '24px', border: '1px solid #2d2645',
-            padding: '28px', width: '450px', color: '#ffffff', boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
-          }} onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '16px' }}>User Details: {selectedUser.name}</h3>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px', color: '#cbd5e1' }}>
-              <div><strong>User ID:</strong> {selectedUser.id}</div>
-              <div><strong>Mobile:</strong> {selectedUser.mobile}</div>
-              <div><strong>Email:</strong> {selectedUser.email}</div>
-              <div><strong>Gold Balance:</strong> {selectedUser.goldGrams.toFixed(4)} gm</div>
-              <div><strong>Silver Balance:</strong> {selectedUser.silverGrams.toFixed(4)} gm</div>
-              <div><strong>KYC Status:</strong> {selectedUser.kycStatus}</div>
-              <div><strong>Account Status:</strong> {selectedUser.status}</div>
-              <div><strong>Joined Date:</strong> {selectedUser.createdAt}</div>
+            backgroundColor: '#ffffff',
+            borderRadius: '20px',
+            padding: '30px',
+            textAlign: 'center',
+            color: '#7e7694'
+          }}>
+            No users match your search.
+          </div>
+        ) : (
+          filteredUsers.map((u) => {
+            const isVerified = u.kycStatus === 'Verified';
+            const isCompleted = u.profileCompleted === true;
+
+            return (
+              <div
+                key={u.id}
+                onClick={() => setSelectedUser(u)}
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: '20px',
+                  padding: '16px',
+                  border: '1px solid #e8e2fa',
+                  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '50%',
+                      backgroundColor: 'var(--primary-purple)',
+                      color: '#ffffff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: '800',
+                      fontSize: '17px'
+                    }}>
+                      {(u.name || 'U').charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '15.5px', fontWeight: '800', color: '#1e1b2e' }}>
+                        {u.name || 'New Customer'}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#736d85', fontWeight: '600' }}>
+                        +91 {u.mobile} · {u.id}
+                      </div>
+                    </div>
+                  </div>
+
+                  <ChevronRight size={18} color="#948fa8" />
+                </div>
+
+                {/* Status Badges */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <span style={{
+                    fontSize: '11px',
+                    fontWeight: '800',
+                    padding: '3px 8px',
+                    borderRadius: '8px',
+                    backgroundColor: isVerified ? '#d1fae5' : '#fef3c7',
+                    color: isVerified ? '#059669' : '#d97706'
+                  }}>
+                    KYC: {u.kycStatus || 'Pending'}
+                  </span>
+
+                  <span style={{
+                    fontSize: '11px',
+                    fontWeight: '800',
+                    padding: '3px 8px',
+                    borderRadius: '8px',
+                    backgroundColor: isCompleted ? '#ede7fc' : '#fee2e2',
+                    color: isCompleted ? 'var(--primary-purple)' : '#dc2626'
+                  }}>
+                    Profile: {isCompleted ? 'Complete' : 'Incomplete'}
+                  </span>
+                </div>
+
+                {/* Holdings summary */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  padding: '8px 12px',
+                  backgroundColor: '#f9f7ff',
+                  borderRadius: '12px',
+                  fontSize: '12.5px',
+                  fontWeight: '700',
+                  color: '#3b3252'
+                }}>
+                  <span>Gold: <strong>{(parseFloat(u.goldGrams) || 0).toFixed(4)} g</strong></span>
+                  <span>Silver: <strong>{(parseFloat(u.silverGrams) || 0).toFixed(4)} g</strong></span>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* 3. User Details Bottom Sheet Modal */}
+      {selectedUser && (
+        <div
+          className="modal-overlay"
+          onClick={() => setSelectedUser(null)}
+          style={{ zIndex: 100 }}
+        >
+          <div
+            className="bottom-sheet"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxHeight: '85vh', overflowY: 'auto', padding: '24px 20px' }}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
+              <div>
+                <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#1e1b2e' }}>
+                  {selectedUser.name || 'User Details'}
+                </h3>
+                <div style={{ fontSize: '12px', color: '#736d85', fontWeight: '600' }}>
+                  User ID: {selectedUser.id}
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedUser(null)}
+                style={{
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: '50%',
+                  backgroundColor: '#ede7fc',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#4a3e68'
+                }}
+              >
+                <X size={18} />
+              </button>
             </div>
 
-            <button
-              onClick={() => setSelectedUser(null)}
-              style={{
-                width: '100%', height: '44px', borderRadius: '12px', border: 'none',
-                backgroundColor: '#583cf5', color: '#ffffff', fontWeight: '800', marginTop: '20px', cursor: 'pointer'
-              }}
-            >
-              Close
-            </button>
+            {/* Account Details Box */}
+            <div style={{
+              backgroundColor: '#f9f7ff',
+              borderRadius: '18px',
+              padding: '16px',
+              border: '1px solid #e8e2fa',
+              marginBottom: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px'
+            }}>
+              <h4 style={{ fontSize: '14.5px', fontWeight: '800', color: 'var(--primary-purple)' }}>
+                Account Information
+              </h4>
+              <div style={{ fontSize: '13px', color: '#3b3252', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#736d85' }}>Mobile:</span>
+                <strong>+91 {selectedUser.mobile}</strong>
+              </div>
+              <div style={{ fontSize: '13px', color: '#3b3252', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#736d85' }}>Email:</span>
+                <strong>{selectedUser.email || 'Not provided'}</strong>
+              </div>
+              <div style={{ fontSize: '13px', color: '#3b3252', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#736d85' }}>PAN Card:</span>
+                <strong>{selectedUser.pan || 'Pending'}</strong>
+              </div>
+              <div style={{ fontSize: '13px', color: '#3b3252', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#736d85' }}>Aadhaar:</span>
+                <strong>{selectedUser.aadhar || 'Pending'}</strong>
+              </div>
+              <div style={{ fontSize: '13px', color: '#3b3252', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#736d85' }}>Bank A/C:</span>
+                <strong>{selectedUser.accountNumber || 'Pending'}</strong>
+              </div>
+              <div style={{ fontSize: '13px', color: '#3b3252', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#736d85' }}>IFSC:</span>
+                <strong>{selectedUser.ifsc || 'Pending'}</strong>
+              </div>
+              <div style={{ fontSize: '13px', color: '#3b3252', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#736d85' }}>Address:</span>
+                <strong style={{ maxWidth: '180px', textAlign: 'right' }}>{selectedUser.address || 'Pending'}</strong>
+              </div>
+            </div>
+
+            {/* Nominee Details Box */}
+            <div style={{
+              backgroundColor: '#f9f7ff',
+              borderRadius: '18px',
+              padding: '16px',
+              border: '1px solid #e8e2fa',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px'
+            }}>
+              <h4 style={{ fontSize: '14.5px', fontWeight: '800', color: 'var(--primary-purple)' }}>
+                Nominee Information
+              </h4>
+              <div style={{ fontSize: '13px', color: '#3b3252', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#736d85' }}>Nominee Name:</span>
+                <strong>{selectedUser.nomineeName || 'Pending'}</strong>
+              </div>
+              <div style={{ fontSize: '13px', color: '#3b3252', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#736d85' }}>Relationship:</span>
+                <strong>{selectedUser.relationship || 'Pending'}</strong>
+              </div>
+              <div style={{ fontSize: '13px', color: '#3b3252', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#736d85' }}>Nominee Mobile:</span>
+                <strong>{selectedUser.nomineeMobile ? `+91 ${selectedUser.nomineeMobile}` : 'Pending'}</strong>
+              </div>
+              <div style={{ fontSize: '13px', color: '#3b3252', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#736d85' }}>Nominee DOB:</span>
+                <strong>{selectedUser.nomineeDob || 'Pending'}</strong>
+              </div>
+            </div>
           </div>
         </div>
       )}

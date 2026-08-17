@@ -1,180 +1,177 @@
 import React from 'react';
 import { 
-  LayoutDashboard, Users, ShieldCheck, FileText, CreditCard, 
-  Hand, Coins, Settings, LogOut, ExternalLink 
+  LayoutDashboard, Users, ShieldCheck, FileText, 
+  Hand, Coins, LogOut, ExternalLink 
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { authService } from '../services/authService';
 
 export default function AdminLayout({ activeTab, onSelectTab, onSwitchToUserApp, children }) {
   const { adminAuth, setAdminAuth } = useApp();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await authService.logoutAdmin();
     setAdminAuth({ isAuthenticated: false, email: '' });
   };
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
     { id: 'users', label: 'Users', icon: <Users size={20} /> },
-    { id: 'kyc', label: 'KYC Management', icon: <ShieldCheck size={20} /> },
-    { id: 'transactions', label: 'Transactions', icon: <FileText size={20} /> },
-    { id: 'payments', label: 'Payments', icon: <CreditCard size={20} /> },
-    { id: 'withdrawals', label: 'Withdrawals', icon: <Hand size={20} /> },
-    { id: 'rates', label: 'Gold & Silver Rates', icon: <Coins size={20} /> },
-    { id: 'settings', label: 'Settings', icon: <Settings size={20} /> }
+    { id: 'kyc', label: 'KYC', icon: <ShieldCheck size={20} /> },
+    { id: 'transactions', label: 'Txns', icon: <FileText size={20} /> },
+    { id: 'withdrawals', label: 'Withdraw', icon: <Hand size={20} /> },
+    { id: 'rates', label: 'Rates', icon: <Coins size={20} /> }
   ];
 
-  return (
-    <div style={{
-      display: 'flex',
-      width: '100vw',
-      height: '100vh',
-      backgroundColor: '#0f0d19',
-      color: '#e2e8f0',
-      overflow: 'hidden'
-    }}>
-      {/* Sidebar */}
-      <div style={{
-        width: '260px',
-        backgroundColor: '#171427',
-        borderRight: '1px solid #2d2645',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        padding: '24px 16px',
-        flexShrink: 0
-      }}>
-        <div>
-          {/* Admin Header Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px', paddingLeft: '8px' }}>
-            <div style={{
-              width: '38px', height: '38px', borderRadius: '12px',
-              backgroundColor: '#583cf5', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: '900', color: '#ffd000', fontSize: '18px'
-            }}>
-              SJ
-            </div>
-            <div>
-              <div style={{ fontSize: '16px', fontWeight: '800', color: '#ffffff' }}>SJ Jewelers</div>
-              <div style={{ fontSize: '11px', color: '#ffd000', fontWeight: '700', letterSpacing: '0.5px' }}>ADMIN DASHBOARD</div>
-            </div>
-          </div>
+  const getHeaderTitle = () => {
+    switch (activeTab) {
+      case 'dashboard': return 'Admin Dashboard';
+      case 'users': return 'User Management';
+      case 'kyc': return 'KYC Requests';
+      case 'transactions': return 'Transactions';
+      case 'withdrawals': return 'Withdrawals';
+      case 'rates': return 'Asset Rates';
+      default: return 'Admin Portal';
+    }
+  };
 
-          {/* Navigation Links */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {navItems.map((item) => {
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => onSelectTab(item.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    width: '100%',
-                    padding: '12px 14px',
-                    borderRadius: '12px',
-                    border: 'none',
-                    backgroundColor: isActive ? '#583cf5' : 'transparent',
-                    color: isActive ? '#ffffff' : '#94a3b8',
-                    fontSize: '14px',
-                    fontWeight: '700',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
+  return (
+    <div className="app-screen-layout">
+      {/* 1. Mobile Fixed Top Header */}
+      <header className="top-header-bar" style={{ justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{
+            width: '34px',
+            height: '34px',
+            borderRadius: '10px',
+            backgroundColor: '#ffffff',
+            color: 'var(--primary-purple)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: '900',
+            fontSize: '15px'
+          }}>
+            SJ
+          </div>
+          <div>
+            <h2 style={{ fontSize: '18px', fontWeight: '800' }}>{getHeaderTitle()}</h2>
+            <div style={{ fontSize: '11px', color: '#e0d7fc', fontWeight: '600' }}>
+              Super Admin · {adminAuth.username || 'admin'}
+            </div>
           </div>
         </div>
 
-        {/* Footer Actions */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Switch to Customer App preview */}
           <button
             onClick={onSwitchToUserApp}
             style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '6px 10px',
+              color: '#ffffff',
+              fontSize: '11.5px',
+              fontWeight: '700',
+              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              width: '100%',
-              padding: '11px 0',
-              borderRadius: '12px',
-              border: '1px solid #583cf5',
-              backgroundColor: 'rgba(88, 60, 245, 0.15)',
-              color: '#a78bfa',
-              fontSize: '13px',
-              fontWeight: '700',
-              cursor: 'pointer'
+              gap: '4px'
             }}
+            aria-label="Customer App Preview"
           >
-            <ExternalLink size={16} />
-            <span>Preview User Mobile App</span>
+            <ExternalLink size={13} />
+            <span>App</span>
           </button>
 
+          {/* Admin Logout */}
           <button
             onClick={handleLogout}
             style={{
+              backgroundColor: '#fee2e2',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '6px 10px',
+              color: '#dc2626',
+              fontSize: '12px',
+              fontWeight: '800',
+              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              width: '100%',
-              padding: '11px 0',
-              borderRadius: '12px',
-              border: 'none',
-              backgroundColor: '#ef4444',
-              color: '#ffffff',
-              fontSize: '14px',
-              fontWeight: '700',
-              cursor: 'pointer'
+              gap: '4px'
             }}
+            aria-label="Admin Logout"
           >
-            <LogOut size={16} />
-            <span>Admin Logout</span>
+            <LogOut size={13} />
+            <span>Exit</span>
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Main Admin Content View */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {/* Top Header */}
-        <div style={{
-          height: '64px',
-          backgroundColor: '#171427',
-          borderBottom: '1px solid #2d2645',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 28px',
-          flexShrink: 0
-        }}>
-          <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#ffffff', textTransform: 'capitalize' }}>
-            {activeTab} Management
-          </h2>
+      {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
+      <main className="app-scroll-content" style={{ padding: '16px 16px 72px 16px' }}>
+        {children}
+      </main>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '600' }}>
-              Logged in as: <strong style={{ color: '#ffffff' }}>{adminAuth.email || 'admin@sjjewelers.com'}</strong>
-            </span>
-            <div style={{
-              width: '34px', height: '34px', borderRadius: '50%',
-              backgroundColor: '#583cf5', color: 'white', fontWeight: '800',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px'
-            }}>
-              A
-            </div>
-          </div>
-        </div>
-
-        {/* Scrollable Content Body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '28px' }}>
-          {children}
-        </div>
-      </div>
+      {/* 3. Mobile Fixed Admin Bottom Navigation */}
+      <nav style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '62px',
+        backgroundColor: '#ffffff',
+        borderTop: '1px solid #e5deff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-around',
+        padding: '0 4px',
+        zIndex: 40,
+        boxShadow: '0 -4px 16px rgba(0, 0, 0, 0.06)'
+      }}>
+        {navItems.map((item) => {
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => onSelectTab(item.id)}
+              style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '2px',
+                background: 'transparent',
+                border: 'none',
+                color: isActive ? 'var(--primary-purple)' : '#8b849c',
+                cursor: 'pointer',
+                padding: '4px 0',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '3px 10px',
+                borderRadius: '14px',
+                backgroundColor: isActive ? '#ede7fc' : 'transparent'
+              }}>
+                {item.icon}
+              </div>
+              <span style={{
+                fontSize: '11px',
+                fontWeight: isActive ? '800' : '600',
+                letterSpacing: '-0.2px'
+              }}>
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 }
