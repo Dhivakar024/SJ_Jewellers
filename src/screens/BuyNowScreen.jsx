@@ -5,7 +5,10 @@ import BottomNav from '../components/BottomNav';
 
 export default function BuyNowScreen({ assetType = 'gold', onNavigate, onTogglePlus }) {
   const { goldRate, silverRate, addPurchaseTransaction } = useApp();
-  const isGold = assetType === 'gold';
+  
+  // Dynamic Gold / Silver state on the SAME page
+  const [selectedAsset, setSelectedAsset] = useState(assetType || 'gold');
+  const isGold = selectedAsset === 'gold';
   const ratePerGram = isGold ? goldRate : silverRate;
 
   const [mode, setMode] = useState('rupees'); // 'rupees' or 'grams'
@@ -26,12 +29,14 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
-  // Dynamic GST & Total calculations
-  const rawAmount = parseFloat(rupeesVal || '0');
-  const gstAmount = rawAmount * 0.03;
-  const totalAmountWithGst = rawAmount + gstAmount;
+  // Sync prop changes if user enters via direct link
+  useEffect(() => {
+    if (assetType) {
+      setSelectedAsset(assetType);
+    }
+  }, [assetType]);
 
-  // Recalculate if assetType or ratePerGram changes
+  // Recalculate if selectedAsset or ratePerGram changes
   useEffect(() => {
     if (mode === 'rupees') {
       const num = parseFloat(rupeesVal) || 100;
@@ -40,7 +45,21 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
       const gm = parseFloat(gramsVal) || (isGold ? 0.01 : 5);
       setRupeesVal((gm * ratePerGram).toFixed(2));
     }
-  }, [assetType, ratePerGram]);
+  }, [selectedAsset, ratePerGram]);
+
+  const handleAssetSwitch = (asset) => {
+    setSelectedAsset(asset);
+    const newRate = asset === 'gold' ? goldRate : silverRate;
+    if (mode === 'rupees') {
+      const num = parseFloat(rupeesVal) || 100;
+      setGramsVal((num / newRate).toFixed(4));
+    } else {
+      const defaultGm = asset === 'gold' ? '0.0100' : '5.00';
+      setSelectedQuickOption(defaultGm);
+      setGramsVal(defaultGm);
+      setRupeesVal((parseFloat(defaultGm) * newRate).toFixed(2));
+    }
+  };
 
   const handleRupeesChange = (val) => {
     setRupeesVal(val);
@@ -93,6 +112,11 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
     }
   };
 
+  // Dynamic GST & Total calculations
+  const rawAmount = parseFloat(rupeesVal || '0');
+  const gstAmount = rawAmount * 0.03;
+  const totalAmountWithGst = rawAmount + gstAmount;
+
   const handleProceed = () => {
     if (parseFloat(rupeesVal) <= 0 || parseFloat(gramsVal) <= 0) {
       alert('Please enter a valid amount or gram quantity.');
@@ -135,16 +159,64 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
       </header>
 
       {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS, with padding for fixed bottom nav) */}
-      <main className="app-scroll-content" style={{ padding: '20px 18px 85px 18px' }}>
+      <main className="app-scroll-content" style={{ padding: '16px 18px 85px 18px' }}>
+        
+        {/* Gold / Silver Segmented Selector at Top */}
+        <div style={{
+          backgroundColor: '#f1ecfe',
+          borderRadius: '30px',
+          padding: '4px',
+          display: 'flex',
+          margin: '0 auto 16px auto',
+          width: '230px'
+        }}>
+          <button
+            type="button"
+            onClick={() => handleAssetSwitch('gold')}
+            style={{
+              flex: 1,
+              padding: '9px 0',
+              borderRadius: '24px',
+              border: 'none',
+              backgroundColor: isGold ? 'var(--primary-purple)' : 'transparent',
+              color: isGold ? '#ffffff' : '#736d85',
+              fontWeight: '700',
+              fontSize: '14.5px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Gold
+          </button>
+          <button
+            type="button"
+            onClick={() => handleAssetSwitch('silver')}
+            style={{
+              flex: 1,
+              padding: '9px 0',
+              borderRadius: '24px',
+              border: 'none',
+              backgroundColor: !isGold ? 'var(--primary-purple)' : 'transparent',
+              color: !isGold ? '#ffffff' : '#736d85',
+              fontWeight: '700',
+              fontSize: '14.5px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Silver
+          </button>
+        </div>
+
         {/* Live Price Box */}
         <div style={{
           backgroundColor: '#dcd0ff',
           borderRadius: '22px',
-          padding: '20px',
+          padding: '18px 20px',
           textAlign: 'center',
           border: '1px solid #c9b8fc'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px' }}>
             <div style={{
               width: '28px', height: '28px', borderRadius: '50%',
               backgroundColor: isGold ? '#ffd000' : '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center'
@@ -152,7 +224,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
               <span style={{ fontSize: '15px' }}>{isGold ? '🪙' : '🥈'}</span>
             </div>
             <span style={{ fontSize: '16px', fontWeight: '800', color: '#33295c' }}>
-              {isGold ? 'Gold Price' : 'Silver Price'}
+              {isGold ? '24KT Gold Price' : '24KT Silver Price'}
             </span>
           </div>
 
@@ -166,7 +238,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
         </div>
 
         {/* Section Heading */}
-        <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-dark)', margin: '24px 0 16px 0' }}>
+        <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-dark)', margin: '20px 0 14px 0' }}>
           Buy Your Assets
         </h3>
 
@@ -177,7 +249,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
           padding: '6px',
           display: 'flex',
           gap: '8px',
-          marginBottom: '24px'
+          marginBottom: '20px'
         }}>
           <button
             onClick={() => handleSwitchMode('rupees')}
@@ -241,7 +313,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: '24px'
+          marginBottom: '22px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontSize: '20px', fontWeight: '800', color: '#1c1829' }}>₹</span>
@@ -281,13 +353,13 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
           </div>
         </div>
 
-        {/* Quick Amount Preset Chips (Highlighted with Proceed button purple when selected) */}
+        {/* Quick Amount Preset Chips */}
         {mode === 'rupees' ? (
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
             gap: '8px',
-            marginBottom: '28px'
+            marginBottom: '24px'
           }}>
             {rupeesPresets.map((amt) => {
               const isSelected = selectedQuickOption === amt;
@@ -341,7 +413,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
             gap: '8px',
-            marginBottom: '28px'
+            marginBottom: '24px'
           }}>
             {gramsPresets.map((gm, idx) => {
               const isSelected = selectedQuickOption === gm;
@@ -454,104 +526,81 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#5b5375', fontWeight: '600' }}>
+                    <span>Live Rate</span>
+                    <span style={{ fontWeight: '800', color: '#1e1b2e' }}>₹ {ratePerGram.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm</span>
+                  </div>
+
+                  {/* 1. Base Amount Row */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#5b5375', fontWeight: '600' }}>
                     <span>Amount</span>
                     <span style={{ fontWeight: '800', color: '#1e1b2e' }}>₹ {rawAmount.toFixed(2)}</span>
                   </div>
 
+                  {/* 2. Dynamic 3% GST Row */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#5b5375', fontWeight: '600' }}>
                     <span>GST (3%)</span>
-                    <span style={{ fontWeight: '800', color: '#1e1b2e' }}>₹ {gstAmount.toFixed(2)}</span>
+                    <span style={{ fontWeight: '800', color: 'var(--primary-purple)' }}>+ ₹ {gstAmount.toFixed(2)}</span>
                   </div>
 
-                  <div style={{ height: '1px', backgroundColor: '#dcd4fa', margin: '4px 0' }}></div>
+                  <div style={{ height: '1px', backgroundColor: '#e2d9fa', margin: '4px 0' }}></div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: '800' }}>
-                    <span style={{ color: '#1e1b2e' }}>Total Amount</span>
-                    <span style={{ color: 'var(--primary-purple)', fontSize: '20px' }}>
-                      ₹ {totalAmountWithGst.toFixed(2)}
-                    </span>
+                  {/* 3. Total Amount Row (Amount + 3% GST) */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '17px', fontWeight: '900', color: '#1e1b2e' }}>
+                    <span>Total Amount</span>
+                    <span style={{ color: 'var(--primary-purple)' }}>₹ {totalAmountWithGst.toFixed(2)}</span>
                   </div>
                 </div>
 
-                {/* Payment Method Section (UPI / GooglePay / PhonePe only) */}
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ fontSize: '14px', fontWeight: '800', color: '#1e1b2e', marginBottom: '10px' }}>
+                <div style={{ marginBottom: '22px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: '700', color: '#5b5375', marginBottom: '10px' }}>
                     Select Payment Method
                   </div>
 
                   <div
+                    onClick={() => setSelectedMethod('UPI')}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      padding: '13px 16px',
+                      padding: '12px 16px',
                       borderRadius: '14px',
-                      border: '2px solid var(--primary-purple)',
-                      backgroundColor: '#f3eeff',
-                      cursor: 'default'
+                      border: selectedMethod === 'UPI' ? '2px solid var(--primary-purple)' : '1px solid #dcd4fa',
+                      backgroundColor: selectedMethod === 'UPI' ? '#f6f2ff' : '#ffffff',
+                      cursor: 'pointer'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700', fontSize: '14px', color: '#1e1b2e' }}>
-                      <Smartphone size={20} color="var(--primary-purple)" />
-                      <span>UPI / GooglePay / PhonePe</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <Smartphone size={22} color="var(--primary-purple)" />
+                      <div>
+                        <div style={{ fontSize: '15px', fontWeight: '800', color: '#1e1b2e' }}>UPI Payment</div>
+                        <div style={{ fontSize: '12px', color: '#6c727f' }}>Google Pay, PhonePe, Paytm</div>
+                      </div>
                     </div>
                     <div style={{
                       width: '18px', height: '18px', borderRadius: '50%',
-                      border: '6px solid var(--primary-purple)'
+                      border: selectedMethod === 'UPI' ? '6px solid var(--primary-purple)' : '2px solid #a49bbd'
                     }}></div>
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <button
-                    disabled={isProcessing}
-                    onClick={() => setShowConfirmModal(false)}
-                    style={{
-                      flex: 1,
-                      height: '52px',
-                      borderRadius: '14px',
-                      border: '1.5px solid var(--primary-purple)',
-                      backgroundColor: 'transparent',
-                      color: 'var(--text-dark)',
-                      fontSize: '16px',
-                      fontWeight: '800',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    disabled={isProcessing}
-                    onClick={handleConfirmPay}
-                    className="btn-primary"
-                    style={{ flex: 1.5, height: '52px', fontSize: '16px' }}
-                  >
-                    {isProcessing ? 'Processing...' : 'Pay Now'}
-                  </button>
-                </div>
+                <button
+                  onClick={handleConfirmPay}
+                  disabled={isProcessing}
+                  className="btn-primary"
+                  style={{ width: '100%', height: '52px', fontSize: '16px' }}
+                >
+                  {isProcessing ? 'Processing Payment...' : `Pay ₹ ${totalAmountWithGst.toFixed(2)}`}
+                </button>
               </>
             ) : (
-              <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                <CheckCircle2 size={64} color="#2ecc71" style={{ margin: '0 auto 14px auto' }} />
-                <h3 style={{ fontSize: '24px', fontWeight: '900', color: '#1e1b2e', marginBottom: '6px' }}>
-                  Payment Successful !
+              <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                <CheckCircle2 size={64} color="#2ecc71" style={{ margin: '0 auto 16px auto' }} />
+                <h3 style={{ fontSize: '24px', fontWeight: '900', color: '#1e1b2e', marginBottom: '8px' }}>
+                  Payment Successful!
                 </h3>
-                <p style={{ fontSize: '15px', color: '#5b5375', fontWeight: '700', marginBottom: '16px' }}>
-                  Purchased {gramsVal} gm of {isGold ? 'Gold' : 'Silver'} for ₹ {totalAmountWithGst.toFixed(2)}
+                <p style={{ fontSize: '15px', color: '#6c727f', fontWeight: '600' }}>
+                  You have successfully purchased {gramsVal} gm of {isGold ? 'Gold' : 'Silver'}.
                 </p>
-                <div style={{
-                  display: 'inline-block',
-                  backgroundColor: '#e6f7ef',
-                  color: '#059669',
-                  padding: '8px 18px',
-                  borderRadius: '20px',
-                  fontSize: '14px',
-                  fontWeight: '800'
-                }}>
-                  Added to Your Holdings
-                </div>
               </div>
             )}
           </div>

@@ -194,7 +194,7 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
             convenience price @ Salem Jewels
           </div>
 
-          {/* Proceed Primary Filled CTA Button */}
+          {/* Buy Now Primary Filled CTA Button */}
           <button
             onClick={() => onNavigate(metalTab === 'gold' ? 'buy-gold' : 'buy-silver')}
             className="btn-primary"
@@ -214,7 +214,7 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
               transition: 'all 0.2s ease'
             }}
           >
-            Proceed
+            Buy Now
           </button>
         </div>
 
