@@ -1,13 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   LayoutDashboard, Users, ShieldCheck, FileText, 
-  Hand, Coins, LogOut, ExternalLink 
+  Hand, Coins, CreditCard, BarChart3, Settings, LogOut, 
+  Menu, X, Sparkles, User, Bell
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { authService } from '../services/authService';
 
-export default function AdminLayout({ activeTab, onSelectTab, onSwitchToUserApp, children }) {
-  const { adminAuth, setAdminAuth } = useApp();
+export default function AdminLayout({ activeTab, onSelectTab, children }) {
+  const { adminAuth, setAdminAuth, kycRequests, withdrawals } = useApp();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const pendingKycCount = kycRequests.filter((k) => k.status === 'Pending' || k.status === 'Under Review').length;
+  const pendingWithdrawalCount = withdrawals.filter((w) => w.status === 'Pending' || w.status === 'Processing').length;
 
   const handleLogout = async () => {
     await authService.logoutAdmin();
@@ -17,161 +22,273 @@ export default function AdminLayout({ activeTab, onSelectTab, onSwitchToUserApp,
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
     { id: 'users', label: 'Users', icon: <Users size={20} /> },
-    { id: 'kyc', label: 'KYC', icon: <ShieldCheck size={20} /> },
-    { id: 'transactions', label: 'Txns', icon: <FileText size={20} /> },
-    { id: 'withdrawals', label: 'Withdraw', icon: <Hand size={20} /> },
-    { id: 'rates', label: 'Rates', icon: <Coins size={20} /> }
+    { id: 'kyc', label: 'KYC Requests', icon: <ShieldCheck size={20} />, badge: pendingKycCount },
+    { id: 'transactions', label: 'Transactions', icon: <FileText size={20} /> },
+    { id: 'withdrawals', label: 'Withdrawals', icon: <Hand size={20} />, badge: pendingWithdrawalCount },
+    { id: 'rates', label: 'Gold & Silver Rates', icon: <Coins size={20} /> },
+    { id: 'payments', label: 'Payments', icon: <CreditCard size={20} /> },
+    { id: 'reports', label: 'Reports', icon: <BarChart3 size={20} /> },
+    { id: 'settings', label: 'Settings', icon: <Settings size={20} /> }
   ];
 
   const getHeaderTitle = () => {
-    switch (activeTab) {
-      case 'dashboard': return 'Admin Dashboard';
-      case 'users': return 'User Management';
-      case 'kyc': return 'KYC Requests';
-      case 'transactions': return 'Transactions';
-      case 'withdrawals': return 'Withdrawals';
-      case 'rates': return 'Asset Rates';
-      default: return 'Admin Portal';
-    }
+    const item = navItems.find((n) => n.id === activeTab);
+    return item ? item.label : 'Admin Portal';
   };
 
   return (
-    <div className="app-screen-layout">
-      {/* 1. Mobile Fixed Top Header */}
-      <header className="top-header-bar" style={{ justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <div style={{
+      display: 'flex',
+      minHeight: '100vh',
+      width: '100vw',
+      backgroundColor: '#f8f6fc',
+      fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
+      color: '#1e1b2e',
+      overflowX: 'hidden'
+    }}>
+      {/* 1. Desktop & Tablet Sidebar */}
+      <aside style={{
+        width: '260px',
+        backgroundColor: '#120f22',
+        color: '#ffffff',
+        display: 'flex',
+        flexDirection: 'column',
+        flexShrink: 0,
+        borderRight: '1px solid #282240',
+        zIndex: 50,
+        position: 'fixed',
+        top: 0,
+        bottom: 0,
+        left: 0,
+        transition: 'transform 0.25s ease',
+        transform: isSidebarOpen ? 'translateX(0)' : 'translateX(0)'
+      }} className="admin-sidebar-desktop">
+        {/* Brand Logo Header */}
+        <div style={{
+          padding: '24px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          borderBottom: '1px solid #231c38'
+        }}>
           <div style={{
-            width: '34px',
-            height: '34px',
-            borderRadius: '10px',
-            backgroundColor: '#ffffff',
-            color: 'var(--primary-purple)',
+            width: '40px',
+            height: '40px',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, var(--primary-purple) 0%, #7b5aff 100%)',
+            color: '#ffd000',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontWeight: '900',
-            fontSize: '15px'
+            fontSize: '18px',
+            boxShadow: '0 4px 12px rgba(88, 60, 245, 0.4)'
           }}>
             SJ
           </div>
           <div>
-            <h2 style={{ fontSize: '18px', fontWeight: '800' }}>{getHeaderTitle()}</h2>
-            <div style={{ fontSize: '11px', color: '#e0d7fc', fontWeight: '600' }}>
-              Super Admin · {adminAuth.username || 'admin'}
+            <div style={{ fontSize: '16px', fontWeight: '800', color: '#ffffff', letterSpacing: '-0.2px' }}>
+              Salem Jewels
+            </div>
+            <div style={{ fontSize: '11px', color: '#a78bfa', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+              Admin Portal
             </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {/* Switch to Customer App preview */}
-          <button
-            onClick={onSwitchToUserApp}
-            style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-              border: 'none',
-              borderRadius: '10px',
-              padding: '6px 10px',
+        {/* Navigation Items */}
+        <nav style={{
+          flex: 1,
+          padding: '16px 12px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '4px',
+          overflowY: 'auto'
+        }}>
+          {navItems.map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  onSelectTab(item.id);
+                  setIsSidebarOpen(false);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 14px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  backgroundColor: isActive ? 'var(--primary-purple)' : 'transparent',
+                  color: isActive ? '#ffffff' : '#94a3b8',
+                  fontSize: '13.5px',
+                  fontWeight: isActive ? '800' : '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  textAlign: 'left',
+                  width: '100%'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ color: isActive ? '#ffffff' : '#a78bfa' }}>{item.icon}</span>
+                  <span>{item.label}</span>
+                </div>
+
+                {item.badge > 0 && (
+                  <span style={{
+                    backgroundColor: isActive ? '#ffffff' : '#d97706',
+                    color: isActive ? 'var(--primary-purple)' : '#ffffff',
+                    fontSize: '10.5px',
+                    fontWeight: '900',
+                    padding: '2px 7px',
+                    borderRadius: '10px'
+                  }}>
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Admin Profile & Logout Footer */}
+        <div style={{
+          padding: '16px 14px',
+          borderTop: '1px solid #231c38',
+          backgroundColor: '#0c0a17',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--primary-purple)',
               color: '#ffffff',
-              fontSize: '11.5px',
-              fontWeight: '700',
-              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px'
-            }}
-            aria-label="Customer App Preview"
-          >
-            <ExternalLink size={13} />
-            <span>App</span>
-          </button>
+              justifyContent: 'center',
+              fontWeight: '800',
+              fontSize: '14px'
+            }}>
+              A
+            </div>
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: '800', color: '#ffffff' }}>
+                {adminAuth.username || 'Administrator'}
+              </div>
+              <div style={{ fontSize: '11px', color: '#64748b' }}>
+                Super Admin
+              </div>
+            </div>
+          </div>
 
-          {/* Admin Logout */}
           <button
             onClick={handleLogout}
+            title="Sign Out"
             style={{
-              backgroundColor: '#fee2e2',
-              border: 'none',
+              width: '34px',
+              height: '34px',
               borderRadius: '10px',
-              padding: '6px 10px',
-              color: '#dc2626',
-              fontSize: '12px',
-              fontWeight: '800',
-              cursor: 'pointer',
+              border: 'none',
+              backgroundColor: 'rgba(239, 68, 68, 0.15)',
+              color: '#f87171',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px'
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s ease'
             }}
-            aria-label="Admin Logout"
           >
-            <LogOut size={13} />
-            <span>Exit</span>
+            <LogOut size={16} />
           </button>
         </div>
-      </header>
+      </aside>
 
-      {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
-      <main className="app-scroll-content" style={{ padding: '16px 16px 72px 16px' }}>
-        {children}
-      </main>
-
-      {/* 3. Mobile Fixed Admin Bottom Navigation */}
-      <nav style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: '62px',
-        backgroundColor: '#ffffff',
-        borderTop: '1px solid #e5deff',
+      {/* 2. Main Desktop Content Container */}
+      <div style={{
+        flex: 1,
+        marginLeft: '260px',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-around',
-        padding: '0 4px',
-        zIndex: 40,
-        boxShadow: '0 -4px 16px rgba(0, 0, 0, 0.06)'
-      }}>
-        {navItems.map((item) => {
-          const isActive = activeTab === item.id;
-          return (
+        flexDirection: 'column',
+        minHeight: '100vh',
+        width: 'calc(100vw - 260px)'
+      }} className="admin-main-wrapper">
+        
+        {/* Top Header Bar */}
+        <header style={{
+          height: '70px',
+          backgroundColor: '#ffffff',
+          borderBottom: '1px solid #e8e2fa',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 32px',
+          position: 'sticky',
+          top: 0,
+          zIndex: 40
+        }}>
+          <div>
+            <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#1e1b2e', margin: 0 }}>
+              {getHeaderTitle()}
+            </h2>
+            <div style={{ fontSize: '12px', color: '#736d85', fontWeight: '600', marginTop: '2px' }}>
+              Salem Jewels Real-time Administration
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{
+              backgroundColor: '#f6f2ff',
+              borderRadius: '20px',
+              padding: '6px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '12px',
+              fontWeight: '700',
+              color: 'var(--primary-purple)',
+              border: '1px solid #e2d9fa'
+            }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981' }}></span>
+              <span>System Live</span>
+            </div>
+
             <button
-              key={item.id}
-              onClick={() => onSelectTab(item.id)}
+              onClick={handleLogout}
               style={{
-                flex: 1,
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center',
-                gap: '2px',
-                background: 'transparent',
-                border: 'none',
-                color: isActive ? 'var(--primary-purple)' : '#8b849c',
-                cursor: 'pointer',
-                padding: '4px 0',
-                transition: 'all 0.15s ease'
+                gap: '6px',
+                padding: '8px 16px',
+                borderRadius: '12px',
+                border: '1px solid #fee2e2',
+                backgroundColor: '#fef2f2',
+                color: '#dc2626',
+                fontSize: '13px',
+                fontWeight: '700',
+                cursor: 'pointer'
               }}
             >
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '3px 10px',
-                borderRadius: '14px',
-                backgroundColor: isActive ? '#ede7fc' : 'transparent'
-              }}>
-                {item.icon}
-              </div>
-              <span style={{
-                fontSize: '11px',
-                fontWeight: isActive ? '800' : '600',
-                letterSpacing: '-0.2px'
-              }}>
-                {item.label}
-              </span>
+              <LogOut size={15} />
+              <span>Logout</span>
             </button>
-          );
-        })}
-      </nav>
+          </div>
+        </header>
+
+        {/* Dynamic Section Content Area */}
+        <main style={{
+          flex: 1,
+          padding: '32px',
+          boxSizing: 'border-box'
+        }}>
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

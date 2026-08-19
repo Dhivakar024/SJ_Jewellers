@@ -598,4 +598,28 @@ textarea.profile-custom-input {
   gap: 24px;
 }
 
+/* Separate Admin Web Portal Desktop & Tablet Styles */
+@media (max-width: 900px) {
+  .admin-sidebar-desktop {
+    width: 220px !important;
+  }
+  .admin-main-wrapper {
+    margin-left: 220px !important;
+    width: calc(100vw - 220px) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-sidebar-desktop {
+    position: relative !important;
+    width: 100vw !important;
+    height: auto !important;
+  }
+  .admin-main-wrapper {
+    margin-left: 0 !important;
+    width: 100vw !important;
+  }
+}
+
+
 

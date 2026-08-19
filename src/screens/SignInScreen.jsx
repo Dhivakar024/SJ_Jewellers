@@ -104,26 +104,6 @@ export default function SignInScreen({ onNavigate }) {
           </div>
         </div>
       </div>
-
-      {/* Admin Portal Switch */}
-      <div style={{ marginTop: '20px', textAlign: 'center' }}>
-        <button
-          type="button"
-          onClick={() => onNavigate('admin-login')}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: '#8b849c',
-            fontSize: '12.5px',
-            fontWeight: '700',
-            cursor: 'pointer',
-            padding: '6px 12px',
-            borderRadius: '8px'
-          }}
-        >
-          🔐 Admin Portal
-        </button>
-      </div>
     </div>
   );
 }
