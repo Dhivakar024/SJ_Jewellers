@@ -7,28 +7,64 @@ export default function WithdrawScreen({ onNavigate, onTogglePlus }) {
   const { currentUser, holdings, goldRate, silverRate, submitKycRequest, requestWithdrawal } = useApp();
   
   // Persistent KYC verification state check
-  const isKycVerified = currentUser.kycStatus === 'Verified';
+  const isKycVerified = currentUser?.kycStatus === 'Verified';
 
   const [showKycModal, setShowKycModal] = useState(false);
   const [showKycForm, setShowKycForm] = useState(false);
-  const [pan, setPan] = useState(currentUser.pan || '');
-  const [aadhar, setAadhar] = useState(currentUser.aadhar || '');
+  const [pan, setPan] = useState(currentUser?.pan || '');
+  const [aadhar, setAadhar] = useState(currentUser?.aadhar || '');
+  const [kycError, setKycError] = useState('');
+  const [kycSuccess, setKycSuccess] = useState(false);
+  const [isSubmittingKyc, setIsSubmittingKyc] = useState(false);
 
   const [withdrawAsset, setWithdrawAsset] = useState('Gold');
   const [withdrawGrams, setWithdrawGrams] = useState('');
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
   const [withdrawSuccess, setWithdrawSuccess] = useState(false);
 
-  const handleSubmitKyc = (e) => {
+  const handleSubmitKyc = async (e) => {
     e.preventDefault();
-    if (!pan || !aadhar) {
-      alert('Please enter both PAN Card and Aadhaar Number.');
+    setKycError('');
+
+    const cleanPan = (pan || '').trim().toUpperCase();
+    const cleanAadhar = (aadhar || '').replace(/[\s-]/g, '').trim();
+
+    if (!cleanPan || !cleanAadhar) {
+      setKycError('Please enter both PAN Card Number and Aadhaar Number.');
       return;
     }
-    submitKycRequest({ pan, aadhar });
-    setShowKycForm(false);
-    setShowKycModal(false);
-    alert('KYC Documents submitted successfully! Your status is now Under Review.');
+
+    // 10-character PAN validation (e.g. ABCDE1234F)
+    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+    if (!panRegex.test(cleanPan)) {
+      setKycError('Please enter a valid 10-character PAN (e.g. ABCDE1234F).');
+      return;
+    }
+
+    // 12-digit Aadhaar validation
+    const aadharRegex = /^\d{12}$/;
+    if (!aadharRegex.test(cleanAadhar)) {
+      setKycError('Please enter a valid 12-digit Aadhaar Number.');
+      return;
+    }
+
+    setIsSubmittingKyc(true);
+    try {
+      if (typeof submitKycRequest === 'function') {
+        submitKycRequest({ pan: cleanPan, aadhar: cleanAadhar });
+      }
+      setKycSuccess(true);
+      setTimeout(() => {
+        setKycSuccess(false);
+        setShowKycForm(false);
+        setShowKycModal(false);
+        setIsSubmittingKyc(false);
+      }, 1400);
+    } catch (err) {
+      console.error('KYC submission error:', err);
+      setKycError('Failed to submit KYC. Please try again.');
+      setIsSubmittingKyc(false);
+    }
   };
 
   const handleInitiateWithdraw = (asset) => {
@@ -260,58 +296,97 @@ export default function WithdrawScreen({ onNavigate, onTogglePlus }) {
 
       {/* Frontend KYC Submission Form Modal */}
       {showKycForm && (
-        <div className="modal-overlay" onClick={() => setShowKycForm(false)}>
+        <div className="modal-overlay" onClick={() => !isSubmittingKyc && setShowKycForm(false)}>
           <div className="bottom-sheet" onClick={(e) => e.stopPropagation()} style={{ padding: '28px 24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-              <ShieldCheck size={26} color="var(--primary-purple)" />
-              <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#1e1b2e' }}>
-                Complete KYC Verification
-              </h3>
-            </div>
+            {!kycSuccess ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                  <ShieldCheck size={26} color="var(--primary-purple)" />
+                  <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#1e1b2e' }}>
+                    Complete KYC Verification
+                  </h3>
+                </div>
 
-            <form onSubmit={handleSubmitKyc} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div className="input-group">
-                <label style={{ fontSize: '13px', fontWeight: '700', color: '#5b5375', marginBottom: '4px' }}>PAN Card Number</label>
-                <input
-                  type="text"
-                  className="custom-input"
-                  placeholder="Enter 10-digit PAN (e.g. ABCDE1234F)"
-                  value={pan}
-                  onChange={(e) => setPan(e.target.value)}
-                />
-              </div>
+                {kycError && (
+                  <div style={{
+                    color: '#dc2626',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    backgroundColor: '#fee2e2',
+                    padding: '10px 14px',
+                    borderRadius: '10px',
+                    marginBottom: '14px',
+                    lineHeight: '1.4'
+                  }}>
+                    {kycError}
+                  </div>
+                )}
 
-              <div className="input-group">
-                <label style={{ fontSize: '13px', fontWeight: '700', color: '#5b5375', marginBottom: '4px' }}>Aadhaar Number</label>
-                <input
-                  type="text"
-                  className="custom-input"
-                  placeholder="Enter 12-digit Aadhaar Number"
-                  value={aadhar}
-                  onChange={(e) => setAadhar(e.target.value)}
-                />
-              </div>
+                <form onSubmit={handleSubmitKyc} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div className="input-group">
+                    <label style={{ fontSize: '13px', fontWeight: '700', color: '#5b5375', marginBottom: '4px' }}>PAN Card Number</label>
+                    <input
+                      type="text"
+                      className="custom-input"
+                      placeholder="Enter 10-digit PAN (e.g. ABCDE1234F)"
+                      value={pan}
+                      onChange={(e) => {
+                        setPan(e.target.value.toUpperCase());
+                        setKycError('');
+                      }}
+                      maxLength={10}
+                    />
+                  </div>
 
-              <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowKycForm(false)}
-                  style={{
-                    flex: 1, height: '50px', borderRadius: '14px', border: '1.5px solid var(--primary-purple)',
-                    backgroundColor: 'transparent', color: '#1e1b2e', fontSize: '16px', fontWeight: '800', cursor: 'pointer'
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  style={{ flex: 1.5, height: '50px', fontSize: '16px' }}
-                >
-                  Submit KYC
-                </button>
+                  <div className="input-group">
+                    <label style={{ fontSize: '13px', fontWeight: '700', color: '#5b5375', marginBottom: '4px' }}>Aadhaar Number</label>
+                    <input
+                      type="text"
+                      className="custom-input"
+                      placeholder="Enter 12-digit Aadhaar Number"
+                      value={aadhar}
+                      onChange={(e) => {
+                        setAadhar(e.target.value);
+                        setKycError('');
+                      }}
+                      maxLength={14}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowKycForm(false)}
+                      disabled={isSubmittingKyc}
+                      style={{
+                        flex: 1, height: '50px', borderRadius: '14px', border: '1.5px solid var(--primary-purple)',
+                        backgroundColor: 'transparent', color: '#1e1b2e', fontSize: '16px', fontWeight: '800', cursor: 'pointer'
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn-primary"
+                      disabled={isSubmittingKyc}
+                      style={{ flex: 1.5, height: '50px', fontSize: '16px', cursor: isSubmittingKyc ? 'not-allowed' : 'pointer' }}
+                    >
+                      {isSubmittingKyc ? 'Submitting...' : 'Submit KYC'}
+                    </button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                <CheckCircle2 size={56} color="#10b981" style={{ margin: '0 auto 14px auto' }} />
+                <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#1e1b2e', marginBottom: '6px' }}>
+                  KYC Verified Successfully!
+                </h3>
+                <p style={{ fontSize: '14px', color: '#6b7280', fontWeight: '500' }}>
+                  Your documents are verified. You can now withdraw your gold and silver.
+                </p>
               </div>
-            </form>
+            )}
           </div>
         </div>
       )}

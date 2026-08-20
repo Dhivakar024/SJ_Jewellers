@@ -461,6 +461,92 @@ export function AppProvider({ children }) {
     return newTxn;
   };
 
+  // KYC Submission Action
+  const submitKycRequest = ({ pan, aadhar }) => {
+    const cleanPan = (pan || '').trim().toUpperCase();
+    const cleanAadhar = (aadhar || '').replace(/[\s-]/g, '').trim();
+
+    const updatedUser = {
+      ...currentUser,
+      pan: cleanPan,
+      aadhar: cleanAadhar,
+      kycStatus: 'Verified',
+      profileCompleted: true
+    };
+
+    setCurrentUser(updatedUser);
+    try {
+      localStorage.setItem('sj_current_user', JSON.stringify(updatedUser));
+    } catch (e) {
+      console.error(e);
+    }
+
+    // Update member list
+    setMembers((prev) => prev.map((m) => {
+      if (m.username === currentUser.name || m.mobile === currentUser.mobile || m.id === currentUser.id) {
+        return { ...m, verified: 'Yes' };
+      }
+      return m;
+    }));
+
+    // Remove from pending verifications
+    setPendingVerifications((prev) => prev.filter((p) => p.name !== currentUser.name && p.mobile !== currentUser.mobile));
+
+    return updatedUser;
+  };
+
+  // Withdrawal Request Action
+  const requestWithdrawal = ({ asset, quantity, amount }) => {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+    const gramsNum = parseFloat(quantity) || 0;
+    const isGold = (asset || '').toLowerCase() === 'gold';
+    const amountNum = parseFloat(amount.toString().replace(/[^0-9.]/g, '')) || 0;
+
+    const newWithdrawal = {
+      id: `WTH-${Math.floor(1000 + Math.random() * 9000)}`,
+      date: `${dateStr}, ${timeStr}`,
+      customer: currentUser.name || 'Demo User',
+      mobile: currentUser.mobile || '+919999999999',
+      metal: isGold ? 'Gold' : 'Silver',
+      grams: gramsNum,
+      rate: isGold ? goldRate : silverRate,
+      amount: amountNum,
+      status: 'Pending',
+      paidDate: null
+    };
+
+    setWithdrawals((prev) => [newWithdrawal, ...prev]);
+
+    // Deduct holdings
+    setHoldings((prev) => {
+      const currentGold = parseFloat(prev?.goldGrams || 0);
+      const currentSilver = parseFloat(prev?.silverGrams || 0);
+      return {
+        goldGrams: isGold ? Math.max(0, parseFloat((currentGold - gramsNum).toFixed(4))) : currentGold,
+        silverGrams: !isGold ? Math.max(0, parseFloat((currentSilver - gramsNum).toFixed(4))) : currentSilver
+      };
+    });
+
+    // Add to transactions record
+    const newTxn = {
+      id: `TXN-${Math.floor(1000 + Math.random() * 9000)}`,
+      date: now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      time: timeStr,
+      paymentMethod: 'Bank Transfer',
+      asset: isGold ? 'Gold' : 'Silver',
+      assetType: isGold ? 'gold' : 'silver',
+      quantity: `${gramsNum.toFixed(4)} gm`,
+      amount: amountNum.toFixed(2),
+      status: 'Pending'
+    };
+    setTransactions((prev) => [newTxn, ...prev]);
+
+    return newWithdrawal;
+  };
+
   // Withdrawal Actions
   const approveWithdrawal = (id) => {
     const now = new Date();
@@ -546,6 +632,8 @@ export function AppProvider({ children }) {
         completeUserProfile,
         logoutUser,
         addPurchaseTransaction,
+        submitKycRequest,
+        requestWithdrawal,
         approveWithdrawal,
         verifyCustomer,
         saveRates
