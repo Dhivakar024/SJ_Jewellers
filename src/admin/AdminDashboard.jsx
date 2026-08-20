@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
-import { TrendingUp, Clock, BarChart2 } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { TrendingUp, Clock, BarChart2, Calendar } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
-// Helper for polar to cartesian coordinates
+// Helper for polar to cartesian coordinates (for Donut SVG)
 function polarToCartesian(cx, cy, radius, angleInDegrees) {
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
   return {
@@ -41,10 +41,51 @@ function getDonutSegmentPath(cx, cy, outerR, innerR, startAngle, endAngle) {
   ].join(' ');
 }
 
+// Helper to parse transaction amounts safely
+function parseTxnAmount(amt) {
+  if (!amt) return 0;
+  if (typeof amt === 'number') return amt;
+  return parseFloat(amt.toString().replace(/,/g, '')) || 0;
+}
+
+// Helper to parse dates in multiple formats safely
+function parseTxnDate(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (!isNaN(d.getTime())) return d;
+  const cleaned = dateStr.replace(/,/g, '').trim();
+  const d2 = new Date(cleaned);
+  if (!isNaN(d2.getTime())) return d2;
+  return null;
+}
+
+// Helper for formatting Y-axis numbers cleanly (e.g. 25.0k, 500, 1.2M)
+function formatYAxisLabel(val) {
+  if (val >= 1000000) return `${(val / 1000000).toFixed(1)}M`;
+  if (val >= 1000) return `${(val / 1000).toFixed(1)}k`;
+  if (val === 0) return '0';
+  return val.toString();
+}
+
 export default function AdminDashboard({ onSelectTab }) {
   const { goldRate, silverRate, transactions } = useApp();
 
-  // Dynamic calculations from actual transactions
+  // Hovered tooltip state for charts
+  const [hoveredBar, setHoveredBar] = useState(null);
+
+  // Reference date: latest transaction date or current system date
+  const referenceDate = useMemo(() => {
+    let latest = new Date();
+    transactions.forEach((t) => {
+      const d = parseTxnDate(t.date);
+      if (d && d.getTime() > latest.getTime()) {
+        latest = d;
+      }
+    });
+    return latest;
+  }, [transactions]);
+
+  // Dynamic Sales by Metal calculations from actual transactions
   const { 
     goldValue, 
     silverValue, 
@@ -53,8 +94,7 @@ export default function AdminDashboard({ onSelectTab }) {
     goldPercent,
     silverPercent,
     goldTxnPercent,
-    silverTxnPercent,
-    totalAnnualValue
+    silverTxnPercent
   } = useMemo(() => {
     let gVal = 0;
     let sVal = 0;
@@ -62,7 +102,7 @@ export default function AdminDashboard({ onSelectTab }) {
     let sCount = 0;
 
     transactions.forEach((t) => {
-      const amt = parseFloat(t.amount) || 0;
+      const amt = parseTxnAmount(t.amount);
       const isGold = (t.asset || t.assetType || '').toLowerCase().includes('gold');
       if (isGold) {
         gVal += amt;
@@ -72,14 +112,6 @@ export default function AdminDashboard({ onSelectTab }) {
         sCount += 1;
       }
     });
-
-    // Reference values from Screenshot 2 if no transactions
-    if (gVal === 0 && sVal === 0) {
-      gVal = 21872.55;
-      sVal = 20680.00;
-      gCount = 6;
-      sCount = 6;
-    }
 
     const totalVal = gVal + sVal;
     const totalCount = gCount + sCount;
@@ -92,12 +124,177 @@ export default function AdminDashboard({ onSelectTab }) {
       goldPercent: totalVal > 0 ? ((gVal / totalVal) * 100).toFixed(1) : '51.4',
       silverPercent: totalVal > 0 ? ((sVal / totalVal) * 100).toFixed(1) : '48.6',
       goldTxnPercent: totalCount > 0 ? ((gCount / totalCount) * 100).toFixed(1) : '50.0',
-      silverTxnPercent: totalCount > 0 ? ((sCount / totalCount) * 100).toFixed(1) : '50.0',
-      totalAnnualValue: totalVal
+      silverTxnPercent: totalCount > 0 ? ((sCount / totalCount) * 100).toFixed(1) : '50.0'
     };
   }, [transactions]);
 
-  // Render a clean, perfectly circular SVG Donut Chart with slice labels
+  // =========================================================================
+  // 1. Annual Transactions Aggregation (Last 5 Years)
+  // =========================================================================
+  const annualChartData = useMemo(() => {
+    const currentYear = referenceDate.getFullYear();
+    const years = [currentYear - 4, currentYear - 3, currentYear - 2, currentYear - 1, currentYear];
+
+    const map = {};
+    years.forEach((y) => {
+      map[y] = {
+        key: y.toString(),
+        label: y.toString(),
+        totalValue: 0,
+        goldValue: 0,
+        silverValue: 0,
+        count: 0,
+        goldCount: 0,
+        silverCount: 0
+      };
+    });
+
+    transactions.forEach((t) => {
+      const d = parseTxnDate(t.date);
+      if (!d) return;
+      const y = d.getFullYear();
+      if (map[y]) {
+        const amt = parseTxnAmount(t.amount);
+        const isGold = (t.asset || t.assetType || '').toLowerCase().includes('gold');
+        map[y].totalValue += amt;
+        map[y].count += 1;
+        if (isGold) {
+          map[y].goldValue += amt;
+          map[y].goldCount += 1;
+        } else {
+          map[y].silverValue += amt;
+          map[y].silverCount += 1;
+        }
+      }
+    });
+
+    const items = years.map((y) => map[y]);
+    let max = Math.max(...items.map((i) => i.totalValue), 0);
+    if (max === 0) max = 50000;
+    else max = Math.ceil(max / 10000) * 10000;
+
+    return { items, maxVal: max };
+  }, [transactions, referenceDate]);
+
+  // =========================================================================
+  // 2. Monthly Transactions Aggregation (Last 12 Months)
+  // =========================================================================
+  const monthlyChartData = useMemo(() => {
+    const months = [];
+    const refYear = referenceDate.getFullYear();
+    const refMonth = referenceDate.getMonth();
+
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(refYear, refMonth - i, 1);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const key = `${yyyy}-${mm}`;
+      months.push({
+        key,
+        label: key,
+        shortLabel: d.toLocaleDateString('en-US', { month: 'short' }),
+        totalValue: 0,
+        goldValue: 0,
+        silverValue: 0,
+        count: 0,
+        goldCount: 0,
+        silverCount: 0
+      });
+    }
+
+    const map = {};
+    months.forEach((m) => { map[m.key] = m; });
+
+    transactions.forEach((t) => {
+      const d = parseTxnDate(t.date);
+      if (!d) return;
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const key = `${yyyy}-${mm}`;
+      if (map[key]) {
+        const amt = parseTxnAmount(t.amount);
+        const isGold = (t.asset || t.assetType || '').toLowerCase().includes('gold');
+        map[key].totalValue += amt;
+        map[key].count += 1;
+        if (isGold) {
+          map[key].goldValue += amt;
+          map[key].goldCount += 1;
+        } else {
+          map[key].silverValue += amt;
+          map[key].silverCount += 1;
+        }
+      }
+    });
+
+    let max = Math.max(...months.map((i) => i.totalValue), 0);
+    if (max === 0) max = 30000;
+    else if (max < 5000) max = 5000;
+    else max = Math.ceil(max / 5000) * 5000;
+
+    return { items: months, maxVal: max };
+  }, [transactions, referenceDate]);
+
+  // =========================================================================
+  // 3. Daily Transactions Aggregation (Last 30 Days)
+  // =========================================================================
+  const dailyChartData = useMemo(() => {
+    const days = [];
+    const refTime = referenceDate.getTime();
+
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(refTime - i * 24 * 60 * 60 * 1000);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const key = `${yyyy}-${mm}-${dd}`;
+      days.push({
+        key,
+        label: key,
+        shortLabel: `${mm}-${dd}`,
+        totalValue: 0,
+        goldValue: 0,
+        silverValue: 0,
+        count: 0,
+        goldCount: 0,
+        silverCount: 0
+      });
+    }
+
+    const map = {};
+    days.forEach((d) => { map[d.key] = d; });
+
+    transactions.forEach((t) => {
+      const d = parseTxnDate(t.date);
+      if (!d) return;
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const key = `${yyyy}-${mm}-${dd}`;
+      if (map[key]) {
+        const amt = parseTxnAmount(t.amount);
+        const isGold = (t.asset || t.assetType || '').toLowerCase().includes('gold');
+        map[key].totalValue += amt;
+        map[key].count += 1;
+        if (isGold) {
+          map[key].goldValue += amt;
+          map[key].goldCount += 1;
+        } else {
+          map[key].silverValue += amt;
+          map[key].silverCount += 1;
+        }
+      }
+    });
+
+    let max = Math.max(...days.map((i) => i.totalValue), 0);
+    if (max === 0) max = 12;
+    else if (max < 10) max = 10;
+    else if (max < 100) max = Math.ceil(max / 10) * 10;
+    else max = Math.ceil(max / 100) * 100;
+
+    return { items: days, maxVal: max };
+  }, [transactions, referenceDate]);
+
+  // Donut Chart renderer
   const renderDonutChart = (silverPctStr, goldPctStr) => {
     const silverPct = parseFloat(silverPctStr) || 48.6;
     const goldPct = parseFloat(goldPctStr) || 51.4;
@@ -108,14 +305,11 @@ export default function AdminDashboard({ onSelectTab }) {
     const innerR = 34;
     const textR = (outerR + innerR) / 2;
 
-    // Gold on the right: 0° to goldAngle
     const goldAngle = Math.max(5, Math.min(355, (goldPct / 100) * 360));
     
-    // Paths
     const goldPath = getDonutSegmentPath(cx, cy, outerR, innerR, 0, goldAngle);
     const silverPath = getDonutSegmentPath(cx, cy, outerR, innerR, goldAngle, 360);
 
-    // Text positions at center of each arc
     const goldTextAngle = goldAngle / 2;
     const silverTextAngle = goldAngle + (360 - goldAngle) / 2;
 
@@ -143,7 +337,6 @@ export default function AdminDashboard({ onSelectTab }) {
             aspectRatio: '1 / 1'
           }}
         >
-          {/* Silver Donut Segment */}
           <path
             d={silverPath}
             fill="#b0b7c3"
@@ -151,7 +344,6 @@ export default function AdminDashboard({ onSelectTab }) {
             strokeWidth="1.5"
           />
 
-          {/* Gold Donut Segment */}
           <path
             d={goldPath}
             fill="#cfa024"
@@ -159,7 +351,6 @@ export default function AdminDashboard({ onSelectTab }) {
             strokeWidth="1.5"
           />
 
-          {/* Silver Percentage Label */}
           {silverPct >= 8 && (
             <text
               x={silverTextPos.x}
@@ -175,7 +366,6 @@ export default function AdminDashboard({ onSelectTab }) {
             </text>
           )}
 
-          {/* Gold Percentage Label */}
           {goldPct >= 8 && (
             <text
               x={goldTextPos.x}
@@ -194,6 +384,197 @@ export default function AdminDashboard({ onSelectTab }) {
       </div>
     );
   };
+
+  // Reusable Bar Chart Component with clean proportions and tooltips
+  const renderBarChart = ({ title, subtitle, icon, data, maxVal, barMaxWidth = '38px', showEveryNthLabel = 1 }) => {
+    const yTicks = [
+      maxVal,
+      maxVal * 0.8,
+      maxVal * 0.6,
+      maxVal * 0.4,
+      maxVal * 0.2,
+      0
+    ];
+
+    return (
+      <div className="admin-card" style={{ textAlign: 'left', overflow: 'visible', position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+          {icon}
+          <span style={{ fontSize: '12.5px', fontWeight: '600', color: 'var(--admin-text-main-light)' }}>
+            {title}
+          </span>
+        </div>
+        <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '16px' }}>
+          {subtitle}
+        </div>
+
+        {/* Chart Drawing Area */}
+        <div style={{
+          height: '145px',
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'flex-end',
+          paddingLeft: '45px',
+          paddingRight: '12px',
+          borderBottom: '1px solid #e5e7eb'
+        }}>
+          {/* Y-axis tick labels */}
+          <div style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: '40px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            fontSize: '9.5px',
+            color: '#9ca3af',
+            userSelect: 'none',
+            textAlign: 'right',
+            paddingRight: '6px'
+          }}>
+            {yTicks.map((t, idx) => (
+              <span key={idx}>{formatYAxisLabel(t)}</span>
+            ))}
+          </div>
+
+          {/* Background Dashed Grid Lines */}
+          <div style={{
+            position: 'absolute',
+            left: '45px',
+            right: '12px',
+            top: 0,
+            bottom: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            pointerEvents: 'none'
+          }}>
+            <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
+            <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
+            <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
+            <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
+            <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
+            <div style={{ borderTop: '1px solid #e5e7eb', width: '100%' }}></div>
+          </div>
+
+          {/* Bars Container */}
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            justifyContent: 'space-around',
+            height: '100%',
+            alignItems: 'flex-end',
+            zIndex: 2,
+            gap: '4px'
+          }}>
+            {data.map((item, idx) => {
+              const heightPct = maxVal > 0 ? Math.min(100, Math.max(item.totalValue > 0 ? 3 : 0, (item.totalValue / maxVal) * 100)) : 0;
+              const isHovered = hoveredBar && hoveredBar.key === item.key;
+
+              return (
+                <div
+                  key={item.key || idx}
+                  onMouseEnter={() => setHoveredBar(item)}
+                  onMouseLeave={() => setHoveredBar(null)}
+                  style={{
+                    flex: 1,
+                    maxWidth: barMaxWidth,
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'flex-end',
+                    alignItems: 'center',
+                    cursor: item.totalValue > 0 ? 'pointer' : 'default',
+                    position: 'relative'
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '100%',
+                      height: `${heightPct}%`,
+                      backgroundColor: isHovered ? '#4f46e5' : '#6366f1',
+                      borderRadius: '3px 3px 0 0',
+                      transition: 'all 0.15s ease',
+                      opacity: item.totalValue > 0 ? 1 : 0
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Floating Tooltip */}
+          {hoveredBar && (
+            <div style={{
+              position: 'absolute',
+              top: '10px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              backgroundColor: '#1e293b',
+              color: '#ffffff',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              fontSize: '11px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              zIndex: 20,
+              pointerEvents: 'none',
+              whiteSpace: 'nowrap',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontWeight: '700', color: '#f8fafc' }}>{hoveredBar.label}</div>
+              <div style={{ color: '#a5b4fc', fontWeight: '600' }}>
+                ₹{hoveredBar.totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              </div>
+              {hoveredBar.count > 0 && (
+                <div style={{ fontSize: '10px', color: '#cbd5e1', marginTop: '2px' }}>
+                  {hoveredBar.count} orders (Gold: ₹{hoveredBar.goldValue.toFixed(0)} · Silver: ₹{hoveredBar.silverValue.toFixed(0)})
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* X-axis Labels */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-around',
+          paddingLeft: '45px',
+          paddingRight: '12px',
+          marginTop: '6px',
+          fontSize: '10px',
+          color: '#9ca3af',
+          userSelect: 'none'
+        }}>
+          {data.map((item, idx) => {
+            const showLabel = idx % showEveryNthLabel === 0 || item.totalValue > 0;
+            return (
+              <div
+                key={item.key || idx}
+                style={{
+                  flex: 1,
+                  maxWidth: barMaxWidth,
+                  textAlign: 'center',
+                  visibility: showLabel ? 'visible' : 'hidden',
+                  fontWeight: item.totalValue > 0 ? '700' : '400',
+                  color: item.totalValue > 0 ? 'var(--admin-text-main-light)' : '#9ca3af',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}
+              >
+                {item.label}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const now = new Date();
+  const updatedTimestamp = `${now.toLocaleDateString('en-US')}, ${now.toLocaleTimeString('en-US')}`;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', boxSizing: 'border-box' }}>
@@ -313,7 +694,10 @@ export default function AdminDashboard({ onSelectTab }) {
 
           {/* Subtext */}
           <div style={{ textAlign: 'center', fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>
-            Gold sells more by value (₹{goldValue.toLocaleString('en-IN', { maximumFractionDigits: 2 })})
+            {goldValue >= silverValue
+              ? `Gold sells more by value (₹${goldValue.toLocaleString('en-IN', { maximumFractionDigits: 2 })})`
+              : `Silver sells more by value (₹${silverValue.toLocaleString('en-IN', { maximumFractionDigits: 2 })})`
+            }
           </div>
         </div>
 
@@ -345,110 +729,50 @@ export default function AdminDashboard({ onSelectTab }) {
 
           {/* Subtext */}
           <div style={{ textAlign: 'center', fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>
-            Gold has more orders ({goldTxnCount})
+            {goldTxnCount >= silverTxnCount
+              ? `Gold has more orders (${goldTxnCount})`
+              : `Silver has more orders (${silverTxnCount})`
+            }
           </div>
         </div>
       </div>
 
-      {/* 4. Annual Transactions (Last 5 Years) Bar Chart - Clean & Balanced */}
-      <div className="admin-card" style={{ textAlign: 'left', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
-          <BarChart2 size={14} color="#6b7280" />
-          <span style={{ fontSize: '12.5px', fontWeight: '600', color: 'var(--admin-text-main-light)' }}>
-            Annual transactions (last 5 years)
-          </span>
-        </div>
-        <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '16px' }}>
-          Annual transaction value (INR)
-        </div>
+      {/* 4. A. Annual Transactions (Last 5 Years) */}
+      {renderBarChart({
+        title: 'Annual transactions (last 5 years)',
+        subtitle: 'Annual transaction value (INR)',
+        icon: <BarChart2 size={14} color="#6b7280" />,
+        data: annualChartData.items,
+        maxVal: annualChartData.maxVal,
+        barMaxWidth: '56px',
+        showEveryNthLabel: 1
+      })}
 
-        {/* Bar Chart Visualization - Fixed Height & Balanced Bar Width */}
-        <div style={{
-          height: '140px',
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'flex-end',
-          paddingLeft: '42px',
-          borderBottom: '1px solid #e5e7eb'
-        }}>
-          {/* Y-axis grid labels */}
-          <div style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: '36px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            fontSize: '9.5px',
-            color: '#9ca3af',
-            userSelect: 'none'
-          }}>
-            <span>50.0k</span>
-            <span>40.0k</span>
-            <span>30.0k</span>
-            <span>20.0k</span>
-            <span>10.0k</span>
-            <span>0</span>
-          </div>
+      {/* 5. B. Monthly Transactions (Last 12 Months) */}
+      {renderBarChart({
+        title: 'Monthly transactions (last 12 months)',
+        subtitle: 'Monthly transaction value (INR)',
+        icon: <Calendar size={14} color="#6b7280" />,
+        data: monthlyChartData.items,
+        maxVal: monthlyChartData.maxVal,
+        barMaxWidth: '40px',
+        showEveryNthLabel: 1
+      })}
 
-          {/* Background grid lines */}
-          <div style={{
-            position: 'absolute',
-            left: '42px',
-            right: 0,
-            top: 0,
-            bottom: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            pointerEvents: 'none'
-          }}>
-            <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
-            <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
-            <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
-            <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
-            <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
-            <div style={{ borderTop: '1px solid #e5e7eb', width: '100%' }}></div>
-          </div>
+      {/* 6. C. Daily Transactions (Last 30 Days) */}
+      {renderBarChart({
+        title: 'Daily transactions (last 30 days)',
+        subtitle: 'Daily transaction value (INR)',
+        icon: <BarChart2 size={14} color="#6b7280" />,
+        data: dailyChartData.items,
+        maxVal: dailyChartData.maxVal,
+        barMaxWidth: '16px',
+        showEveryNthLabel: 3
+      })}
 
-          {/* Clean, Non-Stretched Centered Bar */}
-          <div style={{
-            flex: 1,
-            display: 'flex',
-            justifyContent: 'center',
-            height: '100%',
-            alignItems: 'flex-end',
-            zIndex: 1
-          }}>
-            <div
-              title={`2026: ₹${totalAnnualValue.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`}
-              style={{
-                width: '38%',
-                maxWidth: '160px',
-                minWidth: '40px',
-                height: '75%',
-                backgroundColor: 'var(--admin-purple-chart)',
-                borderRadius: '3px 3px 0 0',
-                transition: 'height 0.3s ease'
-              }}
-            ></div>
-          </div>
-        </div>
-
-        {/* X-axis Label */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          paddingLeft: '42px',
-          marginTop: '6px',
-          fontSize: '10.5px',
-          color: '#9ca3af',
-          userSelect: 'none'
-        }}>
-          <span>2026</span>
-        </div>
+      {/* 7. Footer Rates Updated Timestamp */}
+      <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '8px', textAlign: 'left' }}>
+        Rates updated: {updatedTimestamp}
       </div>
 
     </div>
