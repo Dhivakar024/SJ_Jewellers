@@ -1,5 +1,5 @@
 /* ==========================================================================
-   GOLD & SILVER ADMIN - SCREENSHOT 2 PIXEL-PERFECT DESIGN SYSTEM
+   GOLD & SILVER ADMIN - GLOBAL ALIGNMENT, TYPOGRAPHY & SPACING SYSTEM
    ========================================================================== */
 
 :root {
@@ -30,13 +30,14 @@
   --admin-purple-chart: #6366f1;
   --admin-gold-pie: #cfa024;
   --admin-silver-pie: #b0b7c3;
+  --admin-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 /* Base Admin Container */
 .admin-portal {
   min-height: 100vh;
   width: 100vw;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--admin-font);
   display: flex;
   box-sizing: border-box;
   background-color: var(--admin-bg-light);
@@ -51,7 +52,9 @@
   color: var(--admin-text-main-dark);
 }
 
-/* Sidebar Styles - Matching Screenshot 2 (Compact 185px) */
+/* ==========================================================================
+   1. SIDEBAR - EXACT GLOBAL ALIGNMENT (185px Fixed)
+   ========================================================================== */
 .admin-sidebar {
   width: 185px;
   flex-shrink: 0;
@@ -76,9 +79,9 @@
   width: 60px;
 }
 
-/* Sidebar Top Logo/Profile */
+/* Sidebar Top Logo */
 .admin-sidebar-header {
-  padding: 12px 14px;
+  padding: 0 14px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -87,6 +90,7 @@
   user-select: none;
   height: 52px;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .admin-portal.dark .admin-sidebar-header {
@@ -137,7 +141,7 @@
   color: var(--admin-text-muted-dark);
 }
 
-/* Sidebar Nav Items */
+/* Sidebar Navigation System */
 .admin-nav-list {
   padding: 10px 8px;
   display: flex;
@@ -151,18 +155,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 7px 10px;
+  padding: 0 10px;
+  height: 36px;
   border-radius: 6px;
   border: none;
   background: transparent;
   color: #4b5563;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.12s ease;
   width: 100%;
   text-align: left;
-  height: 34px;
   box-sizing: border-box;
 }
 
@@ -195,7 +199,28 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  height: 100%;
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-nav-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.admin-nav-text {
+  font-size: 13px;
+  font-weight: 500;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
 }
 
 .admin-nav-badge {
@@ -203,12 +228,13 @@
   color: #ffffff;
   font-size: 10px;
   font-weight: 700;
-  width: 17px;
-  height: 17px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .admin-section-heading {
@@ -219,13 +245,16 @@
   padding: 16px 10px 4px 10px;
   text-transform: uppercase;
   text-align: left;
+  line-height: 1;
 }
 
 .admin-portal.dark .admin-section-heading {
   color: #64748b;
 }
 
-/* Main Content Area */
+/* ==========================================================================
+   2. TOP HEADER - GLOBAL ALIGNMENT
+   ========================================================================== */
 .admin-main {
   flex: 1;
   display: flex;
@@ -236,7 +265,6 @@
   box-sizing: border-box;
 }
 
-/* Top Header Bar */
 .admin-header {
   height: 52px;
   padding: 0 24px;
@@ -261,6 +289,9 @@
   font-size: 14px;
   font-weight: 700;
   color: var(--admin-text-main-light);
+  line-height: 1;
+  display: flex;
+  align-items: center;
 }
 
 .admin-portal.dark .admin-header-title {
@@ -271,6 +302,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  height: 100%;
 }
 
 .admin-header-btn {
@@ -278,7 +310,7 @@
   border: none;
   cursor: pointer;
   color: #4b5563;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 32px;
@@ -286,6 +318,8 @@
   border-radius: 50%;
   position: relative;
   transition: all 0.15s ease;
+  padding: 0;
+  flex-shrink: 0;
 }
 
 .admin-portal.dark .admin-header-btn {
@@ -313,7 +347,9 @@
   border-radius: 50%;
 }
 
-/* Page Layout - Left Aligned, Matching Screenshot 2 */
+/* ==========================================================================
+   3. GLOBAL CONTENT GRID & TYPOGRAPHY
+   ========================================================================== */
 .admin-page-container {
   padding: 20px 24px 40px 24px;
   display: flex;
@@ -325,17 +361,21 @@
 }
 
 .admin-page-header {
-  margin-bottom: 2px;
+  margin-bottom: 0;
   text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .admin-page-title {
   font-size: 19px;
   font-weight: 800;
   color: var(--admin-text-main-light);
-  margin: 0;
+  margin: 0 0 3px 0;
   letter-spacing: -0.2px;
   text-align: left;
+  line-height: 1.2;
 }
 
 .admin-portal.dark .admin-page-title {
@@ -345,15 +385,18 @@
 .admin-page-sub {
   font-size: 12px;
   color: var(--admin-text-muted-light);
-  margin-top: 3px;
+  margin: 0;
   text-align: left;
+  line-height: 1.3;
 }
 
 .admin-portal.dark .admin-page-sub {
   color: var(--admin-text-muted-dark);
 }
 
-/* Card Component - Screenshot 2 Proportions */
+/* ==========================================================================
+   4. GLOBAL CARD SYSTEM
+   ========================================================================== */
 .admin-card {
   background-color: var(--admin-card-bg-light);
   border: 1px solid var(--admin-border-light);
@@ -370,7 +413,9 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Buttons */
+/* ==========================================================================
+   5. BUTTONS & CONTROLS
+   ========================================================================== */
 .admin-btn-orange {
   background-color: var(--admin-orange);
   color: #ffffff;
@@ -385,6 +430,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
+  line-height: 1.2;
 }
 
 .admin-btn-orange:hover {
@@ -405,6 +451,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
+  line-height: 1.2;
 }
 
 .admin-btn-outline-green {
@@ -417,6 +464,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
+  line-height: 1.2;
 }
 
 .admin-btn-secondary {
@@ -428,9 +476,12 @@
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
+  line-height: 1.2;
 }
 
-/* Forms & Inputs */
+/* ==========================================================================
+   6. FORMS & INPUTS
+   ========================================================================== */
 .admin-input {
   width: 100%;
   height: 36px;
@@ -443,6 +494,7 @@
   outline: none;
   box-sizing: border-box;
   transition: border-color 0.15s ease;
+  font-family: inherit;
 }
 
 .admin-portal.dark .admin-input {
@@ -465,6 +517,7 @@
   color: var(--admin-text-main-light);
   outline: none;
   cursor: pointer;
+  font-family: inherit;
 }
 
 .admin-portal.dark .admin-select {
@@ -473,12 +526,15 @@
   color: var(--admin-text-main-dark);
 }
 
-/* Data Table */
+/* ==========================================================================
+   7. DATA TABLE SYSTEM
+   ========================================================================== */
 .admin-table-container {
   overflow-x: auto;
   border-radius: 8px;
   border: 1px solid var(--admin-border-light);
   background-color: var(--admin-card-bg-light);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .admin-portal.dark .admin-table-container {
@@ -494,7 +550,7 @@
 }
 
 .admin-table th {
-  padding: 11px 14px;
+  padding: 10px 14px;
   font-weight: 700;
   font-size: 11px;
   text-transform: uppercase;
@@ -502,6 +558,7 @@
   color: var(--admin-text-muted-light);
   border-bottom: 1px solid var(--admin-border-light);
   background-color: #fafbfc;
+  line-height: 1.2;
 }
 
 .admin-portal.dark .admin-table th {
@@ -515,6 +572,7 @@
   border-bottom: 1px solid var(--admin-border-light);
   color: var(--admin-text-main-light);
   vertical-align: middle;
+  line-height: 1.3;
 }
 
 .admin-portal.dark .admin-table td {
@@ -532,6 +590,7 @@
   font-weight: 700;
   background-color: #dcfce7;
   color: #15803d;
+  line-height: 1.2;
 }
 
 .admin-badge-yellow {
@@ -543,6 +602,7 @@
   font-weight: 700;
   background-color: #fef3c7;
   color: #b45309;
+  line-height: 1.2;
 }
 
 .admin-badge-gray {
@@ -554,6 +614,7 @@
   font-weight: 600;
   background-color: #f1f5f9;
   color: #475569;
+  line-height: 1.2;
 }
 
 /* Modal */
@@ -592,13 +653,13 @@
     width: 60px;
   }
   .admin-sidebar .admin-sidebar-brand,
-  .admin-sidebar .admin-nav-item span,
+  .admin-sidebar .admin-nav-text,
   .admin-sidebar .admin-section-heading {
     display: none;
   }
   .admin-sidebar .admin-nav-item {
     justify-content: center;
-    padding: 8px;
+    padding: 0;
   }
   .admin-page-container {
     padding: 16px;

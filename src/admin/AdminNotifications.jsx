@@ -25,7 +25,7 @@ export default function AdminNotifications() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', boxSizing: 'border-box' }}>
       
       {/* 1. Page Header */}
       <div className="admin-page-header">
@@ -36,11 +36,11 @@ export default function AdminNotifications() {
       </div>
 
       {/* 2. Pending Withdrawal Payments Section */}
-      <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
           <div>
-            <h3 style={{ fontSize: '15px', fontWeight: '800', margin: 0 }}>Pending withdrawal payments</h3>
-            <p style={{ fontSize: '12.5px', color: '#64748b', margin: '3px 0 0 0' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0 }}>Pending withdrawal payments</h3>
+            <p style={{ fontSize: '12px', color: '#6b7280', margin: '2px 0 0 0' }}>
               Confirm when the amount has been paid to the customer.
             </p>
           </div>
@@ -51,9 +51,9 @@ export default function AdminNotifications() {
         </div>
 
         {/* Withdrawal List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {pendingWithdrawals.length === 0 ? (
-            <div style={{ fontSize: '13px', color: '#94a3b8', padding: '12px 0' }}>
+            <div style={{ fontSize: '12.5px', color: '#9ca3af', padding: '8px 0' }}>
               No pending withdrawal payments.
             </div>
           ) : (
@@ -64,20 +64,20 @@ export default function AdminNotifications() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '14px 16px',
-                  borderRadius: '10px',
+                  padding: '12px 14px',
+                  borderRadius: '6px',
                   border: '1px solid var(--admin-border-light)',
                   backgroundColor: 'rgba(248, 250, 252, 0.6)'
                 }}
               >
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: '700', color: '#059669' }}>
+                  <div style={{ fontSize: '13.5px', fontWeight: '700', color: '#059669' }}>
                     {w.customer} · {w.metal}
                   </div>
-                  <div style={{ fontSize: '13px', fontWeight: '800', marginTop: '2px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '700', marginTop: '2px' }}>
                     {w.grams} · ₹{parseFloat(w.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </div>
-                  <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '2px' }}>
+                  <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>
                     Mobile: {w.mobile} · {w.date}
                   </div>
                 </div>
@@ -95,11 +95,11 @@ export default function AdminNotifications() {
       </div>
 
       {/* 3. Pending User Verifications Section */}
-      <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
           <div>
-            <h3 style={{ fontSize: '15px', fontWeight: '800', margin: 0 }}>Pending user verifications</h3>
-            <p style={{ fontSize: '12.5px', color: '#64748b', margin: '3px 0 0 0' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0 }}>Pending user verifications</h3>
+            <p style={{ fontSize: '12px', color: '#6b7280', margin: '2px 0 0 0' }}>
               Click a user to view full details and verify their account.
             </p>
           </div>
@@ -110,9 +110,9 @@ export default function AdminNotifications() {
         </div>
 
         {/* Verification List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {pendingVerifications.length === 0 ? (
-            <div style={{ fontSize: '13px', color: '#94a3b8', padding: '12px 0' }}>
+            <div style={{ fontSize: '12.5px', color: '#9ca3af', padding: '8px 0' }}>
               No pending user verifications.
             </div>
           ) : (
@@ -123,20 +123,20 @@ export default function AdminNotifications() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '14px 16px',
-                  borderRadius: '10px',
+                  padding: '12px 14px',
+                  borderRadius: '6px',
                   border: '1px solid var(--admin-border-light)',
                   backgroundColor: 'rgba(248, 250, 252, 0.6)'
                 }}
               >
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: '700', color: '#059669' }}>
+                  <div style={{ fontSize: '13.5px', fontWeight: '700', color: '#059669' }}>
                     {v.name}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                  <div style={{ fontSize: '11.5px', color: '#6b7280', marginTop: '2px' }}>
                     Mobile: {v.mobile} · Role: {v.role}
                   </div>
-                  <div style={{ fontSize: '11.5px', color: '#94a3b8', marginTop: '2px' }}>
+                  <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
                     Created: {v.created}
                   </div>
                 </div>
@@ -157,37 +157,39 @@ export default function AdminNotifications() {
       {selectedWithdrawal && (
         <div className="admin-modal-overlay" onClick={() => setSelectedWithdrawal(null)}>
           <div className="admin-modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: '17px', fontWeight: '800', margin: '0 0 6px 0' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 6px 0' }}>
               Confirm amount paid
             </h3>
-            <p style={{ fontSize: '12.5px', color: '#64748b', margin: '0 0 18px 0', lineHeight: 1.4 }}>
-              Confirm that you have paid this amount to the customer. The transaction will show as completed for the customer.
+            <p style={{ fontSize: '12px', color: '#6b7280', margin: '0 0 16px 0', lineHeight: 1.4 }}>
+              Confirm that you have transferred the withdrawal amount to the customer.
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', marginBottom: '22px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
-                <span style={{ color: '#64748b' }}>Customer</span>
-                <span style={{ fontWeight: '700' }}>{selectedWithdrawal.customer}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12.5px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
+                <span style={{ color: '#6b7280' }}>Customer</span>
+                <span style={{ fontWeight: '600' }}>{selectedWithdrawal.customer}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
-                <span style={{ color: '#64748b' }}>Mobile</span>
-                <span style={{ fontWeight: '700' }}>{selectedWithdrawal.mobile}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
+                <span style={{ color: '#6b7280' }}>Mobile</span>
+                <span style={{ fontWeight: '600' }}>{selectedWithdrawal.mobile}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
-                <span style={{ color: '#64748b' }}>Metal</span>
-                <span style={{ fontWeight: '700' }}>{selectedWithdrawal.metal}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
+                <span style={{ color: '#6b7280' }}>Metal</span>
+                <span style={{ fontWeight: '600' }}>{selectedWithdrawal.metal}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
-                <span style={{ color: '#64748b' }}>Grams</span>
-                <span style={{ fontWeight: '700' }}>{selectedWithdrawal.grams}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
+                <span style={{ color: '#6b7280' }}>Grams</span>
+                <span style={{ fontWeight: '600' }}>{selectedWithdrawal.grams}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
-                <span style={{ color: '#64748b' }}>Amount (₹)</span>
-                <span style={{ fontWeight: '800' }}>₹{parseFloat(selectedWithdrawal.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
+                <span style={{ color: '#6b7280' }}>Amount</span>
+                <span style={{ fontWeight: '700', color: 'var(--admin-orange)' }}>
+                  ₹{parseFloat(selectedWithdrawal.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
-                <span style={{ color: '#64748b' }}>Requested at</span>
-                <span style={{ color: '#94a3b8' }}>{selectedWithdrawal.date}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0' }}>
+                <span style={{ color: '#6b7280' }}>Requested at</span>
+                <span style={{ color: '#6b7280' }}>{selectedWithdrawal.date}</span>
               </div>
             </div>
 
@@ -213,33 +215,33 @@ export default function AdminNotifications() {
       {selectedVerification && (
         <div className="admin-modal-overlay" onClick={() => setSelectedVerification(null)}>
           <div className="admin-modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: '17px', fontWeight: '800', margin: '0 0 6px 0' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 6px 0' }}>
               Verify customer
             </h3>
-            <p style={{ fontSize: '12.5px', color: '#64748b', margin: '0 0 18px 0', lineHeight: 1.4 }}>
-              Please confirm this customer's details before verifying their account.
+            <p style={{ fontSize: '12px', color: '#6b7280', margin: '0 0 16px 0', lineHeight: 1.4 }}>
+              Review customer details and verify their account.
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', marginBottom: '22px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
-                <span style={{ color: '#64748b' }}>Name</span>
-                <span style={{ fontWeight: '700' }}>{selectedVerification.name}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12.5px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
+                <span style={{ color: '#6b7280' }}>Name</span>
+                <span style={{ fontWeight: '600' }}>{selectedVerification.name}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
-                <span style={{ color: '#64748b' }}>Mobile</span>
-                <span style={{ fontWeight: '700' }}>{selectedVerification.mobile}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
+                <span style={{ color: '#6b7280' }}>Mobile</span>
+                <span style={{ fontWeight: '600' }}>{selectedVerification.mobile}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
-                <span style={{ color: '#64748b' }}>Role</span>
-                <span style={{ fontWeight: '700' }}>{selectedVerification.role}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
+                <span style={{ color: '#6b7280' }}>Role</span>
+                <span style={{ fontWeight: '600' }}>{selectedVerification.role}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
-                <span style={{ color: '#64748b' }}>Mobile verified</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
+                <span style={{ color: '#6b7280' }}>Mobile verified</span>
                 <span style={{ fontWeight: '700', color: '#10b981' }}>{selectedVerification.mobileVerified}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
-                <span style={{ color: '#64748b' }}>Created at</span>
-                <span style={{ color: '#94a3b8' }}>{selectedVerification.created}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0' }}>
+                <span style={{ color: '#6b7280' }}>Created at</span>
+                <span style={{ color: '#6b7280' }}>{selectedVerification.created}</span>
               </div>
             </div>
 

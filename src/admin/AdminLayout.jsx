@@ -35,7 +35,7 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
       id: 'notifications', 
       label: 'Notifications', 
       icon: (
-        <div style={{ position: 'relative', display: 'inline-flex' }}>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Bell size={15} />
           {totalNotifications > 0 && (
             <span style={{
@@ -61,7 +61,7 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
   return (
     <div className={`admin-portal ${adminTheme}`}>
       
-      {/* 1. Compact Left Sidebar (185px) */}
+      {/* 1. Compact Left Sidebar (185px Fixed Width) */}
       <aside className={`admin-sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
         
         {/* Logo Section */}
@@ -92,8 +92,8 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
                 title={isSidebarCollapsed ? item.label : undefined}
               >
                 <div className="admin-nav-item-left">
-                  <span>{item.icon}</span>
-                  {!isSidebarCollapsed && <span>{item.label}</span>}
+                  <span className="admin-nav-icon">{item.icon}</span>
+                  {!isSidebarCollapsed && <span className="admin-nav-text">{item.label}</span>}
                 </div>
 
                 {!isSidebarCollapsed && item.badge > 0 && (
@@ -118,8 +118,8 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
             title={isSidebarCollapsed ? 'Settings' : undefined}
           >
             <div className="admin-nav-item-left">
-              <Settings size={15} />
-              {!isSidebarCollapsed && <span>Settings</span>}
+              <span className="admin-nav-icon"><Settings size={15} /></span>
+              {!isSidebarCollapsed && <span className="admin-nav-text">Settings</span>}
             </div>
           </button>
 
@@ -129,8 +129,8 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
             title={isSidebarCollapsed ? 'Log out' : undefined}
           >
             <div className="admin-nav-item-left">
-              <LogOut size={15} />
-              {!isSidebarCollapsed && <span>Log out</span>}
+              <span className="admin-nav-icon"><LogOut size={15} /></span>
+              {!isSidebarCollapsed && <span className="admin-nav-text">Log out</span>}
             </div>
           </button>
 
@@ -142,8 +142,10 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
             title={isSidebarCollapsed ? 'Show' : 'Hide'}
           >
             <div className="admin-nav-item-left">
-              {isSidebarCollapsed ? <ChevronsRight size={15} /> : <ChevronsLeft size={15} />}
-              {!isSidebarCollapsed && <span style={{ fontSize: '12px' }}>« Hide</span>}
+              <span className="admin-nav-icon">
+                {isSidebarCollapsed ? <ChevronsRight size={15} /> : <ChevronsLeft size={15} />}
+              </span>
+              {!isSidebarCollapsed && <span className="admin-nav-text" style={{ fontSize: '12px' }}>« Hide</span>}
             </div>
           </button>
         </nav>

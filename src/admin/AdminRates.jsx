@@ -37,7 +37,7 @@ export default function AdminRates() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', boxSizing: 'border-box' }}>
       
       {/* 1. Page Header */}
       <div className="admin-page-header">
@@ -49,21 +49,21 @@ export default function AdminRates() {
 
       {/* 2. Rates Configuration Card */}
       <div className="admin-card">
-        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '24px'
+            gap: '20px'
           }}>
             {/* Gold Rate Input */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <label style={{ fontSize: '13.5px', fontWeight: '700' }}>Gold</label>
+                <label style={{ fontSize: '13px', fontWeight: '700', color: 'var(--admin-text-main-light)' }}>Gold</label>
                 
                 {/* API / Custom Toggle Switch */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#64748b' }}>
-                  <span style={{ fontWeight: !goldCustom ? '700' : '400', color: !goldCustom ? '#0f172a' : '#64748b' }}>API</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#6b7280' }}>
+                  <span style={{ fontWeight: !goldCustom ? '700' : '400', color: !goldCustom ? 'var(--admin-text-main-light)' : '#6b7280' }}>API</span>
                   <div
                     onClick={() => setGoldCustom(!goldCustom)}
                     style={{
@@ -88,7 +88,7 @@ export default function AdminRates() {
                       transition: 'transform 0.2s ease'
                     }}></div>
                   </div>
-                  <span style={{ fontWeight: goldCustom ? '700' : '400', color: goldCustom ? '#0f172a' : '#64748b' }}>Custom</span>
+                  <span style={{ fontWeight: goldCustom ? '700' : '400', color: goldCustom ? 'var(--admin-text-main-light)' : '#6b7280' }}>Custom</span>
                 </div>
               </div>
 
@@ -105,11 +105,11 @@ export default function AdminRates() {
             {/* Silver Rate Input */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <label style={{ fontSize: '13.5px', fontWeight: '700' }}>Silver</label>
+                <label style={{ fontSize: '13px', fontWeight: '700', color: 'var(--admin-text-main-light)' }}>Silver</label>
                 
                 {/* API / Custom Toggle Switch */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#64748b' }}>
-                  <span style={{ fontWeight: !silverCustom ? '700' : '400', color: !silverCustom ? '#0f172a' : '#64748b' }}>API</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#6b7280' }}>
+                  <span style={{ fontWeight: !silverCustom ? '700' : '400', color: !silverCustom ? 'var(--admin-text-main-light)' : '#6b7280' }}>API</span>
                   <div
                     onClick={() => setSilverCustom(!silverCustom)}
                     style={{
@@ -134,7 +134,7 @@ export default function AdminRates() {
                       transition: 'transform 0.2s ease'
                     }}></div>
                   </div>
-                  <span style={{ fontWeight: silverCustom ? '700' : '400', color: silverCustom ? '#0f172a' : '#64748b' }}>Custom</span>
+                  <span style={{ fontWeight: silverCustom ? '700' : '400', color: silverCustom ? 'var(--admin-text-main-light)' : '#6b7280' }}>Custom</span>
                 </div>
               </div>
 
@@ -156,13 +156,13 @@ export default function AdminRates() {
                 Save
               </button>
               {savedSuccess && (
-                <span style={{ fontSize: '13px', color: '#10b981', fontWeight: '700' }}>
+                <span style={{ fontSize: '12.5px', color: '#10b981', fontWeight: '700' }}>
                   Rates saved & updated in customer app!
                 </span>
               )}
             </div>
 
-            <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '12px' }}>
+            <div style={{ fontSize: '11.5px', color: '#9ca3af', marginTop: '10px' }}>
               Custom rates are valid until today 11:59 PM. After that they will reset to API.
             </div>
           </div>

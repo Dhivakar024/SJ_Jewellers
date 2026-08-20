@@ -55,7 +55,7 @@ export default function AdminSettings() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '800px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '800px', width: '100%', boxSizing: 'border-box' }}>
       
       {/* 1. Page Header */}
       <div className="admin-page-header">
@@ -64,11 +64,11 @@ export default function AdminSettings() {
 
       {/* 2. Username Section */}
       <div className="admin-card">
-        <h3 style={{ fontSize: '15px', fontWeight: '800', margin: '0 0 16px 0' }}>Username</h3>
+        <h3 style={{ fontSize: '14px', fontWeight: '700', margin: '0 0 14px 0' }}>Username</h3>
 
-        <form onSubmit={handleSaveUsername} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form onSubmit={handleSaveUsername} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '600', color: '#64748b', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6b7280', marginBottom: '5px' }}>
               Account username
             </label>
             <input
@@ -80,7 +80,7 @@ export default function AdminSettings() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '600', color: '#64748b', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6b7280', marginBottom: '5px' }}>
               Password (to confirm change)
             </label>
             <input
@@ -92,12 +92,12 @@ export default function AdminSettings() {
             />
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '2px' }}>
             <button type="submit" className="admin-btn-orange">
               Save username
             </button>
             {userSavedMsg && (
-              <span style={{ fontSize: '12.5px', color: '#10b981', fontWeight: '700' }}>
+              <span style={{ fontSize: '12px', color: '#10b981', fontWeight: '700' }}>
                 Username updated successfully!
               </span>
             )}
@@ -107,13 +107,13 @@ export default function AdminSettings() {
 
       {/* 3. Auto Logout (Inactivity) Section */}
       <div className="admin-card">
-        <h3 style={{ fontSize: '15px', fontWeight: '800', margin: '0 0 4px 0' }}>Auto logout (inactivity)</h3>
-        <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 16px 0' }}>
+        <h3 style={{ fontSize: '14px', fontWeight: '700', margin: '0 0 3px 0' }}>Auto logout (inactivity)</h3>
+        <p style={{ fontSize: '12px', color: '#6b7280', margin: '0 0 14px 0' }}>
           Log out automatically after this much time with no activity (mouse, keyboard, touch, scroll).
         </p>
 
         <div>
-          <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '600', color: '#64748b', marginBottom: '6px' }}>
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6b7280', marginBottom: '5px' }}>
             Logout after
           </label>
           <select
@@ -133,17 +133,17 @@ export default function AdminSettings() {
 
       {/* 4. Change Password Section */}
       <div className="admin-card">
-        <h3 style={{ fontSize: '15px', fontWeight: '800', margin: '0 0 16px 0' }}>Change password</h3>
+        <h3 style={{ fontSize: '14px', fontWeight: '700', margin: '0 0 14px 0' }}>Change password</h3>
 
         {pwdError && (
-          <div style={{ fontSize: '12.5px', color: '#ef4444', fontWeight: '700', marginBottom: '12px' }}>
+          <div style={{ fontSize: '12px', color: '#ef4444', fontWeight: '700', marginBottom: '10px' }}>
             {pwdError}
           </div>
         )}
 
-        <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '600', color: '#64748b', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6b7280', marginBottom: '5px' }}>
               Current password
             </label>
             <input
@@ -155,7 +155,7 @@ export default function AdminSettings() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '600', color: '#64748b', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6b7280', marginBottom: '5px' }}>
               New password
             </label>
             <input
@@ -167,7 +167,7 @@ export default function AdminSettings() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '600', color: '#64748b', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6b7280', marginBottom: '5px' }}>
               Confirm new password
             </label>
             <input
@@ -176,17 +176,17 @@ export default function AdminSettings() {
               onChange={(e) => setConfirmNewPassword(e.target.value)}
               className="admin-input"
             />
-            <div style={{ fontSize: '11.5px', color: '#94a3b8', marginTop: '4px' }}>
+            <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
               At least 6 characters
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '2px' }}>
             <button type="submit" className="admin-btn-orange">
               Change password
             </button>
             {pwdSavedMsg && (
-              <span style={{ fontSize: '12.5px', color: '#10b981', fontWeight: '700' }}>
+              <span style={{ fontSize: '12px', color: '#10b981', fontWeight: '700' }}>
                 Password changed successfully!
               </span>
             )}

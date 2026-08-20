@@ -5,7 +5,7 @@ export default function AdminMembers() {
   const { members } = useApp();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', boxSizing: 'border-box' }}>
       
       {/* 1. Page Header */}
       <div className="admin-page-header">
@@ -38,7 +38,7 @@ export default function AdminMembers() {
 
               return (
                 <tr key={m.id}>
-                  <td style={{ color: '#64748b', fontWeight: '600' }}>{m.id}</td>
+                  <td style={{ color: '#6b7280', fontWeight: '600' }}>{m.id}</td>
                   
                   {/* Username in orange/terracotta color */}
                   <td style={{ fontWeight: '700', color: 'var(--admin-orange)' }}>
@@ -73,7 +73,7 @@ export default function AdminMembers() {
                     </span>
                   </td>
 
-                  <td style={{ color: '#64748b' }}>
+                  <td style={{ color: '#6b7280' }}>
                     {m.created}
                   </td>
                 </tr>
