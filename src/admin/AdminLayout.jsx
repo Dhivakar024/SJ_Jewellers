@@ -82,72 +82,90 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
 
         {/* Navigation Items */}
         <nav className="admin-nav-list">
-          {navItems.map((item) => {
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => onSelectTab(item.id)}
-                className={`admin-nav-item ${isActive ? 'active' : ''}`}
-                title={isSidebarCollapsed ? item.label : undefined}
-              >
-                <div className="admin-nav-item-left">
-                  <span className="admin-nav-icon">{item.icon}</span>
-                  {!isSidebarCollapsed && <span className="admin-nav-text">{item.label}</span>}
-                </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {navItems.map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => onSelectTab(item.id)}
+                  className={`admin-nav-item ${isActive ? 'active' : ''}`}
+                  title={isSidebarCollapsed ? item.label : undefined}
+                >
+                  <div className="admin-nav-item-left">
+                    <span className="admin-nav-icon">{item.icon}</span>
+                    {!isSidebarCollapsed && <span className="admin-nav-text">{item.label}</span>}
+                  </div>
 
-                {!isSidebarCollapsed && item.badge > 0 && (
-                  <span className="admin-nav-badge">
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+                  {!isSidebarCollapsed && item.badge > 0 && (
+                    <span className="admin-nav-badge">
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
-          {/* Account Section Heading */}
-          {!isSidebarCollapsed && (
-            <div className="admin-section-heading">
-              ACCOUNT
-            </div>
-          )}
+          {/* Account Section Container (Moved downward closer to Hide) */}
+          <div style={{
+            marginTop: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+            borderTop: '1px solid var(--admin-border-light)',
+            paddingTop: '14px'
+          }}>
+            {/* Account Section Heading */}
+            {!isSidebarCollapsed && (
+              <div className="admin-section-heading" style={{ padding: '0 14px 6px 14px' }}>
+                ACCOUNT
+              </div>
+            )}
 
-          <button
-            onClick={() => onSelectTab('settings')}
-            className={`admin-nav-item ${activeTab === 'settings' ? 'active' : ''}`}
-            title={isSidebarCollapsed ? 'Settings' : undefined}
-          >
-            <div className="admin-nav-item-left">
-              <span className="admin-nav-icon"><Settings size={15} /></span>
-              {!isSidebarCollapsed && <span className="admin-nav-text">Settings</span>}
-            </div>
-          </button>
+            <button
+              onClick={() => onSelectTab('settings')}
+              className={`admin-nav-item ${activeTab === 'settings' ? 'active' : ''}`}
+              title={isSidebarCollapsed ? 'Settings' : undefined}
+            >
+              <div className="admin-nav-item-left">
+                <span className="admin-nav-icon"><Settings size={15} /></span>
+                {!isSidebarCollapsed && <span className="admin-nav-text">Settings</span>}
+              </div>
+            </button>
 
-          <button
-            onClick={handleLogout}
-            className="admin-nav-item"
-            title={isSidebarCollapsed ? 'Log out' : undefined}
-          >
-            <div className="admin-nav-item-left">
-              <span className="admin-nav-icon"><LogOut size={15} /></span>
-              {!isSidebarCollapsed && <span className="admin-nav-text">Log out</span>}
-            </div>
-          </button>
+            <button
+              onClick={handleLogout}
+              className="admin-nav-item"
+              title={isSidebarCollapsed ? 'Log out' : undefined}
+            >
+              <div className="admin-nav-item-left">
+                <span className="admin-nav-icon"><LogOut size={15} /></span>
+                {!isSidebarCollapsed && <span className="admin-nav-text">Log out</span>}
+              </div>
+            </button>
+          </div>
 
-          {/* Hide Sidebar Button */}
-          <button
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="admin-nav-item"
-            style={{ marginTop: 'auto', marginBottom: '8px' }}
-            title={isSidebarCollapsed ? 'Show' : 'Hide'}
-          >
-            <div className="admin-nav-item-left">
-              <span className="admin-nav-icon">
-                {isSidebarCollapsed ? <ChevronsRight size={15} /> : <ChevronsLeft size={15} />}
-              </span>
-              {!isSidebarCollapsed && <span className="admin-nav-text" style={{ fontSize: '12px' }}>« Hide</span>}
-            </div>
-          </button>
+          {/* Hide Sidebar Button (Remains at bottom with divider) */}
+          <div style={{
+            borderTop: '1px solid var(--admin-border-light)',
+            paddingTop: '6px',
+            marginTop: '4px',
+            marginBottom: '4px'
+          }}>
+            <button
+              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              className="admin-nav-item"
+              title={isSidebarCollapsed ? 'Show' : 'Hide'}
+            >
+              <div className="admin-nav-item-left">
+                <span className="admin-nav-icon">
+                  {isSidebarCollapsed ? <ChevronsRight size={15} /> : <ChevronsLeft size={15} />}
+                </span>
+                {!isSidebarCollapsed && <span className="admin-nav-text" style={{ fontSize: '12px' }}>« Hide</span>}
+              </div>
+            </button>
+          </div>
         </nav>
       </aside>
 
