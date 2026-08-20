@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { 
-  LayoutDashboard, Bell, DollarSign, Users, BarChart2, 
-  ArrowDownToLine, Settings, LogOut, ChevronDown, 
-  Moon, Sun, User, PanelLeftClose, PanelLeftOpen
+  Home, Bell, DollarSign, Users, BarChart2, 
+  FileText, Settings, LogOut, ChevronDown, 
+  Moon, Sun, User, ChevronsLeft, ChevronsRight
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { authService } from '../services/authService';
@@ -30,20 +30,20 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
   };
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
+    { id: 'dashboard', label: 'Dashboard', icon: <Home size={15} /> },
     { 
       id: 'notifications', 
       label: 'Notifications', 
       icon: (
         <div style={{ position: 'relative', display: 'inline-flex' }}>
-          <Bell size={18} />
+          <Bell size={15} />
           {totalNotifications > 0 && (
             <span style={{
               position: 'absolute',
               top: '-1px',
               right: '-1px',
-              width: '6px',
-              height: '6px',
+              width: '5px',
+              height: '5px',
               backgroundColor: '#ef4444',
               borderRadius: '50%'
             }}></span>
@@ -52,19 +52,19 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
       ), 
       badge: totalNotifications 
     },
-    { id: 'rates', label: 'Rates', icon: <DollarSign size={18} /> },
-    { id: 'members', label: 'Members', icon: <Users size={18} /> },
-    { id: 'analytics', label: 'Analytics', icon: <BarChart2 size={18} /> },
-    { id: 'withdrawal', label: 'Withdrawal', icon: <ArrowDownToLine size={18} /> }
+    { id: 'rates', label: 'Rates', icon: <DollarSign size={15} /> },
+    { id: 'members', label: 'Members', icon: <Users size={15} /> },
+    { id: 'analytics', label: 'Analytics', icon: <BarChart2 size={15} /> },
+    { id: 'withdrawal', label: 'Withdrawal', icon: <FileText size={15} /> }
   ];
 
   return (
     <div className={`admin-portal ${adminTheme}`}>
       
-      {/* 1. Sidebar */}
+      {/* 1. Compact Left Sidebar (185px) */}
       <aside className={`admin-sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
         
-        {/* Brand Header */}
+        {/* Logo Section */}
         <div className="admin-sidebar-header" onClick={() => onSelectTab('dashboard')}>
           <div className="admin-sidebar-logo-icon">
             $
@@ -75,12 +75,12 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
                 <div className="admin-sidebar-brand-title">Gold & Silver</div>
                 <div className="admin-sidebar-brand-sub">Admin</div>
               </div>
-              <ChevronDown size={14} color="#94a3b8" />
+              <ChevronDown size={13} color="#9ca3af" />
             </>
           )}
         </div>
 
-        {/* Main Navigation */}
+        {/* Navigation Items */}
         <nav className="admin-nav-list">
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
@@ -105,7 +105,7 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
             );
           })}
 
-          {/* Account Section */}
+          {/* Account Section Heading */}
           {!isSidebarCollapsed && (
             <div className="admin-section-heading">
               ACCOUNT
@@ -118,7 +118,7 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
             title={isSidebarCollapsed ? 'Settings' : undefined}
           >
             <div className="admin-nav-item-left">
-              <Settings size={18} />
+              <Settings size={15} />
               {!isSidebarCollapsed && <span>Settings</span>}
             </div>
           </button>
@@ -129,21 +129,21 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
             title={isSidebarCollapsed ? 'Log out' : undefined}
           >
             <div className="admin-nav-item-left">
-              <LogOut size={18} />
+              <LogOut size={15} />
               {!isSidebarCollapsed && <span>Log out</span>}
             </div>
           </button>
 
-          {/* Collapse / Expand Toggle */}
+          {/* Hide Sidebar Button */}
           <button
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             className="admin-nav-item"
-            style={{ marginTop: 'auto' }}
-            title={isSidebarCollapsed ? 'Show Sidebar' : 'Hide Sidebar'}
+            style={{ marginTop: 'auto', marginBottom: '8px' }}
+            title={isSidebarCollapsed ? 'Show' : 'Hide'}
           >
             <div className="admin-nav-item-left">
-              {isSidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-              {!isSidebarCollapsed && <span>« Hide</span>}
+              {isSidebarCollapsed ? <ChevronsRight size={15} /> : <ChevronsLeft size={15} />}
+              {!isSidebarCollapsed && <span style={{ fontSize: '12px' }}>« Hide</span>}
             </div>
           </button>
         </nav>
@@ -165,7 +165,7 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
               onClick={() => onSelectTab('notifications')}
               title="Notifications"
             >
-              <Bell size={18} />
+              <Bell size={15} />
               {totalNotifications > 0 && <span className="admin-header-badge-dot"></span>}
             </button>
 
@@ -175,7 +175,7 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
               onClick={toggleAdminTheme}
               title={adminTheme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
             >
-              {adminTheme === 'light' ? <Moon size={18} /> : <Sun size={18} color="#f59e0b" />}
+              {adminTheme === 'light' ? <Moon size={15} /> : <Sun size={15} color="#f59e0b" />}
             </button>
 
             {/* User Profile */}
@@ -184,7 +184,7 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
               onClick={() => onSelectTab('settings')}
               title={`Logged in as ${adminSettings.username}`}
             >
-              <User size={18} />
+              <User size={15} />
             </button>
           </div>
         </header>
