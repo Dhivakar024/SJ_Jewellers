@@ -91,6 +91,360 @@ function formatYAxisINR(val) {
   return `₹${Math.round(val)}`;
 }
 
+// =========================================================================
+// Interactive Donut Chart Component with Live Data, Tooltips & Legend Toggle
+// =========================================================================
+function InteractiveDonutCard({
+  title,
+  type = 'value', // 'value' | 'transactions'
+  goldRaw = 0,
+  silverRaw = 0,
+  goldColor = '#cfa024',
+  silverColor = '#b0b7c3'
+}) {
+  const [showGold, setShowGold] = useState(true);
+  const [showSilver, setShowSilver] = useState(true);
+  const [hoveredCategory, setHoveredCategory] = useState(null); // 'gold' | 'silver' | null
+
+  // Calculate visible values and recalculated percentages
+  const visibleGoldVal = showGold ? goldRaw : 0;
+  const visibleSilverVal = showSilver ? silverRaw : 0;
+  const totalVisible = visibleGoldVal + visibleSilverVal;
+
+  let goldPct = 0;
+  let silverPct = 0;
+
+  if (totalVisible > 0) {
+    if (showGold && showSilver) {
+      goldPct = (visibleGoldVal / totalVisible) * 100;
+      silverPct = (visibleSilverVal / totalVisible) * 100;
+    } else if (showGold) {
+      goldPct = 100;
+      silverPct = 0;
+    } else if (showSilver) {
+      goldPct = 0;
+      silverPct = 100;
+    }
+  }
+
+  // Dimensions
+  const cx = 95;
+  const cy = 95;
+  const baseOuterR = 75;
+  const baseInnerR = 42;
+  const textR = (baseOuterR + baseInnerR) / 2;
+
+  // Dynamic outer radius on hover for subtle animation
+  const isGoldHovered = hoveredCategory === 'gold';
+  const isSilverHovered = hoveredCategory === 'silver';
+
+  const goldOuterR = isGoldHovered ? baseOuterR + 4 : baseOuterR;
+  const silverOuterR = isSilverHovered ? baseOuterR + 4 : baseOuterR;
+
+  // Angles calculation (Gold from 0° to goldAngle, Silver from goldAngle to 360°)
+  const goldAngle = Math.max(0, Math.min(360, (goldPct / 100) * 360));
+
+  let goldPath = '';
+  let silverPath = '';
+  let goldTextPos = null;
+  let silverTextPos = null;
+
+  if (showGold && goldPct > 0) {
+    if (goldPct >= 99.9) {
+      goldPath = getDonutSegmentPath(cx, cy, goldOuterR, baseInnerR, 0, 359.99);
+      goldTextPos = polarToCartesian(cx, cy, textR, 0);
+    } else {
+      goldPath = getDonutSegmentPath(cx, cy, goldOuterR, baseInnerR, 0, goldAngle);
+      goldTextPos = polarToCartesian(cx, cy, textR, goldAngle / 2);
+    }
+  }
+
+  if (showSilver && silverPct > 0) {
+    if (silverPct >= 99.9) {
+      silverPath = getDonutSegmentPath(cx, cy, silverOuterR, baseInnerR, 0, 359.99);
+      silverTextPos = polarToCartesian(cx, cy, textR, 180);
+    } else {
+      silverPath = getDonutSegmentPath(cx, cy, silverOuterR, baseInnerR, goldAngle, 360);
+      silverTextPos = polarToCartesian(cx, cy, textR, goldAngle + (360 - goldAngle) / 2);
+    }
+  }
+
+  // Subtext calculation
+  let subtext = '';
+  if (type === 'value') {
+    if (goldRaw >= silverRaw) {
+      subtext = `Gold sells more by value (₹${goldRaw.toLocaleString('en-IN', { maximumFractionDigits: 2 })})`;
+    } else {
+      subtext = `Silver sells more by value (₹${silverRaw.toLocaleString('en-IN', { maximumFractionDigits: 2 })})`;
+    }
+  } else {
+    if (goldRaw >= silverRaw) {
+      subtext = `Gold has more orders (${goldRaw})`;
+    } else {
+      subtext = `Silver has more orders (${silverRaw})`;
+    }
+  }
+
+  return (
+    <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', minHeight: '340px', boxSizing: 'border-box', position: 'relative' }}>
+      {/* Title */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+        <Clock size={16} color="#6b7280" />
+        <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--admin-text-main-light)' }}>
+          {title}
+        </span>
+      </div>
+
+      {/* Donut Chart Area */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        minHeight: '190px'
+      }}>
+        <svg
+          width="190"
+          height="190"
+          viewBox="0 0 190 190"
+          style={{
+            display: 'block',
+            margin: '0 auto',
+            maxWidth: '100%',
+            height: 'auto',
+            aspectRatio: '1 / 1',
+            overflow: 'visible'
+          }}
+        >
+          {/* Empty state background ring if both hidden */}
+          {!showGold && !showSilver && (
+            <circle
+              cx={cx}
+              cy={cy}
+              r={(baseOuterR + baseInnerR) / 2}
+              fill="none"
+              stroke="#e5e7eb"
+              strokeWidth={baseOuterR - baseInnerR}
+              opacity="0.6"
+            />
+          )}
+
+          {/* Silver Donut Segment */}
+          {showSilver && silverPath && (
+            <path
+              d={silverPath}
+              fill={silverColor}
+              stroke="#ffffff"
+              strokeWidth="2"
+              onMouseEnter={() => setHoveredCategory('silver')}
+              onMouseLeave={() => setHoveredCategory(null)}
+              style={{
+                cursor: 'pointer',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                filter: isSilverHovered ? 'drop-shadow(0 4px 10px rgba(0,0,0,0.18)) brightness(1.08)' : 'none',
+                opacity: hoveredCategory && hoveredCategory !== 'silver' ? 0.45 : 1
+              }}
+            />
+          )}
+
+          {/* Gold Donut Segment */}
+          {showGold && goldPath && (
+            <path
+              d={goldPath}
+              fill={goldColor}
+              stroke="#ffffff"
+              strokeWidth="2"
+              onMouseEnter={() => setHoveredCategory('gold')}
+              onMouseLeave={() => setHoveredCategory(null)}
+              style={{
+                cursor: 'pointer',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                filter: isGoldHovered ? 'drop-shadow(0 4px 10px rgba(0,0,0,0.18)) brightness(1.08)' : 'none',
+                opacity: hoveredCategory && hoveredCategory !== 'gold' ? 0.45 : 1
+              }}
+            />
+          )}
+
+          {/* Silver Percentage Label */}
+          {showSilver && silverPct >= 9 && silverTextPos && (
+            <text
+              x={silverTextPos.x}
+              y={silverTextPos.y}
+              dominantBaseline="central"
+              textAnchor="middle"
+              fontSize="12"
+              fontWeight="700"
+              fill="#ffffff"
+              style={{ pointerEvents: 'none', userSelect: 'none' }}
+            >
+              {silverPct.toFixed(1)}%
+            </text>
+          )}
+
+          {/* Gold Percentage Label */}
+          {showGold && goldPct >= 9 && goldTextPos && (
+            <text
+              x={goldTextPos.x}
+              y={goldTextPos.y}
+              dominantBaseline="central"
+              textAnchor="middle"
+              fontSize="12"
+              fontWeight="700"
+              fill="#ffffff"
+              style={{ pointerEvents: 'none', userSelect: 'none' }}
+            >
+              {goldPct.toFixed(1)}%
+            </text>
+          )}
+
+          {/* Empty state label */}
+          {!showGold && !showSilver && (
+            <text
+              x={cx}
+              y={cy}
+              dominantBaseline="central"
+              textAnchor="middle"
+              fontSize="11"
+              fontWeight="600"
+              fill="#9ca3af"
+              style={{ pointerEvents: 'none', userSelect: 'none' }}
+            >
+              Hidden
+            </text>
+          )}
+        </svg>
+
+        {/* Interactive Floating Tooltip */}
+        {hoveredCategory && (
+          <div style={{
+            position: 'absolute',
+            top: '4px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: '#1e293b',
+            color: '#ffffff',
+            padding: '8px 14px',
+            borderRadius: '8px',
+            fontSize: '11.5px',
+            boxShadow: '0 6px 18px rgba(0,0,0,0.25)',
+            zIndex: 20,
+            pointerEvents: 'none',
+            whiteSpace: 'nowrap',
+            textAlign: 'center'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: '700', marginBottom: '2px' }}>
+              <span style={{
+                width: '7px',
+                height: '7px',
+                borderRadius: '50%',
+                backgroundColor: hoveredCategory === 'gold' ? goldColor : silverColor
+              }}></span>
+              <span style={{ color: '#f8fafc' }}>
+                {hoveredCategory === 'gold' ? 'Gold' : 'Silver'}
+              </span>
+            </div>
+
+            <div style={{ color: '#a5b4fc', fontWeight: '700', fontSize: '12px' }}>
+              {type === 'value' ? (
+                <>Actual Value: ₹{(hoveredCategory === 'gold' ? goldRaw : silverRaw).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</>
+              ) : (
+                <>Transaction Count: {hoveredCategory === 'gold' ? goldRaw : silverRaw} orders</>
+              )}
+            </div>
+
+            <div style={{ fontSize: '11px', color: '#cbd5e1', marginTop: '2px', fontWeight: '600' }}>
+              Share: {(hoveredCategory === 'gold' ? goldPct : silverPct).toFixed(1)}%
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Interactive Legend (Clickable to toggle visibility) */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '20px',
+        marginTop: '10px',
+        fontSize: '12px',
+        userSelect: 'none'
+      }}>
+        {/* Gold Legend Item */}
+        <div
+          onClick={() => setShowGold(!showGold)}
+          onMouseEnter={() => showGold && setHoveredCategory('gold')}
+          onMouseLeave={() => setHoveredCategory(null)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            cursor: 'pointer',
+            opacity: showGold ? 1 : 0.4,
+            transition: 'opacity 0.15s ease',
+            padding: '2px 6px',
+            borderRadius: '4px'
+          }}
+          title={showGold ? 'Click to hide Gold' : 'Click to show Gold'}
+        >
+          <span style={{
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            backgroundColor: goldColor,
+            border: !showGold ? '1px dashed #9ca3af' : 'none'
+          }}></span>
+          <span style={{
+            color: '#4b5563',
+            fontWeight: showGold ? '700' : '400',
+            textDecoration: !showGold ? 'line-through' : 'none'
+          }}>
+            Gold
+          </span>
+        </div>
+
+        {/* Silver Legend Item */}
+        <div
+          onClick={() => setShowSilver(!showSilver)}
+          onMouseEnter={() => showSilver && setHoveredCategory('silver')}
+          onMouseLeave={() => setHoveredCategory(null)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            cursor: 'pointer',
+            opacity: showSilver ? 1 : 0.4,
+            transition: 'opacity 0.15s ease',
+            padding: '2px 6px',
+            borderRadius: '4px'
+          }}
+          title={showSilver ? 'Click to hide Silver' : 'Click to show Silver'}
+        >
+          <span style={{
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            backgroundColor: silverColor,
+            border: !showSilver ? '1px dashed #9ca3af' : 'none'
+          }}></span>
+          <span style={{
+            color: '#4b5563',
+            fontWeight: showSilver ? '700' : '400',
+            textDecoration: !showSilver ? 'line-through' : 'none'
+          }}>
+            Silver
+          </span>
+        </div>
+      </div>
+
+      {/* Subtext */}
+      <div style={{ textAlign: 'center', fontSize: '11.5px', color: '#6b7280', marginTop: '6px' }}>
+        {subtext}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboard({ onSelectTab }) {
   const appContext = useApp();
   const rawGoldRate = appContext?.goldRate;
@@ -101,7 +455,7 @@ export default function AdminDashboard({ onSelectTab }) {
   const silverRate = typeof rawSilverRate === 'number' && !isNaN(rawSilverRate) ? rawSilverRate : (parseFloat(rawSilverRate) || 206.17);
   const transactions = Array.isArray(rawTransactions) ? rawTransactions : [];
 
-  // Hovered tooltip state for charts
+  // Hovered tooltip state for bar charts
   const [hoveredBar, setHoveredBar] = useState(null);
 
   // Reference date: latest transaction date or current system date
@@ -122,11 +476,7 @@ export default function AdminDashboard({ onSelectTab }) {
     goldValue, 
     silverValue, 
     goldTxnCount, 
-    silverTxnCount,
-    goldPercent,
-    silverPercent,
-    goldTxnPercent,
-    silverTxnPercent
+    silverTxnCount
   } = useMemo(() => {
     let gVal = 0;
     let sVal = 0;
@@ -145,18 +495,11 @@ export default function AdminDashboard({ onSelectTab }) {
       }
     });
 
-    const totalVal = gVal + sVal;
-    const totalCount = gCount + sCount;
-
     return {
       goldValue: gVal,
       silverValue: sVal,
       goldTxnCount: gCount,
-      silverTxnCount: sCount,
-      goldPercent: totalVal > 0 ? ((gVal / totalVal) * 100).toFixed(1) : '51.4',
-      silverPercent: totalVal > 0 ? ((sVal / totalVal) * 100).toFixed(1) : '48.6',
-      goldTxnPercent: totalCount > 0 ? ((gCount / totalCount) * 100).toFixed(1) : '50.0',
-      silverTxnPercent: totalCount > 0 ? ((sCount / totalCount) * 100).toFixed(1) : '50.0'
+      silverTxnCount: sCount
     };
   }, [transactions]);
 
@@ -340,97 +683,6 @@ export default function AdminDashboard({ onSelectTab }) {
 
     return { items: days, maxVal: max };
   }, [transactions, referenceDate]);
-
-  // Donut Chart renderer (Target size: 185px)
-  const renderDonutChart = (silverPctStr, goldPctStr) => {
-    const silverPct = parseFloat(silverPctStr) || 48.6;
-    const goldPct = parseFloat(goldPctStr) || 51.4;
-
-    const cx = 92.5;
-    const cy = 92.5;
-    const outerR = 75;
-    const innerR = 42;
-    const textR = 58.5;
-
-    const goldAngle = Math.max(5, Math.min(355, (goldPct / 100) * 360));
-    
-    const goldPath = getDonutSegmentPath(cx, cy, outerR, innerR, 0, goldAngle);
-    const silverPath = getDonutSegmentPath(cx, cy, outerR, innerR, goldAngle, 360);
-
-    const goldTextAngle = goldAngle / 2;
-    const silverTextAngle = goldAngle + (360 - goldAngle) / 2;
-
-    const goldTextPos = polarToCartesian(cx, cy, textR, goldTextAngle);
-    const silverTextPos = polarToCartesian(cx, cy, textR, silverTextAngle);
-
-    return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '100%',
-        height: '200px',
-        overflow: 'hidden'
-      }}>
-        <svg
-          width="185"
-          height="185"
-          viewBox="0 0 185 185"
-          style={{
-            display: 'block',
-            margin: '0 auto',
-            maxWidth: '100%',
-            height: 'auto',
-            aspectRatio: '1 / 1'
-          }}
-        >
-          <path
-            d={silverPath}
-            fill="#b0b7c3"
-            stroke="#ffffff"
-            strokeWidth="2"
-          />
-
-          <path
-            d={goldPath}
-            fill="#cfa024"
-            stroke="#ffffff"
-            strokeWidth="2"
-          />
-
-          {silverPct >= 8 && (
-            <text
-              x={silverTextPos.x}
-              y={silverTextPos.y}
-              dominantBaseline="central"
-              textAnchor="middle"
-              fontSize="12"
-              fontWeight="700"
-              fill="#ffffff"
-              style={{ pointerEvents: 'none', userSelect: 'none' }}
-            >
-              {silverPct.toFixed(1)}%
-            </text>
-          )}
-
-          {goldPct >= 8 && (
-            <text
-              x={goldTextPos.x}
-              y={goldTextPos.y}
-              dominantBaseline="central"
-              textAnchor="middle"
-              fontSize="12"
-              fontWeight="700"
-              fill="#ffffff"
-              style={{ pointerEvents: 'none', userSelect: 'none' }}
-            >
-              {goldPct.toFixed(1)}%
-            </text>
-          )}
-        </svg>
-      </div>
-    );
-  };
 
   // Reusable Bar Chart Component with spacious 320px height, INR labels and tooltips
   const renderBarChart = ({ 
@@ -739,81 +991,31 @@ export default function AdminDashboard({ onSelectTab }) {
         </div>
       </div>
 
-      {/* 3. Sales By Metal Donut Charts (Side by Side & 100% Symmetrical, Target 185px) */}
+      {/* 3. Sales By Metal Donut Charts (Interactive, Symmetrical, Live Data Connected) */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: '20px'
       }}>
         {/* Sales by metal (value) */}
-        <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', minHeight: '340px', boxSizing: 'border-box' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-            <Clock size={16} color="#6b7280" />
-            <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--admin-text-main-light)' }}>
-              Sales by metal (value)
-            </span>
-          </div>
-
-          {/* Mathematically Exact Donut Chart */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {renderDonutChart(silverPercent, goldPercent)}
-          </div>
-
-          {/* Legend */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginTop: '10px', fontSize: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#cfa024' }}></span>
-              <span style={{ color: '#4b5563', fontWeight: '600' }}>Gold</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#b0b7c3' }}></span>
-              <span style={{ color: '#4b5563', fontWeight: '600' }}>Silver</span>
-            </div>
-          </div>
-
-          {/* Subtext */}
-          <div style={{ textAlign: 'center', fontSize: '11.5px', color: '#6b7280', marginTop: '6px' }}>
-            {goldValue >= silverValue
-              ? `Gold sells more by value (₹${goldValue.toLocaleString('en-IN', { maximumFractionDigits: 2 })})`
-              : `Silver sells more by value (₹${silverValue.toLocaleString('en-IN', { maximumFractionDigits: 2 })})`
-            }
-          </div>
-        </div>
+        <InteractiveDonutCard
+          title="Sales by metal (value)"
+          type="value"
+          goldRaw={goldValue}
+          silverRaw={silverValue}
+          goldColor="#cfa024"
+          silverColor="#b0b7c3"
+        />
 
         {/* Sales by metal (transactions) */}
-        <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', minHeight: '340px', boxSizing: 'border-box' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-            <Clock size={16} color="#6b7280" />
-            <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--admin-text-main-light)' }}>
-              Sales by metal (transactions)
-            </span>
-          </div>
-
-          {/* Mathematically Exact Donut Chart */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {renderDonutChart(silverTxnPercent, goldTxnPercent)}
-          </div>
-
-          {/* Legend */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginTop: '10px', fontSize: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#cfa024' }}></span>
-              <span style={{ color: '#4b5563', fontWeight: '600' }}>Gold</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#b0b7c3' }}></span>
-              <span style={{ color: '#4b5563', fontWeight: '600' }}>Silver</span>
-            </div>
-          </div>
-
-          {/* Subtext */}
-          <div style={{ textAlign: 'center', fontSize: '11.5px', color: '#6b7280', marginTop: '6px' }}>
-            {goldTxnCount >= silverTxnCount
-              ? `Gold has more orders (${goldTxnCount})`
-              : `Silver has more orders (${silverTxnCount})`
-            }
-          </div>
-        </div>
+        <InteractiveDonutCard
+          title="Sales by metal (transactions)"
+          type="transactions"
+          goldRaw={goldTxnCount}
+          silverRaw={silverTxnCount}
+          goldColor="#cfa024"
+          silverColor="#b0b7c3"
+        />
       </div>
 
       {/* 4. A. Annual Transactions (Last 5 Years, 320px Height) */}
