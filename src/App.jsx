@@ -99,7 +99,7 @@ function MainContent() {
         'profile', 'transactions', 'contact', 'withdraw', 'create-profile'
       ];
       if (validScreens.includes(hash)) {
-        setUserScreen(hash === 'buy-gold' ? 'buy' : hash);
+        setUserScreen(hash);
       } else {
         setUserScreen('home');
       }

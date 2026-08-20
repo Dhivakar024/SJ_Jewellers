@@ -291,45 +291,90 @@ export function AppProvider({ children }) {
   };
 
   // Transaction & KYC Action Helpers
-  const addPurchaseTransaction = ({ asset, amount, grams, paymentMethod }) => {
-    const gramsNum = parseFloat(grams) || 0;
+  const addPurchaseTransaction = ({ assetType, asset, amount, grams, quantity, ratePerGram, paymentMethod = 'UPI' }) => {
+    // 1. Determine asset strictly (case-insensitive)
+    const rawAsset = (assetType || asset || 'gold').toString().toLowerCase().trim();
+    const isGold = rawAsset === 'gold';
+    const assetDisplay = isGold ? 'Gold' : 'Silver';
+    const assetNormalized = isGold ? 'gold' : 'silver';
+
+    // 2. Parse grams strictly
+    let gramsNum = 0;
+    if (grams !== undefined && grams !== null) {
+      gramsNum = parseFloat(grams) || 0;
+    } else if (quantity !== undefined && quantity !== null) {
+      gramsNum = parseFloat(quantity.toString().replace(/[^0-9.]/g, '')) || 0;
+    }
+
+    const amountNum = parseFloat(amount) || 0;
     const now = new Date();
     const dateStr = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
+    // 3. Single source of truth transaction object
     const newTxn = {
       id: `TXN-${Math.floor(1000 + Math.random() * 9000)}`,
       date: dateStr,
       time: timeStr,
-      paymentMethod,
-      asset: asset === 'gold' ? 'Gold' : 'Silver',
-      quantity: `${gramsNum.toFixed(4)}g`,
-      amount: parseFloat(amount).toFixed(2),
+      paymentMethod: paymentMethod || 'UPI',
+      asset: assetDisplay, // 'Gold' or 'Silver'
+      assetType: assetNormalized, // 'gold' or 'silver'
+      quantity: `${gramsNum.toFixed(4)} gm`,
+      amount: amountNum.toFixed(2),
       status: 'Success'
     };
 
-    setTransactions((prev) => [newTxn, ...prev]);
-
-    // Update holdings
-    setHoldings((prev) => {
-      if (asset === 'gold') {
-        return { ...prev, goldGrams: parseFloat((prev.goldGrams + gramsNum).toFixed(4)) };
-      } else {
-        return { ...prev, silverGrams: parseFloat((prev.silverGrams + gramsNum).toFixed(4)) };
-      }
+    // Update transactions list
+    setTransactions((prev) => {
+      const updated = [newTxn, ...prev];
+      localStorage.setItem('sj_transactions', JSON.stringify(updated));
+      return updated;
     });
 
-    // Update user entry in usersList
-    setUsersList((prev) => prev.map((u) => {
-      if (u.id === currentUser.id) {
-        return {
-          ...u,
-          goldGrams: asset === 'gold' ? parseFloat((u.goldGrams + gramsNum).toFixed(4)) : u.goldGrams,
-          silverGrams: asset === 'silver' ? parseFloat((u.silverGrams + gramsNum).toFixed(4)) : u.silverGrams,
-        };
-      }
-      return u;
-    }));
+    // Update holdings (single source of truth for Home, Holdings, Withdraw screens)
+    setHoldings((prev) => {
+      const currentGold = parseFloat(prev?.goldGrams || 0);
+      const currentSilver = parseFloat(prev?.silverGrams || 0);
+
+      const updated = {
+        goldGrams: isGold ? parseFloat((currentGold + gramsNum).toFixed(4)) : currentGold,
+        silverGrams: !isGold ? parseFloat((currentSilver + gramsNum).toFixed(4)) : currentSilver
+      };
+      localStorage.setItem('sj_holdings', JSON.stringify(updated));
+      return updated;
+    });
+
+    // Update currentUser state
+    setCurrentUser((prev) => {
+      if (!prev) return prev;
+      const curGold = parseFloat(prev.goldGrams || 0);
+      const curSilver = parseFloat(prev.silverGrams || 0);
+      return {
+        ...prev,
+        goldGrams: isGold ? parseFloat((curGold + gramsNum).toFixed(4)) : curGold,
+        silverGrams: !isGold ? parseFloat((curSilver + gramsNum).toFixed(4)) : curSilver
+      };
+    });
+
+    // Update usersList entry
+    setUsersList((prev) => {
+      const updated = prev.map((u) => {
+        if (u.id === currentUser.id) {
+          const uGold = parseFloat(u.goldGrams || 0);
+          const uSilver = parseFloat(u.silverGrams || 0);
+          return {
+            ...u,
+            goldGrams: isGold ? parseFloat((uGold + gramsNum).toFixed(4)) : uGold,
+            silverGrams: !isGold ? parseFloat((uSilver + gramsNum).toFixed(4)) : uSilver
+          };
+        }
+        return u;
+      });
+      localStorage.setItem('sj_usersList', JSON.stringify(updated));
+      return updated;
+    });
+
+    return newTxn;
   };
 
   const submitKycRequest = ({ pan, aadhar }) => {

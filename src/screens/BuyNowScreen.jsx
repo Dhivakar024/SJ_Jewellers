@@ -133,12 +133,19 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
       setIsProcessing(false);
       setPaymentSuccess(true);
       
-      // Update global context state with total amount including GST
+      const currentAsset = (selectedAsset || 'gold').toLowerCase() === 'gold' ? 'gold' : 'silver';
+      const currentRate = currentAsset === 'gold' ? goldRate : silverRate;
+      const gramsNumber = parseFloat(gramsVal) || 0;
+      const amountNumber = parseFloat(totalAmountWithGst.toFixed(2)) || 0;
+
+      // Update global context state with exact selected asset & grams
       addPurchaseTransaction({
-        asset: isGold ? 'Gold' : 'Silver',
-        amount: totalAmountWithGst.toFixed(2),
-        quantity: `${gramsVal}g`,
-        paymentMethod: 'UPI'
+        assetType: currentAsset,
+        asset: currentAsset === 'gold' ? 'Gold' : 'Silver',
+        amount: amountNumber,
+        grams: gramsNumber,
+        ratePerGram: currentRate,
+        paymentMethod: selectedMethod || 'UPI'
       });
 
       setTimeout(() => {
