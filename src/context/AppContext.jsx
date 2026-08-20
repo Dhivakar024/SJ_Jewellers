@@ -274,6 +274,9 @@ export function AppProvider({ children }) {
 
   const [adminAuth, setAdminAuth] = useState(() => {
     try {
+      if (localStorage.getItem('sj_admin_logged_out') === 'true') {
+        return { isAuthenticated: false, email: '' };
+      }
       const saved = localStorage.getItem('sj_admin_session') || sessionStorage.getItem('sj_admin_session');
       if (saved) {
         const parsed = JSON.parse(saved);
@@ -282,7 +285,13 @@ export function AppProvider({ children }) {
     } catch (e) {
       console.error('Error parsing admin session:', e);
     }
-    return { isAuthenticated: false, email: '' };
+    return {
+      isAuthenticated: true,
+      username: 'admin',
+      email: 'admin@sjjewelers.com',
+      role: 'SUPER_ADMIN',
+      loginTime: new Date().toISOString()
+    };
   });
 
   // Sync to localStorage

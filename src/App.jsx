@@ -31,13 +31,33 @@ import './styles/app.css';
 
 // Helper to determine if current URL is an admin route
 function isAdminRoute() {
-  const path = window.location.pathname.toLowerCase();
-  const hash = window.location.hash.toLowerCase();
-  return path.startsWith('/admin') || hash.startsWith('#admin') || hash.startsWith('#/admin');
+  const path = (window.location.pathname || '').toLowerCase();
+  const hash = (window.location.hash || '').toLowerCase();
+  const search = (window.location.search || '').toLowerCase();
+  return path.startsWith('/admin') || 
+         path.includes('admin') || 
+         hash.startsWith('#admin') || 
+         hash.startsWith('#/admin') || 
+         hash.includes('admin') ||
+         search.includes('admin');
+}
+
+// Helper to extract the active admin tab from URL
+function getAdminTabFromUrl() {
+  const hash = (window.location.hash || '').toLowerCase();
+  const path = (window.location.pathname || '').toLowerCase();
+  const full = `${path} ${hash}`;
+  if (full.includes('notifications')) return 'notifications';
+  if (full.includes('rates')) return 'rates';
+  if (full.includes('members')) return 'members';
+  if (full.includes('analytics')) return 'analytics';
+  if (full.includes('withdrawal')) return 'withdrawal';
+  if (full.includes('settings')) return 'settings';
+  return 'dashboard';
 }
 
 function MainContent() {
-  const { currentUser, adminAuth } = useApp();
+  const { currentUser, adminAuth } = useApp() || {};
   
   // Route separation: 'admin' vs 'user'
   const [isAdminMode, setIsAdminMode] = useState(() => isAdminRoute());
@@ -51,7 +71,7 @@ function MainContent() {
   });
 
   // Admin Tab State
-  const [adminTab, setAdminTab] = useState('dashboard');
+  const [adminTab, setAdminTab] = useState(() => getAdminTabFromUrl());
   const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
 
   // Sync route on popstate / hashchange / pathname change
@@ -61,15 +81,7 @@ function MainContent() {
       setIsAdminMode(isAdm);
 
       if (isAdm) {
-        // Extract admin subtab from hash if present, e.g. #admin/rates
-        const hash = window.location.hash.toLowerCase();
-        if (hash.includes('notifications')) setAdminTab('notifications');
-        else if (hash.includes('rates')) setAdminTab('rates');
-        else if (hash.includes('members')) setAdminTab('members');
-        else if (hash.includes('analytics')) setAdminTab('analytics');
-        else if (hash.includes('withdrawal')) setAdminTab('withdrawal');
-        else if (hash.includes('settings')) setAdminTab('settings');
-        else setAdminTab('dashboard');
+        setAdminTab(getAdminTabFromUrl());
         return;
       }
 
@@ -111,15 +123,14 @@ function MainContent() {
 
   // Auth Guard: Enforce Sign In on customer app unauthenticated state
   useEffect(() => {
-    if (!isAdminMode) {
-      if (!currentUser || !currentUser.isAuthenticated) {
-        if (userScreen !== 'signin' && userScreen !== 'signup' && userScreen !== 'forgot-username') {
-          setUserScreen('signin');
-          window.location.hash = 'signin';
-        }
+    if (isAdminRoute()) return;
+    if (!currentUser || !currentUser.isAuthenticated) {
+      if (userScreen !== 'signin' && userScreen !== 'signup' && userScreen !== 'forgot-username') {
+        setUserScreen('signin');
+        window.location.hash = 'signin';
       }
     }
-  }, [currentUser, isAdminMode, userScreen]);
+  }, [currentUser, userScreen]);
 
   const handleUserNavigate = (screen) => {
     // If not authenticated, only allow auth screens

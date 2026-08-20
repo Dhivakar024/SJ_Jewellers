@@ -13,6 +13,7 @@ function polarToCartesian(cx, cy, radius, angleInDegrees) {
 
 // Helper to generate a mathematically perfect SVG Donut Segment
 function getDonutSegmentPath(cx, cy, outerR, innerR, startAngle, endAngle) {
+  if (isNaN(startAngle) || isNaN(endAngle)) return '';
   const sweep = endAngle - startAngle;
   if (sweep >= 359.99) {
     return [
@@ -44,8 +45,10 @@ function getDonutSegmentPath(cx, cy, outerR, innerR, startAngle, endAngle) {
 // Helper to parse transaction amounts safely
 function parseTxnAmount(amt) {
   if (amt === undefined || amt === null) return 0;
-  if (typeof amt === 'number') return amt;
-  return parseFloat(amt.toString().replace(/,/g, '')) || 0;
+  if (typeof amt === 'number') return isNaN(amt) ? 0 : amt;
+  const cleaned = amt.toString().replace(/,/g, '').trim();
+  const val = parseFloat(cleaned);
+  return isNaN(val) ? 0 : val;
 }
 
 // Helper to parse dates in multiple formats safely
@@ -53,16 +56,24 @@ function parseTxnDate(dateStr) {
   if (!dateStr) return null;
   if (dateStr instanceof Date) return isNaN(dateStr.getTime()) ? null : dateStr;
 
-  const d = new Date(dateStr);
-  if (!isNaN(d.getTime())) return d;
+  try {
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) return d;
 
-  const cleaned = dateStr.split(',')[0].trim();
-  const d2 = new Date(cleaned);
-  if (!isNaN(d2.getTime())) return d2;
+    const cleaned = dateStr.toString().split(',')[0].trim();
+    const d2 = new Date(cleaned);
+    if (!isNaN(d2.getTime())) return d2;
 
-  const match = dateStr.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-  if (match) {
-    return new Date(parseInt(match[1], 10), parseInt(match[2], 10) - 1, parseInt(match[3], 10));
+    const match = dateStr.toString().match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (match) {
+      const y = parseInt(match[1], 10);
+      const m = parseInt(match[2], 10) - 1;
+      const day = parseInt(match[3], 10);
+      const d3 = new Date(y, m, day);
+      if (!isNaN(d3.getTime())) return d3;
+    }
+  } catch (e) {
+    return null;
   }
 
   return null;
@@ -70,17 +81,25 @@ function parseTxnDate(dateStr) {
 
 // Helper for formatting Y-axis INR currency cleanly (e.g. ₹50K, ₹10K, ₹500, ₹0)
 function formatYAxisINR(val) {
+  if (val === undefined || val === null || isNaN(val)) return '₹0';
   if (val >= 1000000) return `₹${(val / 1000000).toFixed(1)}M`;
   if (val >= 1000) {
     const kVal = val / 1000;
     return `₹${kVal % 1 === 0 ? kVal.toFixed(0) : kVal.toFixed(1)}K`;
   }
-  if (val === 0) return '₹0';
+  if (val <= 0) return '₹0';
   return `₹${Math.round(val)}`;
 }
 
 export default function AdminDashboard({ onSelectTab }) {
-  const { goldRate, silverRate, transactions } = useApp();
+  const appContext = useApp();
+  const rawGoldRate = appContext?.goldRate;
+  const rawSilverRate = appContext?.silverRate;
+  const rawTransactions = appContext?.transactions;
+
+  const goldRate = typeof rawGoldRate === 'number' && !isNaN(rawGoldRate) ? rawGoldRate : (parseFloat(rawGoldRate) || 13818.88);
+  const silverRate = typeof rawSilverRate === 'number' && !isNaN(rawSilverRate) ? rawSilverRate : (parseFloat(rawSilverRate) || 206.17);
+  const transactions = Array.isArray(rawTransactions) ? rawTransactions : [];
 
   // Hovered tooltip state for charts
   const [hoveredBar, setHoveredBar] = useState(null);
@@ -89,12 +108,13 @@ export default function AdminDashboard({ onSelectTab }) {
   const referenceDate = useMemo(() => {
     let latest = new Date();
     transactions.forEach((t) => {
+      if (!t?.date) return;
       const d = parseTxnDate(t.date);
-      if (d && d.getTime() > latest.getTime()) {
+      if (d && !isNaN(d.getTime()) && d.getTime() > latest.getTime()) {
         latest = d;
       }
     });
-    return latest;
+    return !isNaN(latest.getTime()) ? latest : new Date();
   }, [transactions]);
 
   // Dynamic Sales by Metal calculations from actual transactions
@@ -114,8 +134,8 @@ export default function AdminDashboard({ onSelectTab }) {
     let sCount = 0;
 
     transactions.forEach((t) => {
-      const amt = parseTxnAmount(t.amount);
-      const isGold = (t.asset || t.assetType || t.metal || '').toLowerCase().includes('gold');
+      const amt = parseTxnAmount(t?.amount);
+      const isGold = (t?.asset || t?.assetType || t?.metal || '').toLowerCase().includes('gold');
       if (isGold) {
         gVal += amt;
         gCount += 1;
@@ -163,6 +183,7 @@ export default function AdminDashboard({ onSelectTab }) {
     });
 
     transactions.forEach((t) => {
+      if (!t?.date) return;
       const d = parseTxnDate(t.date);
       if (!d) return;
       const y = d.getFullYear();
@@ -183,7 +204,7 @@ export default function AdminDashboard({ onSelectTab }) {
 
     const items = years.map((y) => map[y]);
     let max = Math.max(...items.map((i) => i.totalValue), 0);
-    if (max === 0) max = 50000;
+    if (max === 0 || isNaN(max)) max = 50000;
     else if (max < 10000) max = 10000;
     else max = Math.ceil(max / 10000) * 10000;
 
@@ -222,9 +243,10 @@ export default function AdminDashboard({ onSelectTab }) {
     months.forEach((m) => { map[m.key] = m; });
 
     transactions.forEach((t) => {
+      if (!t?.date) return;
       const d = parseTxnDate(t.date);
       if (!d) return;
-      const y = d.getFullYear();
+      const yyyy = d.getFullYear();
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const key = `${yyyy}-${mm}`;
       if (map[key]) {
@@ -243,7 +265,7 @@ export default function AdminDashboard({ onSelectTab }) {
     });
 
     let max = Math.max(...months.map((i) => i.totalValue), 0);
-    if (max === 0) max = 30000;
+    if (max === 0 || isNaN(max)) max = 30000;
     else if (max < 5000) max = 5000;
     else if (max < 20000) max = Math.ceil(max / 5000) * 5000;
     else max = Math.ceil(max / 10000) * 10000;
@@ -287,9 +309,10 @@ export default function AdminDashboard({ onSelectTab }) {
     days.forEach((d) => { map[d.key] = d; });
 
     transactions.forEach((t) => {
+      if (!t?.date) return;
       const d = parseTxnDate(t.date);
       if (!d) return;
-      const y = d.getFullYear();
+      const yyyy = d.getFullYear();
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const dd = String(d.getDate()).padStart(2, '0');
       const key = `${yyyy}-${mm}-${dd}`;
@@ -309,7 +332,7 @@ export default function AdminDashboard({ onSelectTab }) {
     });
 
     let max = Math.max(...days.map((i) => i.totalValue), 0);
-    if (max === 0) max = 1000;
+    if (max === 0 || isNaN(max)) max = 1000;
     else if (max < 500) max = 500;
     else if (max < 1000) max = 1000;
     else if (max < 5000) max = Math.ceil(max / 1000) * 1000;
@@ -419,12 +442,15 @@ export default function AdminDashboard({ onSelectTab }) {
     barMaxWidth = '48px',
     isDaily = false
   }) => {
+    const safeData = Array.isArray(data) ? data : [];
+    const safeMax = typeof maxVal === 'number' && !isNaN(maxVal) && maxVal > 0 ? maxVal : 1000;
+
     const yTicks = [
-      maxVal,
-      maxVal * 0.8,
-      maxVal * 0.6,
-      maxVal * 0.4,
-      maxVal * 0.2,
+      safeMax,
+      safeMax * 0.8,
+      safeMax * 0.6,
+      safeMax * 0.4,
+      safeMax * 0.2,
       0
     ];
 
@@ -502,8 +528,8 @@ export default function AdminDashboard({ onSelectTab }) {
             zIndex: 2,
             gap: isDaily ? '3px' : '8px'
           }}>
-            {data.map((item, idx) => {
-              const heightPct = maxVal > 0 ? Math.min(100, Math.max(item.totalValue > 0 ? 3 : 0, (item.totalValue / maxVal) * 100)) : 0;
+            {safeData.map((item, idx) => {
+              const heightPct = safeMax > 0 ? Math.min(100, Math.max(item.totalValue > 0 ? 3 : 0, (item.totalValue / safeMax) * 100)) : 0;
               const isHovered = hoveredBar && hoveredBar.key === item.key;
 
               return (
@@ -596,10 +622,10 @@ export default function AdminDashboard({ onSelectTab }) {
           color: '#9ca3af',
           userSelect: 'none'
         }}>
-          {data.map((item, idx) => {
+          {safeData.map((item, idx) => {
             let isVisible = true;
             if (isDaily) {
-              isVisible = idx === 0 || idx === 5 || idx === 10 || idx === 15 || idx === 20 || idx === 25 || idx === data.length - 1;
+              isVisible = idx === 0 || idx === 5 || idx === 10 || idx === 15 || idx === 20 || idx === 25 || idx === safeData.length - 1;
             }
 
             return (

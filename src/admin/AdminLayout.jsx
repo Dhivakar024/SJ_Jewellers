@@ -10,18 +10,18 @@ import '../styles/admin.css';
 
 export default function AdminLayout({ activeTab, onSelectTab, children }) {
   const { 
-    adminTheme, 
+    adminTheme = 'light', 
     toggleAdminTheme, 
-    pendingVerifications, 
-    withdrawals, 
+    pendingVerifications = [], 
+    withdrawals = [], 
     setAdminAuth,
-    adminSettings 
-  } = useApp();
+    adminSettings = { username: 'SJ Jewellers' } 
+  } = useApp() || {};
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  const pendingWithdrawalsCount = withdrawals.filter((w) => w.status === 'Pending').length;
-  const pendingVerificationsCount = pendingVerifications.length;
+  const pendingWithdrawalsCount = (withdrawals || []).filter((w) => w?.status === 'Pending').length;
+  const pendingVerificationsCount = (pendingVerifications || []).length;
   const totalNotifications = pendingWithdrawalsCount + pendingVerificationsCount;
 
   const handleLogout = async () => {
@@ -184,7 +184,7 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
             <button 
               className="admin-header-btn" 
               onClick={() => onSelectTab('settings')}
-              title={`Logged in as ${adminSettings.username}`}
+              title={`Logged in as ${adminSettings?.username || 'Admin'}`}
             >
               <User size={15} />
             </button>
