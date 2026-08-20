@@ -272,7 +272,18 @@ export function AppProvider({ children }) {
     };
   });
 
-  const [adminAuth, setAdminAuth] = useState({ isAuthenticated: false, email: '' });
+  const [adminAuth, setAdminAuth] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sj_admin_session') || sessionStorage.getItem('sj_admin_session');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.isAuthenticated) return parsed;
+      }
+    } catch (e) {
+      console.error('Error parsing admin session:', e);
+    }
+    return { isAuthenticated: false, email: '' };
+  });
 
   // Sync to localStorage
   useEffect(() => { localStorage.setItem('sj_goldRate', goldRate.toString()); }, [goldRate]);
@@ -288,6 +299,15 @@ export function AppProvider({ children }) {
   useEffect(() => { localStorage.setItem('sj_pending_verifications', JSON.stringify(pendingVerifications)); }, [pendingVerifications]);
   useEffect(() => { localStorage.setItem('sj_admin_theme', adminTheme); }, [adminTheme]);
   useEffect(() => { localStorage.setItem('sj_admin_settings', JSON.stringify(adminSettings)); }, [adminSettings]);
+  useEffect(() => {
+    if (adminAuth?.isAuthenticated) {
+      localStorage.setItem('sj_admin_session', JSON.stringify(adminAuth));
+      sessionStorage.setItem('sj_admin_session', JSON.stringify(adminAuth));
+    } else {
+      localStorage.removeItem('sj_admin_session');
+      sessionStorage.removeItem('sj_admin_session');
+    }
+  }, [adminAuth]);
 
   // Auth Handlers
   const registerNewUser = ({ username, mobile }) => {
