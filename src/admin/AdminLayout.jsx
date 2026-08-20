@@ -1,18 +1,28 @@
 import React, { useState } from 'react';
 import { 
-  LayoutDashboard, Users, ShieldCheck, FileText, 
-  Hand, Coins, CreditCard, BarChart3, Settings, LogOut, 
-  Menu, X, Sparkles, User, Bell
+  LayoutDashboard, Bell, DollarSign, Users, BarChart2, 
+  ArrowDownToLine, Settings, LogOut, ChevronDown, 
+  Moon, Sun, User, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { authService } from '../services/authService';
+import '../styles/admin.css';
 
 export default function AdminLayout({ activeTab, onSelectTab, children }) {
-  const { adminAuth, setAdminAuth, kycRequests, withdrawals } = useApp();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { 
+    adminTheme, 
+    toggleAdminTheme, 
+    pendingVerifications, 
+    withdrawals, 
+    setAdminAuth,
+    adminSettings 
+  } = useApp();
 
-  const pendingKycCount = kycRequests.filter((k) => k.status === 'Pending' || k.status === 'Under Review').length;
-  const pendingWithdrawalCount = withdrawals.filter((w) => w.status === 'Pending' || w.status === 'Processing').length;
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  const pendingWithdrawalsCount = withdrawals.filter((w) => w.status === 'Pending').length;
+  const pendingVerificationsCount = pendingVerifications.length;
+  const totalNotifications = pendingWithdrawalsCount + pendingVerificationsCount;
 
   const handleLogout = async () => {
     await authService.logoutAdmin();
@@ -20,275 +30,171 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
   };
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
-    { id: 'users', label: 'Users', icon: <Users size={20} /> },
-    { id: 'kyc', label: 'KYC Requests', icon: <ShieldCheck size={20} />, badge: pendingKycCount },
-    { id: 'transactions', label: 'Transactions', icon: <FileText size={20} /> },
-    { id: 'withdrawals', label: 'Withdrawals', icon: <Hand size={20} />, badge: pendingWithdrawalCount },
-    { id: 'rates', label: 'Gold & Silver Rates', icon: <Coins size={20} /> },
-    { id: 'payments', label: 'Payments', icon: <CreditCard size={20} /> },
-    { id: 'reports', label: 'Reports', icon: <BarChart3 size={20} /> },
-    { id: 'settings', label: 'Settings', icon: <Settings size={20} /> }
+    { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
+    { 
+      id: 'notifications', 
+      label: 'Notifications', 
+      icon: (
+        <div style={{ position: 'relative', display: 'inline-flex' }}>
+          <Bell size={18} />
+          {totalNotifications > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: '-1px',
+              right: '-1px',
+              width: '6px',
+              height: '6px',
+              backgroundColor: '#ef4444',
+              borderRadius: '50%'
+            }}></span>
+          )}
+        </div>
+      ), 
+      badge: totalNotifications 
+    },
+    { id: 'rates', label: 'Rates', icon: <DollarSign size={18} /> },
+    { id: 'members', label: 'Members', icon: <Users size={18} /> },
+    { id: 'analytics', label: 'Analytics', icon: <BarChart2 size={18} /> },
+    { id: 'withdrawal', label: 'Withdrawal', icon: <ArrowDownToLine size={18} /> }
   ];
 
-  const getHeaderTitle = () => {
-    const item = navItems.find((n) => n.id === activeTab);
-    return item ? item.label : 'Admin Portal';
-  };
-
   return (
-    <div style={{
-      display: 'flex',
-      minHeight: '100vh',
-      width: '100vw',
-      backgroundColor: '#f8f6fc',
-      fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
-      color: '#1e1b2e',
-      overflowX: 'hidden'
-    }}>
-      {/* 1. Desktop & Tablet Sidebar */}
-      <aside style={{
-        width: '260px',
-        backgroundColor: '#120f22',
-        color: '#ffffff',
-        display: 'flex',
-        flexDirection: 'column',
-        flexShrink: 0,
-        borderRight: '1px solid #282240',
-        zIndex: 50,
-        position: 'fixed',
-        top: 0,
-        bottom: 0,
-        left: 0,
-        transition: 'transform 0.25s ease',
-        transform: isSidebarOpen ? 'translateX(0)' : 'translateX(0)'
-      }} className="admin-sidebar-desktop">
-        {/* Brand Logo Header */}
-        <div style={{
-          padding: '24px 20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          borderBottom: '1px solid #231c38'
-        }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, var(--primary-purple) 0%, #7b5aff 100%)',
-            color: '#ffd000',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: '900',
-            fontSize: '18px',
-            boxShadow: '0 4px 12px rgba(88, 60, 245, 0.4)'
-          }}>
-            SJ
+    <div className={`admin-portal ${adminTheme}`}>
+      
+      {/* 1. Sidebar */}
+      <aside className={`admin-sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+        
+        {/* Brand Header */}
+        <div className="admin-sidebar-header" onClick={() => onSelectTab('dashboard')}>
+          <div className="admin-sidebar-logo-icon">
+            $
           </div>
-          <div>
-            <div style={{ fontSize: '16px', fontWeight: '800', color: '#ffffff', letterSpacing: '-0.2px' }}>
-              Salem Jewels
-            </div>
-            <div style={{ fontSize: '11px', color: '#a78bfa', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-              Admin Portal
-            </div>
-          </div>
+          {!isSidebarCollapsed && (
+            <>
+              <div className="admin-sidebar-brand">
+                <div className="admin-sidebar-brand-title">Gold & Silver</div>
+                <div className="admin-sidebar-brand-sub">Admin</div>
+              </div>
+              <ChevronDown size={14} color="#94a3b8" />
+            </>
+          )}
         </div>
 
-        {/* Navigation Items */}
-        <nav style={{
-          flex: 1,
-          padding: '16px 12px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '4px',
-          overflowY: 'auto'
-        }}>
+        {/* Main Navigation */}
+        <nav className="admin-nav-list">
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
-                onClick={() => {
-                  onSelectTab(item.id);
-                  setIsSidebarOpen(false);
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '12px 14px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  backgroundColor: isActive ? 'var(--primary-purple)' : 'transparent',
-                  color: isActive ? '#ffffff' : '#94a3b8',
-                  fontSize: '13.5px',
-                  fontWeight: isActive ? '800' : '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  textAlign: 'left',
-                  width: '100%'
-                }}
+                onClick={() => onSelectTab(item.id)}
+                className={`admin-nav-item ${isActive ? 'active' : ''}`}
+                title={isSidebarCollapsed ? item.label : undefined}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ color: isActive ? '#ffffff' : '#a78bfa' }}>{item.icon}</span>
-                  <span>{item.label}</span>
+                <div className="admin-nav-item-left">
+                  <span>{item.icon}</span>
+                  {!isSidebarCollapsed && <span>{item.label}</span>}
                 </div>
 
-                {item.badge > 0 && (
-                  <span style={{
-                    backgroundColor: isActive ? '#ffffff' : '#d97706',
-                    color: isActive ? 'var(--primary-purple)' : '#ffffff',
-                    fontSize: '10.5px',
-                    fontWeight: '900',
-                    padding: '2px 7px',
-                    borderRadius: '10px'
-                  }}>
+                {!isSidebarCollapsed && item.badge > 0 && (
+                  <span className="admin-nav-badge">
                     {item.badge}
                   </span>
                 )}
               </button>
             );
           })}
-        </nav>
 
-        {/* Admin Profile & Logout Footer */}
-        <div style={{
-          padding: '16px 14px',
-          borderTop: '1px solid #231c38',
-          backgroundColor: '#0c0a17',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--primary-purple)',
-              color: '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: '800',
-              fontSize: '14px'
-            }}>
-              A
+          {/* Account Section */}
+          {!isSidebarCollapsed && (
+            <div className="admin-section-heading">
+              ACCOUNT
             </div>
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: '800', color: '#ffffff' }}>
-                {adminAuth.username || 'Administrator'}
-              </div>
-              <div style={{ fontSize: '11px', color: '#64748b' }}>
-                Super Admin
-              </div>
+          )}
+
+          <button
+            onClick={() => onSelectTab('settings')}
+            className={`admin-nav-item ${activeTab === 'settings' ? 'active' : ''}`}
+            title={isSidebarCollapsed ? 'Settings' : undefined}
+          >
+            <div className="admin-nav-item-left">
+              <Settings size={18} />
+              {!isSidebarCollapsed && <span>Settings</span>}
             </div>
-          </div>
+          </button>
 
           <button
             onClick={handleLogout}
-            title="Sign Out"
-            style={{
-              width: '34px',
-              height: '34px',
-              borderRadius: '10px',
-              border: 'none',
-              backgroundColor: 'rgba(239, 68, 68, 0.15)',
-              color: '#f87171',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'background-color 0.2s ease'
-            }}
+            className="admin-nav-item"
+            title={isSidebarCollapsed ? 'Log out' : undefined}
           >
-            <LogOut size={16} />
+            <div className="admin-nav-item-left">
+              <LogOut size={18} />
+              {!isSidebarCollapsed && <span>Log out</span>}
+            </div>
           </button>
-        </div>
+
+          {/* Collapse / Expand Toggle */}
+          <button
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="admin-nav-item"
+            style={{ marginTop: 'auto' }}
+            title={isSidebarCollapsed ? 'Show Sidebar' : 'Hide Sidebar'}
+          >
+            <div className="admin-nav-item-left">
+              {isSidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+              {!isSidebarCollapsed && <span>« Hide</span>}
+            </div>
+          </button>
+        </nav>
       </aside>
 
-      {/* 2. Main Desktop Content Container */}
-      <div style={{
-        flex: 1,
-        marginLeft: '260px',
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh',
-        width: 'calc(100vw - 260px)'
-      }} className="admin-main-wrapper">
+      {/* 2. Main Content View */}
+      <div className="admin-main">
         
         {/* Top Header Bar */}
-        <header style={{
-          height: '70px',
-          backgroundColor: '#ffffff',
-          borderBottom: '1px solid #e8e2fa',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 32px',
-          position: 'sticky',
-          top: 0,
-          zIndex: 40
-        }}>
-          <div>
-            <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#1e1b2e', margin: 0 }}>
-              {getHeaderTitle()}
-            </h2>
-            <div style={{ fontSize: '12px', color: '#736d85', fontWeight: '600', marginTop: '2px' }}>
-              Salem Jewels Real-time Administration
-            </div>
+        <header className="admin-header">
+          <div className="admin-header-title">
+            Gold & Silver Admin
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{
-              backgroundColor: '#f6f2ff',
-              borderRadius: '20px',
-              padding: '6px 14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '12px',
-              fontWeight: '700',
-              color: 'var(--primary-purple)',
-              border: '1px solid #e2d9fa'
-            }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981' }}></span>
-              <span>System Live</span>
-            </div>
-
-            <button
-              onClick={handleLogout}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 16px',
-                borderRadius: '12px',
-                border: '1px solid #fee2e2',
-                backgroundColor: '#fef2f2',
-                color: '#dc2626',
-                fontSize: '13px',
-                fontWeight: '700',
-                cursor: 'pointer'
-              }}
+          <div className="admin-header-actions">
+            {/* Notification Bell */}
+            <button 
+              className="admin-header-btn" 
+              onClick={() => onSelectTab('notifications')}
+              title="Notifications"
             >
-              <LogOut size={15} />
-              <span>Logout</span>
+              <Bell size={18} />
+              {totalNotifications > 0 && <span className="admin-header-badge-dot"></span>}
+            </button>
+
+            {/* Dark/Light Mode Toggle */}
+            <button 
+              className="admin-header-btn" 
+              onClick={toggleAdminTheme}
+              title={adminTheme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            >
+              {adminTheme === 'light' ? <Moon size={18} /> : <Sun size={18} color="#f59e0b" />}
+            </button>
+
+            {/* User Profile */}
+            <button 
+              className="admin-header-btn" 
+              onClick={() => onSelectTab('settings')}
+              title={`Logged in as ${adminSettings.username}`}
+            >
+              <User size={18} />
             </button>
           </div>
         </header>
 
-        {/* Dynamic Section Content Area */}
-        <main style={{
-          flex: 1,
-          padding: '32px',
-          boxSizing: 'border-box'
-        }}>
+        {/* Dynamic Page Content */}
+        <main className="admin-page-container">
           {children}
         </main>
       </div>
+
     </div>
   );
 }

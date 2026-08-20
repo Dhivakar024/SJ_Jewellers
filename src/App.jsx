@@ -16,17 +16,15 @@ import HoldingsScreen from './screens/HoldingsScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import CreateProfileScreen from './screens/CreateProfileScreen';
 
-// Separate Admin Web Portal Components
+// Screenshot-Accurate Admin Web Portal Components
 import AdminLayout from './admin/AdminLayout';
 import AdminLogin from './admin/AdminLogin';
 import AdminDashboard from './admin/AdminDashboard';
-import AdminUsers from './admin/AdminUsers';
-import AdminKyc from './admin/AdminKyc';
-import AdminTransactions from './admin/AdminTransactions';
-import AdminWithdrawals from './admin/AdminWithdrawals';
+import AdminNotifications from './admin/AdminNotifications';
 import AdminRates from './admin/AdminRates';
-import AdminPayments from './admin/AdminPayments';
-import AdminReports from './admin/AdminReports';
+import AdminMembers from './admin/AdminMembers';
+import AdminAnalytics from './admin/AdminAnalytics';
+import AdminWithdrawal from './admin/AdminWithdrawal';
 import AdminSettings from './admin/AdminSettings';
 
 import './styles/app.css';
@@ -63,16 +61,14 @@ function MainContent() {
       setIsAdminMode(isAdm);
 
       if (isAdm) {
-        // Extract admin subtab from hash if present, e.g. #admin/users
+        // Extract admin subtab from hash if present, e.g. #admin/rates
         const hash = window.location.hash.toLowerCase();
-        if (hash.includes('users')) setAdminTab('users');
-        else if (hash.includes('transactions')) setAdminTab('transactions');
-        else if (hash.includes('withdrawals')) setAdminTab('withdrawals');
+        if (hash.includes('notifications')) setAdminTab('notifications');
         else if (hash.includes('rates')) setAdminTab('rates');
-        else if (hash.includes('payments')) setAdminTab('payments');
-        else if (hash.includes('reports')) setAdminTab('reports');
+        else if (hash.includes('members')) setAdminTab('members');
+        else if (hash.includes('analytics')) setAdminTab('analytics');
+        else if (hash.includes('withdrawal')) setAdminTab('withdrawal');
         else if (hash.includes('settings')) setAdminTab('settings');
-        else if (hash.includes('kyc')) setAdminTab('kyc');
         else setAdminTab('dashboard');
         return;
       }
@@ -170,13 +166,11 @@ function MainContent() {
         onSelectTab={handleAdminTabSelect}
       >
         {adminTab === 'dashboard' && <AdminDashboard onSelectTab={handleAdminTabSelect} />}
-        {adminTab === 'users' && <AdminUsers />}
-        {adminTab === 'kyc' && <AdminKyc />}
-        {adminTab === 'transactions' && <AdminTransactions />}
-        {adminTab === 'withdrawals' && <AdminWithdrawals />}
+        {adminTab === 'notifications' && <AdminNotifications />}
         {adminTab === 'rates' && <AdminRates />}
-        {adminTab === 'payments' && <AdminPayments />}
-        {adminTab === 'reports' && <AdminReports />}
+        {adminTab === 'members' && <AdminMembers />}
+        {adminTab === 'analytics' && <AdminAnalytics />}
+        {adminTab === 'withdrawal' && <AdminWithdrawal />}
         {adminTab === 'settings' && <AdminSettings />}
       </AdminLayout>
     );

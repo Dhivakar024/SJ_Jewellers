@@ -1,294 +1,172 @@
 import React, { useState } from 'react';
-import { Coins, CheckCircle2, RefreshCw, Sparkles, TrendingUp, ShieldCheck } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { ratesService } from '../services/ratesService';
 
 export default function AdminRates() {
-  const { goldRate, setGoldRate, silverRate, setSilverRate } = useApp();
-  const [goldInput, setGoldInput] = useState(goldRate.toString());
-  const [silverInput, setSilverInput] = useState(silverRate.toString());
-  const [gstRate, setGstRate] = useState('3');
-  const [effectiveDate, setEffectiveDate] = useState(new Date().toISOString().split('T')[0]);
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const { 
+    goldRate, 
+    silverRate, 
+    isGoldCustom, 
+    isSilverCustom, 
+    customGoldInput, 
+    customSilverInput, 
+    saveRates 
+  } = useApp();
 
-  const handleSaveRates = async (e) => {
+  const [goldCustom, setGoldCustom] = useState(isGoldCustom);
+  const [silverCustom, setSilverCustom] = useState(isSilverCustom);
+  const [goldInput, setGoldInput] = useState(customGoldInput || goldRate.toString());
+  const [silverInput, setSilverInput] = useState(customSilverInput || silverRate.toString());
+  const [savedSuccess, setSavedSuccess] = useState(false);
+
+  const handleSave = (e) => {
     e.preventDefault();
-    const gNum = parseFloat(goldInput) || 16263.65;
-    const sNum = parseFloat(silverInput) || 265.00;
+    const gVal = parseFloat(goldInput) || goldRate;
+    const sVal = parseFloat(silverInput) || silverRate;
 
-    await ratesService.saveRates({ goldRate: gNum, silverRate: sNum });
-    setGoldRate(gNum);
-    setSilverRate(sNum);
+    saveRates({
+      newGoldRate: gVal,
+      newSilverRate: sVal,
+      goldCustom,
+      silverCustom,
+      goldInputVal: goldInput,
+      silverInputVal: silverInput
+    });
 
-    setSaveSuccess(true);
-    setTimeout(() => {
-      setSaveSuccess(false);
-    }, 2500);
-  };
-
-  const handleResetDefaults = () => {
-    setGoldInput('16263.65');
-    setSilverInput('265.00');
+    setSavedSuccess(true);
+    setTimeout(() => setSavedSuccess(false), 2500);
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '850px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
-      {/* 1. Live Market Rates Overview Cards */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '16px'
-      }}>
-        {/* 24KT Gold Rate Card */}
-        <div style={{
-          backgroundColor: '#ffffff',
-          borderRadius: '24px',
-          padding: '24px',
-          border: '1px solid #fde68a',
-          boxShadow: '0 4px 16px rgba(245, 158, 11, 0.06)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-              <span style={{ backgroundColor: '#ffd000', color: '#000', fontSize: '10px', fontWeight: '900', padding: '2px 6px', borderRadius: '8px' }}>
-                24KT
-              </span>
-              <span style={{ fontSize: '13px', fontWeight: '700', color: '#78350f' }}>Gold Live Rate</span>
-            </div>
-            <div style={{ fontSize: '28px', fontWeight: '900', color: '#1e1b2e' }}>
-              ₹ {goldRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-            </div>
-            <div style={{ fontSize: '12px', color: '#736d85', marginTop: '2px' }}>Per 1.0000 Gram</div>
-          </div>
-
-          <div style={{ width: '52px', height: '52px', borderRadius: '16px', backgroundColor: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Coins size={28} color="#b45309" />
-          </div>
-        </div>
-
-        {/* 24KT Silver Rate Card */}
-        <div style={{
-          backgroundColor: '#ffffff',
-          borderRadius: '24px',
-          padding: '24px',
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 4px 16px rgba(100, 116, 139, 0.06)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-              <span style={{ backgroundColor: '#e2e8f0', color: '#334155', fontSize: '10px', fontWeight: '900', padding: '2px 6px', borderRadius: '8px' }}>
-                24KT
-              </span>
-              <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155' }}>Silver Live Rate</span>
-            </div>
-            <div style={{ fontSize: '28px', fontWeight: '900', color: '#1e1b2e' }}>
-              ₹ {silverRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-            </div>
-            <div style={{ fontSize: '12px', color: '#736d85', marginTop: '2px' }}>Per 1.0000 Gram</div>
-          </div>
-
-          <div style={{ width: '52px', height: '52px', borderRadius: '16px', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Coins size={28} color="#475569" />
-          </div>
-        </div>
+      {/* 1. Page Header */}
+      <div className="admin-page-header">
+        <h1 className="admin-page-title">Rates</h1>
+        <p className="admin-page-sub">
+          Set custom gold and silver rates (₹/gram). Custom rate must be at least the current API rate.
+        </p>
       </div>
 
-      {/* 2. Success Alert */}
-      {saveSuccess && (
-        <div style={{
-          backgroundColor: '#d1fae5',
-          border: '1px solid #10b981',
-          borderRadius: '16px',
-          padding: '16px 20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          color: '#065f46',
-          fontSize: '14px',
-          fontWeight: '700'
-        }}>
-          <CheckCircle2 size={22} color="#10b981" />
-          <span>Rates updated successfully! Customer applications are now using the updated market pricing.</span>
-        </div>
-      )}
-
-      {/* 3. Editable Rate Management Form */}
-      <div style={{
-        backgroundColor: '#ffffff',
-        borderRadius: '24px',
-        padding: '28px',
-        border: '1px solid #e8e2fa',
-        boxShadow: '0 2px 12px rgba(0, 0, 0, 0.03)'
-      }}>
-        <div style={{ marginBottom: '22px' }}>
-          <h4 style={{ fontSize: '18px', fontWeight: '800', color: '#1e1b2e', margin: 0 }}>
-            Configure Platform Pricing
-          </h4>
-          <p style={{ fontSize: '13px', color: '#736d85', margin: '4px 0 0 0' }}>
-            Changes will instantly update calculations across the entire customer application.
-          </p>
-        </div>
-
-        <form onSubmit={handleSaveRates} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+      {/* 2. Rates Configuration Card */}
+      <div className="admin-card">
+        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '24px'
+          }}>
             {/* Gold Rate Input */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '800', color: '#2c2642', marginBottom: '8px' }}>
-                24KT Gold Rate (₹ / Gram)
-              </label>
-              <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '16px', top: '13px', fontSize: '16px', fontWeight: '800', color: 'var(--primary-purple)' }}>
-                  ₹
-                </span>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={goldInput}
-                  onChange={(e) => setGoldInput(e.target.value)}
-                  style={{
-                    width: '100%',
-                    height: '48px',
-                    borderRadius: '14px',
-                    border: '1px solid #dcd4fa',
-                    backgroundColor: '#f9f7ff',
-                    padding: '0 16px 0 36px',
-                    fontSize: '16px',
-                    fontWeight: '800',
-                    color: '#1e1b2e',
-                    outline: 'none',
-                    boxSizing: 'border-box'
-                  }}
-                />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <label style={{ fontSize: '13.5px', fontWeight: '700' }}>Gold</label>
+                
+                {/* API / Custom Toggle Switch */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#64748b' }}>
+                  <span style={{ fontWeight: !goldCustom ? '700' : '400', color: !goldCustom ? '#0f172a' : '#64748b' }}>API</span>
+                  <div
+                    onClick={() => setGoldCustom(!goldCustom)}
+                    style={{
+                      width: '36px',
+                      height: '20px',
+                      backgroundColor: goldCustom ? '#10b981' : '#cbd5e1',
+                      borderRadius: '12px',
+                      padding: '2px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      transition: 'background-color 0.2s ease',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <div style={{
+                      width: '16px',
+                      height: '16px',
+                      backgroundColor: '#ffffff',
+                      borderRadius: '50%',
+                      transform: goldCustom ? 'translateX(16px)' : 'translateX(0)',
+                      transition: 'transform 0.2s ease'
+                    }}></div>
+                  </div>
+                  <span style={{ fontWeight: goldCustom ? '700' : '400', color: goldCustom ? '#0f172a' : '#64748b' }}>Custom</span>
+                </div>
               </div>
+
+              <input
+                type="number"
+                step="0.01"
+                placeholder="e.g. 6500"
+                value={goldInput}
+                onChange={(e) => setGoldInput(e.target.value)}
+                className="admin-input"
+              />
             </div>
 
             {/* Silver Rate Input */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '800', color: '#2c2642', marginBottom: '8px' }}>
-                24KT Silver Rate (₹ / Gram)
-              </label>
-              <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '16px', top: '13px', fontSize: '16px', fontWeight: '800', color: 'var(--primary-purple)' }}>
-                  ₹
-                </span>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={silverInput}
-                  onChange={(e) => setSilverInput(e.target.value)}
-                  style={{
-                    width: '100%',
-                    height: '48px',
-                    borderRadius: '14px',
-                    border: '1px solid #dcd4fa',
-                    backgroundColor: '#f9f7ff',
-                    padding: '0 16px 0 36px',
-                    fontSize: '16px',
-                    fontWeight: '800',
-                    color: '#1e1b2e',
-                    outline: 'none',
-                    boxSizing: 'border-box'
-                  }}
-                />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <label style={{ fontSize: '13.5px', fontWeight: '700' }}>Silver</label>
+                
+                {/* API / Custom Toggle Switch */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#64748b' }}>
+                  <span style={{ fontWeight: !silverCustom ? '700' : '400', color: !silverCustom ? '#0f172a' : '#64748b' }}>API</span>
+                  <div
+                    onClick={() => setSilverCustom(!silverCustom)}
+                    style={{
+                      width: '36px',
+                      height: '20px',
+                      backgroundColor: silverCustom ? '#10b981' : '#cbd5e1',
+                      borderRadius: '12px',
+                      padding: '2px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      transition: 'background-color 0.2s ease',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <div style={{
+                      width: '16px',
+                      height: '16px',
+                      backgroundColor: '#ffffff',
+                      borderRadius: '50%',
+                      transform: silverCustom ? 'translateX(16px)' : 'translateX(0)',
+                      transition: 'transform 0.2s ease'
+                    }}></div>
+                  </div>
+                  <span style={{ fontWeight: silverCustom ? '700' : '400', color: silverCustom ? '#0f172a' : '#64748b' }}>Custom</span>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-            {/* Applicable GST */}
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '800', color: '#2c2642', marginBottom: '8px' }}>
-                Applicable GST Rate (%)
-              </label>
               <input
-                type="text"
-                value={gstRate}
-                onChange={(e) => setGstRate(e.target.value)}
-                style={{
-                  width: '100%',
-                  height: '48px',
-                  borderRadius: '14px',
-                  border: '1px solid #dcd4fa',
-                  backgroundColor: '#f9f7ff',
-                  padding: '0 16px',
-                  fontSize: '15px',
-                  fontWeight: '800',
-                  color: '#1e1b2e',
-                  outline: 'none',
-                  boxSizing: 'border-box'
-                }}
-              />
-            </div>
-
-            {/* Effective Date */}
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '800', color: '#2c2642', marginBottom: '8px' }}>
-                Effective Date
-              </label>
-              <input
-                type="date"
-                value={effectiveDate}
-                onChange={(e) => setEffectiveDate(e.target.value)}
-                style={{
-                  width: '100%',
-                  height: '48px',
-                  borderRadius: '14px',
-                  border: '1px solid #dcd4fa',
-                  backgroundColor: '#f9f7ff',
-                  padding: '0 16px',
-                  fontSize: '14px',
-                  fontWeight: '700',
-                  color: '#1e1b2e',
-                  outline: 'none',
-                  boxSizing: 'border-box'
-                }}
+                type="number"
+                step="0.01"
+                placeholder="e.g. 85"
+                value={silverInput}
+                onChange={(e) => setSilverInput(e.target.value)}
+                className="admin-input"
               />
             </div>
           </div>
 
-          {/* Form Actions */}
-          <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
-            <button
-              type="button"
-              onClick={handleResetDefaults}
-              style={{
-                height: '48px',
-                padding: '0 20px',
-                borderRadius: '14px',
-                border: '1.5px solid var(--primary-purple)',
-                backgroundColor: 'transparent',
-                color: 'var(--primary-purple)',
-                fontSize: '14px',
-                fontWeight: '800',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              <RefreshCw size={16} />
-              <span>Reset Defaults</span>
-            </button>
+          {/* Save Button & Note */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <button type="submit" className="admin-btn-orange">
+                Save
+              </button>
+              {savedSuccess && (
+                <span style={{ fontSize: '13px', color: '#10b981', fontWeight: '700' }}>
+                  Rates saved & updated in customer app!
+                </span>
+              )}
+            </div>
 
-            <button
-              type="submit"
-              className="btn-primary"
-              style={{
-                flex: 1,
-                height: '48px',
-                fontSize: '15px',
-                boxShadow: '0 6px 18px rgba(88, 60, 245, 0.35)'
-              }}
-            >
-              Save & Broadcast Rates
-            </button>
+            <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '12px' }}>
+              Custom rates are valid until today 11:59 PM. After that they will reset to API.
+            </div>
           </div>
+
         </form>
       </div>
 

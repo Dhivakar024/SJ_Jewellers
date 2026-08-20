@@ -36,7 +36,8 @@ const INITIAL_TRANSACTIONS = [
     time: '11:45 AM',
     paymentMethod: 'UPI',
     asset: 'Gold',
-    quantity: '0.0075g',
+    assetType: 'gold',
+    quantity: '0.0075 gm',
     amount: '103.00',
     status: 'Success'
   },
@@ -46,7 +47,8 @@ const INITIAL_TRANSACTIONS = [
     time: '9:30 AM',
     paymentMethod: 'UPI',
     asset: 'Gold',
-    quantity: '0.0377g',
+    assetType: 'gold',
+    quantity: '0.0377 gm',
     amount: '515.00',
     status: 'Processing'
   },
@@ -56,7 +58,8 @@ const INITIAL_TRANSACTIONS = [
     time: '4:15 PM',
     paymentMethod: 'UPI',
     asset: 'Silver',
-    quantity: '0.9434g',
+    assetType: 'silver',
+    quantity: '0.9434 gm',
     amount: '257.50',
     status: 'Success'
   },
@@ -66,7 +69,8 @@ const INITIAL_TRANSACTIONS = [
     time: '2:10 PM',
     paymentMethod: 'UPI',
     asset: 'Gold',
-    quantity: '0.0075g',
+    assetType: 'gold',
+    quantity: '0.0075 gm',
     amount: '103.00',
     status: 'Cancelled'
   },
@@ -76,7 +80,8 @@ const INITIAL_TRANSACTIONS = [
     time: '10:00 AM',
     paymentMethod: 'UPI',
     asset: 'Silver',
-    quantity: '0.3774g',
+    assetType: 'silver',
+    quantity: '0.3774 gm',
     amount: '103.00',
     status: 'Failed'
   },
@@ -86,9 +91,10 @@ const INITIAL_TRANSACTIONS = [
     time: '4:59 AM',
     paymentMethod: 'UPI',
     asset: 'Silver',
-    quantity: '0.0377g',
+    assetType: 'silver',
+    quantity: '0.0377 gm',
     amount: '10.30',
-    status: 'Pending'
+    status: 'Success'
   },
   {
     id: 'TXN-8540',
@@ -96,54 +102,134 @@ const INITIAL_TRANSACTIONS = [
     time: '2:15 PM',
     paymentMethod: 'UPI',
     asset: 'Gold',
-    quantity: '0.1000g',
-    amount: '1,326.37',
+    assetType: 'gold',
+    quantity: '0.1000 gm',
+    amount: '1,381.89',
     status: 'Success'
   }
 ];
 
-const INITIAL_USERS_LIST = [
+const INITIAL_MEMBERS = [
+  { id: '1', username: 'testuser', mobile: '+918438486023', role: 'customer', verified: 'Yes', mobileVerified: 'Yes', active: 'Yes', created: '1/14/2026' },
+  { id: '9', username: 'thiyagarajan', mobile: '+918667536040', role: 'customer', verified: 'No', mobileVerified: 'Yes', active: 'Yes', created: '3/17/2026' },
+  { id: '10', username: 'thiyagu', mobile: '+916382895840', role: 'customer', verified: 'No', mobileVerified: 'Yes', active: 'Yes', created: '3/17/2026' },
+  { id: '16', username: 'nala', mobile: '+918438486022', role: 'customer', verified: 'No', mobileVerified: 'Yes', active: 'Yes', created: '3/27/2026' },
+  { id: '17', username: 'Haritha E', mobile: '+916369589253', role: 'customer', verified: 'No', mobileVerified: 'Yes', active: 'Yes', created: '3/27/2026' },
+  { id: '18', username: 'Pravin', mobile: '+919600958100', role: 'customer', verified: 'No', mobileVerified: 'Yes', active: 'Yes', created: '3/27/2026' },
+  { id: '19', username: 'demo', mobile: '+916369626461', role: 'customer', verified: 'No', mobileVerified: 'Yes', active: 'Yes', created: '3/31/2026' },
+  { id: '20', username: 'sarathy', mobile: '+918754753199', role: 'customer', verified: 'No', mobileVerified: 'Yes', active: 'Yes', created: '3/31/2026' },
+  { id: '21', username: 'sashikumar', mobile: '+918248629310', role: 'customer', verified: 'No', mobileVerified: 'Yes', active: 'Yes', created: '4/7/2026' },
+  { id: '22', username: 'neelesh', mobile: '+917624956109', role: 'customer', verified: 'No', mobileVerified: 'Yes', active: 'Yes', created: '4/8/2026' },
+  { id: '23', username: 'Naveen', mobile: '+917667950565', role: 'customer', verified: 'No', mobileVerified: 'Yes', active: 'Yes', created: '4/13/2026' },
+  { id: '24', username: 'Santhi', mobile: '+918870013848', role: 'customer', verified: 'No', mobileVerified: 'Yes', active: 'Yes', created: '4/13/2026' },
+  { id: '25', username: 'lalitha', mobile: '+919972452935', role: 'customer', verified: 'No', mobileVerified: 'Yes', active: 'Yes', created: '4/13/2026' },
+  { id: '26', username: 'premnath', mobile: '+918637458187', role: 'customer', verified: 'No', mobileVerified: 'Yes', active: 'Yes', created: '4/13/2026' },
+  { id: '27', username: 'kavipriya', mobile: '+916381535131', role: 'customer', verified: 'No', mobileVerified: 'Yes', active: 'Yes', created: '4/13/2026' }
+];
+
+const INITIAL_WITHDRAWALS = [
   {
-    id: 'USR-8821',
-    name: 'Demo User',
-    mobile: '9999999999',
-    email: 'demo@example.com',
-    goldGrams: 0.0000,
-    silverGrams: 0.0377,
-    kycStatus: 'Pending',
-    profileCompleted: true,
-    status: 'Active',
-    address: '123 Cross Cut Road, Salem',
-    pan: 'ABCDE1234F',
-    aadhar: '1234-5678-9012',
-    accountNumber: '918237192837',
-    ifsc: 'SBIN0001234',
-    nomineeName: 'Priya',
-    nomineeMobile: '9876543210',
-    nomineeDob: '15/06/1995',
-    nomineeAddress: '123 Cross Cut Road, Salem',
-    relationship: 'Spouse',
-    createdAt: '2026-08-01'
+    id: 'WTH-1',
+    date: '17 Mar 2026, 05:04 am',
+    customer: 'testuser',
+    mobile: '+918438486023',
+    metal: 'Silver',
+    grams: 8.4034,
+    rate: 238.00,
+    amount: 2000.01,
+    status: 'Approved',
+    paidDate: '20 Aug 2026, 12:40 pm'
   },
-  { id: 'USR-8820', name: 'Rajesh Kumar', mobile: '9842109823', email: 'rajesh@example.com', goldGrams: 1.2500, silverGrams: 15.0000, kycStatus: 'Verified', profileCompleted: true, status: 'Active', createdAt: '2026-07-20' },
-  { id: 'USR-8819', name: 'Priya Sharma', mobile: '9789012345', email: 'priya@example.com', goldGrams: 0.5000, silverGrams: 5.2500, kycStatus: 'Under Review', profileCompleted: true, status: 'Active', createdAt: '2026-07-15' },
-  { id: 'USR-8818', name: 'Arun Varma', mobile: '9655432109', email: 'arun@example.com', goldGrams: 0.0000, silverGrams: 0.0000, kycStatus: 'Rejected', profileCompleted: false, status: 'Blocked', createdAt: '2026-07-10' }
+  {
+    id: 'WTH-2',
+    date: '17 Mar 2026, 04:08 am',
+    customer: 'testuser',
+    mobile: '+918438486023',
+    metal: 'Silver',
+    grams: 60.00,
+    rate: 238.00,
+    amount: 14280.00,
+    status: 'Pending',
+    paidDate: null
+  },
+  {
+    id: 'WTH-3',
+    date: '17 Mar 2026, 02:34 am',
+    customer: 'testuser',
+    mobile: '+918438486023',
+    metal: 'Gold',
+    grams: 0.75,
+    rate: 14800.00,
+    amount: 11100.00,
+    status: 'Approved',
+    paidDate: '17 Mar 2026, 04:07 am'
+  },
+  {
+    id: 'WTH-4',
+    date: '17 Mar 2026, 02:32 am',
+    customer: 'testuser',
+    mobile: '+918438486023',
+    metal: 'Gold',
+    grams: 0.10,
+    rate: 8500.00,
+    amount: 850.00,
+    status: 'Approved',
+    paidDate: null
+  }
+];
+
+const INITIAL_PENDING_VERIFICATIONS = [
+  {
+    id: 'VER-1',
+    name: 'premnath',
+    mobile: '+918637458187',
+    role: 'customer',
+    mobileVerified: 'Yes',
+    created: '4/13/2026, 10:20:05 AM',
+    status: 'Pending'
+  },
+  {
+    id: 'VER-2',
+    name: 'thiyagu',
+    mobile: '+916382895840',
+    role: 'customer',
+    mobileVerified: 'Yes',
+    created: '3/17/2026, 11:00:57 AM',
+    status: 'Pending'
+  }
 ];
 
 export function AppProvider({ children }) {
-  // Always start in unauthenticated state on app startup/refresh
   const [currentUser, setCurrentUser] = useState(LOGGED_OUT_USER);
 
+  // Live and Custom Rates
   const [goldRate, setGoldRate] = useState(() => {
     const saved = localStorage.getItem('sj_goldRate');
-    return saved ? parseFloat(saved) : 13263.65;
+    return saved ? parseFloat(saved) : 13818.88;
   });
 
   const [silverRate, setSilverRate] = useState(() => {
     const saved = localStorage.getItem('sj_silverRate');
-    return saved ? parseFloat(saved) : 265.00;
+    return saved ? parseFloat(saved) : 206.17;
   });
 
+  const [isGoldCustom, setIsGoldCustom] = useState(() => {
+    return localStorage.getItem('sj_isGoldCustom') === 'true';
+  });
+
+  const [isSilverCustom, setIsSilverCustom] = useState(() => {
+    return localStorage.getItem('sj_isSilverCustom') === 'true';
+  });
+
+  const [customGoldInput, setCustomGoldInput] = useState(() => {
+    return localStorage.getItem('sj_customGoldInput') || '13818.88';
+  });
+
+  const [customSilverInput, setCustomSilverInput] = useState(() => {
+    return localStorage.getItem('sj_customSilverInput') || '206.17';
+  });
+
+  // Holdings & Transactions
   const [holdings, setHoldings] = useState(() => {
     const saved = localStorage.getItem('sj_holdings');
     return saved ? JSON.parse(saved) : INITIAL_HOLDINGS;
@@ -154,58 +240,77 @@ export function AppProvider({ children }) {
     return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
   });
 
-  const [usersList, setUsersList] = useState(() => {
-    const saved = localStorage.getItem('sj_usersList');
-    return saved ? JSON.parse(saved) : INITIAL_USERS_LIST;
+  // Members / Registered Users
+  const [members, setMembers] = useState(() => {
+    const saved = localStorage.getItem('sj_members');
+    return saved ? JSON.parse(saved) : INITIAL_MEMBERS;
   });
 
-  const [kycRequests, setKycRequests] = useState(() => {
-    const saved = localStorage.getItem('sj_kycRequests');
-    return saved ? JSON.parse(saved) : [
-      { id: 'KYC-101', userId: 'USR-8821', userName: 'Demo User', mobile: '9999999999', submittedDate: '14 Aug 2026', status: 'Pending', pan: 'ABCDE1234F', aadhar: '1234-5678-9012' },
-      { id: 'KYC-100', userId: 'USR-8819', userName: 'Priya Sharma', mobile: '9789012345', submittedDate: '12 Aug 2026', status: 'Under Review', pan: 'PQRS6789K', aadhar: '9876-5432-1098' }
-    ];
-  });
-
+  // Withdrawals
   const [withdrawals, setWithdrawals] = useState(() => {
     const saved = localStorage.getItem('sj_withdrawals');
-    return saved ? JSON.parse(saved) : [
-      { id: 'WTH-401', userId: 'USR-8820', userName: 'Rajesh Kumar', asset: 'Gold', quantity: '0.5000 gm', amount: '₹ 6,631.83', status: 'Completed', date: '10 Aug 2026' },
-      { id: 'WTH-402', userId: 'USR-8819', userName: 'Priya Sharma', asset: 'Silver', quantity: '2.0000 gm', amount: '₹ 530.00', status: 'Processing', date: '13 Aug 2026' }
-    ];
+    return saved ? JSON.parse(saved) : INITIAL_WITHDRAWALS;
   });
 
-  const [settings, setSettings] = useState(() => {
-    const saved = localStorage.getItem('sj_settings');
+  // Pending Verifications
+  const [pendingVerifications, setPendingVerifications] = useState(() => {
+    const saved = localStorage.getItem('sj_pending_verifications');
+    return saved ? JSON.parse(saved) : INITIAL_PENDING_VERIFICATIONS;
+  });
+
+  // Admin Theme (light | dark)
+  const [adminTheme, setAdminTheme] = useState(() => {
+    return localStorage.getItem('sj_admin_theme') || 'light';
+  });
+
+  // Admin Settings
+  const [adminSettings, setAdminSettings] = useState(() => {
+    const saved = localStorage.getItem('sj_admin_settings');
     return saved ? JSON.parse(saved) : {
-      appName: 'SJ Jewelers',
-      supportEmail: 'goldhouse@gmail.com',
-      supportPhone: '94562-84829',
-      maintenanceMode: false
+      username: 'SJ Jewellers',
+      autoLogout: '30 minutes'
     };
   });
 
   const [adminAuth, setAdminAuth] = useState({ isAuthenticated: false, email: '' });
 
-  // Sync persistent datasets to localStorage
+  // Sync to localStorage
   useEffect(() => { localStorage.setItem('sj_goldRate', goldRate.toString()); }, [goldRate]);
   useEffect(() => { localStorage.setItem('sj_silverRate', silverRate.toString()); }, [silverRate]);
+  useEffect(() => { localStorage.setItem('sj_isGoldCustom', isGoldCustom.toString()); }, [isGoldCustom]);
+  useEffect(() => { localStorage.setItem('sj_isSilverCustom', isSilverCustom.toString()); }, [isSilverCustom]);
+  useEffect(() => { localStorage.setItem('sj_customGoldInput', customGoldInput); }, [customGoldInput]);
+  useEffect(() => { localStorage.setItem('sj_customSilverInput', customSilverInput); }, [customSilverInput]);
   useEffect(() => { localStorage.setItem('sj_holdings', JSON.stringify(holdings)); }, [holdings]);
   useEffect(() => { localStorage.setItem('sj_transactions', JSON.stringify(transactions)); }, [transactions]);
-  useEffect(() => { localStorage.setItem('sj_usersList', JSON.stringify(usersList)); }, [usersList]);
-  useEffect(() => { localStorage.setItem('sj_kycRequests', JSON.stringify(kycRequests)); }, [kycRequests]);
+  useEffect(() => { localStorage.setItem('sj_members', JSON.stringify(members)); }, [members]);
   useEffect(() => { localStorage.setItem('sj_withdrawals', JSON.stringify(withdrawals)); }, [withdrawals]);
-  useEffect(() => { localStorage.setItem('sj_settings', JSON.stringify(settings)); }, [settings]);
+  useEffect(() => { localStorage.setItem('sj_pending_verifications', JSON.stringify(pendingVerifications)); }, [pendingVerifications]);
+  useEffect(() => { localStorage.setItem('sj_admin_theme', adminTheme); }, [adminTheme]);
+  useEffect(() => { localStorage.setItem('sj_admin_settings', JSON.stringify(adminSettings)); }, [adminSettings]);
 
-  // Auth & Profile Lifecycle Handlers
+  // Auth Handlers
   const registerNewUser = ({ username, mobile }) => {
+    const newMember = {
+      id: (members.length + 1).toString(),
+      username: username || 'New User',
+      mobile: mobile ? (mobile.startsWith('+91') ? mobile : `+91${mobile}`) : '+919876543210',
+      role: 'customer',
+      verified: 'No',
+      mobileVerified: 'Yes',
+      active: 'Yes',
+      created: new Date().toLocaleDateString('en-US')
+    };
+
+    setMembers((prev) => [newMember, ...prev]);
+
     const newUser = {
       id: `USR-${Math.floor(1000 + Math.random() * 9000)}`,
       name: username || 'New User',
       mobile: mobile || '9876543210',
       email: '',
       kycStatus: 'Pending',
-      profileCompleted: false, // Must complete profile
+      profileCompleted: false,
       isAuthenticated: true,
       address: '',
       pan: '',
@@ -224,48 +329,33 @@ export function AppProvider({ children }) {
     };
 
     setCurrentUser(newUser);
-    setUsersList((prev) => [newUser, ...prev]);
     return newUser;
   };
 
   const loginUser = ({ username, mobile }) => {
-    const existing = usersList.find((u) => 
-      (username && u.name.toLowerCase() === username.toLowerCase()) ||
-      (mobile && u.mobile === mobile)
-    );
-
-    let loggedInUser;
-    if (existing) {
-      loggedInUser = {
-        ...existing,
-        isAuthenticated: true
-      };
-    } else {
-      // Demo fallback user
-      loggedInUser = {
-        id: `USR-${Math.floor(1000 + Math.random() * 9000)}`,
-        name: username || 'Demo User',
-        mobile: mobile || '9999999999',
-        email: 'demo@example.com',
-        kycStatus: 'Pending',
-        profileCompleted: true,
-        isAuthenticated: true,
-        address: '123 Cross Cut Road, Salem',
-        pan: 'ABCDE1234F',
-        aadhar: '1234-5678-9012',
-        accountNumber: '918237192837',
-        ifsc: 'SBIN0001234',
-        nomineeName: 'Priya',
-        nomineeMobile: '9876543210',
-        nomineeDob: '15/06/1995',
-        nomineeAddress: '123 Cross Cut Road, Salem',
-        relationship: 'Spouse',
-        goldGrams: 0.0000,
-        silverGrams: 0.0377,
-        status: 'Active',
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-    }
+    const loggedInUser = {
+      id: 'USR-8821',
+      name: username || 'Demo User',
+      mobile: mobile || '9999999999',
+      email: 'demo@example.com',
+      kycStatus: 'Pending',
+      profileCompleted: true,
+      isAuthenticated: true,
+      address: '123 Cross Cut Road, Salem',
+      pan: 'ABCDE1234F',
+      aadhar: '1234-5678-9012',
+      accountNumber: '918237192837',
+      ifsc: 'SBIN0001234',
+      nomineeName: 'Priya',
+      nomineeMobile: '9876543210',
+      nomineeDob: '15/06/1995',
+      nomineeAddress: '123 Cross Cut Road, Salem',
+      relationship: 'Spouse',
+      goldGrams: holdings.goldGrams,
+      silverGrams: holdings.silverGrams,
+      status: 'Active',
+      createdAt: new Date().toISOString().split('T')[0]
+    };
 
     setCurrentUser(loggedInUser);
     return loggedInUser;
@@ -278,27 +368,21 @@ export function AppProvider({ children }) {
       profileCompleted: true,
       isAuthenticated: true
     };
-
     setCurrentUser(updated);
-    setUsersList((prev) => prev.map((u) => u.id === currentUser.id ? { ...u, ...updated, profileCompleted: true } : u));
     return updated;
   };
 
   const logoutUser = () => {
     setCurrentUser(LOGGED_OUT_USER);
-    sessionStorage.removeItem('sj_session_skipped_profile');
-    sessionStorage.removeItem('sj_activeScreen');
   };
 
-  // Transaction & KYC Action Helpers
+  // Transaction Helpers
   const addPurchaseTransaction = ({ assetType, asset, amount, grams, quantity, ratePerGram, paymentMethod = 'UPI' }) => {
-    // 1. Determine asset strictly (case-insensitive)
     const rawAsset = (assetType || asset || 'gold').toString().toLowerCase().trim();
     const isGold = rawAsset === 'gold';
     const assetDisplay = isGold ? 'Gold' : 'Silver';
     const assetNormalized = isGold ? 'gold' : 'silver';
 
-    // 2. Parse grams strictly
     let gramsNum = 0;
     if (grams !== undefined && grams !== null) {
       gramsNum = parseFloat(grams) || 0;
@@ -311,40 +395,29 @@ export function AppProvider({ children }) {
     const dateStr = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
-    // 3. Single source of truth transaction object
     const newTxn = {
       id: `TXN-${Math.floor(1000 + Math.random() * 9000)}`,
       date: dateStr,
       time: timeStr,
       paymentMethod: paymentMethod || 'UPI',
-      asset: assetDisplay, // 'Gold' or 'Silver'
-      assetType: assetNormalized, // 'gold' or 'silver'
+      asset: assetDisplay,
+      assetType: assetNormalized,
       quantity: `${gramsNum.toFixed(4)} gm`,
       amount: amountNum.toFixed(2),
       status: 'Success'
     };
 
-    // Update transactions list
-    setTransactions((prev) => {
-      const updated = [newTxn, ...prev];
-      localStorage.setItem('sj_transactions', JSON.stringify(updated));
-      return updated;
-    });
+    setTransactions((prev) => [newTxn, ...prev]);
 
-    // Update holdings (single source of truth for Home, Holdings, Withdraw screens)
     setHoldings((prev) => {
       const currentGold = parseFloat(prev?.goldGrams || 0);
       const currentSilver = parseFloat(prev?.silverGrams || 0);
-
-      const updated = {
+      return {
         goldGrams: isGold ? parseFloat((currentGold + gramsNum).toFixed(4)) : currentGold,
         silverGrams: !isGold ? parseFloat((currentSilver + gramsNum).toFixed(4)) : currentSilver
       };
-      localStorage.setItem('sj_holdings', JSON.stringify(updated));
-      return updated;
     });
 
-    // Update currentUser state
     setCurrentUser((prev) => {
       if (!prev) return prev;
       const curGold = parseFloat(prev.goldGrams || 0);
@@ -356,117 +429,108 @@ export function AppProvider({ children }) {
       };
     });
 
-    // Update usersList entry
-    setUsersList((prev) => {
-      const updated = prev.map((u) => {
-        if (u.id === currentUser.id) {
-          const uGold = parseFloat(u.goldGrams || 0);
-          const uSilver = parseFloat(u.silverGrams || 0);
-          return {
-            ...u,
-            goldGrams: isGold ? parseFloat((uGold + gramsNum).toFixed(4)) : uGold,
-            silverGrams: !isGold ? parseFloat((uSilver + gramsNum).toFixed(4)) : uSilver
-          };
-        }
-        return u;
-      });
-      localStorage.setItem('sj_usersList', JSON.stringify(updated));
-      return updated;
-    });
-
     return newTxn;
   };
 
-  const submitKycRequest = ({ pan, aadhar }) => {
-    setCurrentUser((prev) => ({ ...prev, kycStatus: 'Under Review' }));
-    
-    const newKyc = {
-      id: `KYC-${Math.floor(100 + Math.random() * 900)}`,
-      userId: currentUser.id,
-      userName: currentUser.name,
-      mobile: currentUser.mobile,
-      submittedDate: 'Today',
-      status: 'Under Review',
-      pan,
-      aadhar
-    };
+  // Withdrawal Actions
+  const approveWithdrawal = (id) => {
+    const now = new Date();
+    const paidStr = `${now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}, ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`;
 
-    setKycRequests((prev) => [newKyc, ...prev]);
+    setWithdrawals((prev) => prev.map((w) => {
+      if (w.id === id) {
+        return {
+          ...w,
+          status: 'Approved',
+          paidDate: paidStr
+        };
+      }
+      return w;
+    }));
   };
 
-  const approveKyc = (kycId, userId) => {
-    setKycRequests((prev) => prev.map((k) => k.id === kycId ? { ...k, status: 'Verified' } : k));
-    setUsersList((prev) => prev.map((u) => u.id === userId ? { ...u, kycStatus: 'Verified' } : u));
-    if (currentUser.id === userId) {
-      setCurrentUser((prev) => ({ ...prev, kycStatus: 'Verified' }));
+  // User Verification Actions
+  const verifyCustomer = (verificationId, memberName) => {
+    setPendingVerifications((prev) => prev.filter((v) => v.id !== verificationId && v.name !== memberName));
+    if (memberName) {
+      setMembers((prev) => prev.map((m) => {
+        if (m.username === memberName) {
+          return { ...m, verified: 'Yes' };
+        }
+        return m;
+      }));
     }
   };
 
-  const rejectKyc = (kycId, userId) => {
-    setKycRequests((prev) => prev.map((k) => k.id === kycId ? { ...k, status: 'Rejected' } : k));
-    setUsersList((prev) => prev.map((u) => u.id === userId ? { ...u, kycStatus: 'Rejected' } : u));
-    if (currentUser.id === userId) {
-      setCurrentUser((prev) => ({ ...prev, kycStatus: 'Rejected' }));
-    }
+  // Rate Management Actions
+  const saveRates = ({ newGoldRate, newSilverRate, goldCustom, silverCustom, goldInputVal, silverInputVal }) => {
+    if (newGoldRate) setGoldRate(parseFloat(newGoldRate));
+    if (newSilverRate) setSilverRate(parseFloat(newSilverRate));
+    if (goldCustom !== undefined) setIsGoldCustom(goldCustom);
+    if (silverCustom !== undefined) setIsSilverCustom(silverCustom);
+    if (goldInputVal !== undefined) setCustomGoldInput(goldInputVal);
+    if (silverInputVal !== undefined) setCustomSilverInput(silverInputVal);
   };
 
-  const toggleBlockUser = (userId) => {
-    setUsersList((prev) => prev.map((u) => u.id === userId ? { ...u, status: u.status === 'Active' ? 'Blocked' : 'Active' } : u));
-  };
-
-  const updateRates = (newGold, newSilver) => {
-    if (newGold) setGoldRate(parseFloat(newGold));
-    if (newSilver) setSilverRate(parseFloat(newSilver));
-  };
-
-  const requestWithdrawal = ({ asset, quantity, amount }) => {
-    const newWth = {
-      id: `WTH-${Math.floor(100 + Math.random() * 900)}`,
-      userId: currentUser.id,
-      userName: currentUser.name,
-      asset,
-      quantity,
-      amount,
-      status: 'Pending',
-      date: 'Today'
-    };
-    setWithdrawals((prev) => [newWth, ...prev]);
-  };
-
-  const updateWithdrawalStatus = (wthId, status) => {
-    setWithdrawals((prev) => prev.map((w) => w.id === wthId ? { ...w, status } : w));
+  // Theme Toggle Action
+  const toggleAdminTheme = () => {
+    setAdminTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
   return (
-    <AppContext.Provider value={{
-      currentUser, setCurrentUser,
-      goldRate, setGoldRate,
-      silverRate, setSilverRate,
-      holdings, setHoldings,
-      transactions, setTransactions,
-      usersList, setUsersList,
-      kycRequests, setKycRequests,
-      withdrawals, setWithdrawals,
-      settings, setSettings,
-      adminAuth, setAdminAuth,
-      registerNewUser,
-      loginUser,
-      completeUserProfile,
-      logoutUser,
-      addPurchaseTransaction,
-      submitKycRequest,
-      approveKyc,
-      rejectKyc,
-      toggleBlockUser,
-      updateRates,
-      requestWithdrawal,
-      updateWithdrawalStatus
-    }}>
+    <AppContext.Provider
+      value={{
+        currentUser,
+        setCurrentUser,
+        goldRate,
+        setGoldRate,
+        silverRate,
+        setSilverRate,
+        isGoldCustom,
+        setIsGoldCustom,
+        isSilverCustom,
+        setIsSilverCustom,
+        customGoldInput,
+        setCustomGoldInput,
+        customSilverInput,
+        setCustomSilverInput,
+        holdings,
+        setHoldings,
+        transactions,
+        setTransactions,
+        members,
+        setMembers,
+        usersList: members,
+        withdrawals,
+        setWithdrawals,
+        pendingVerifications,
+        setPendingVerifications,
+        adminTheme,
+        setAdminTheme,
+        toggleAdminTheme,
+        adminSettings,
+        setAdminSettings,
+        adminAuth,
+        setAdminAuth,
+        registerNewUser,
+        loginUser,
+        completeUserProfile,
+        logoutUser,
+        addPurchaseTransaction,
+        approveWithdrawal,
+        verifyCustomer,
+        saveRates
+      }}
+    >
       {children}
     </AppContext.Provider>
   );
 }
 
 export function useApp() {
-  return useContext(AppContext);
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error('useApp must be used within an AppProvider');
+  }
+  return context;
 }
