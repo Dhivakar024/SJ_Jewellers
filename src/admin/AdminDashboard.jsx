@@ -43,7 +43,7 @@ function getDonutSegmentPath(cx, cy, outerR, innerR, startAngle, endAngle) {
 
 // Helper to parse transaction amounts safely
 function parseTxnAmount(amt) {
-  if (!amt) return 0;
+  if (amt === undefined || amt === null) return 0;
   if (typeof amt === 'number') return amt;
   return parseFloat(amt.toString().replace(/,/g, '')) || 0;
 }
@@ -51,20 +51,34 @@ function parseTxnAmount(amt) {
 // Helper to parse dates in multiple formats safely
 function parseTxnDate(dateStr) {
   if (!dateStr) return null;
+  if (dateStr instanceof Date) return isNaN(dateStr.getTime()) ? null : dateStr;
+
   const d = new Date(dateStr);
   if (!isNaN(d.getTime())) return d;
-  const cleaned = dateStr.replace(/,/g, '').trim();
+
+  // Format "17 Mar 2026, 05:04 am" -> "17 Mar 2026"
+  const cleaned = dateStr.split(',')[0].trim();
   const d2 = new Date(cleaned);
   if (!isNaN(d2.getTime())) return d2;
+
+  // Format "YYYY-MM-DD"
+  const match = dateStr.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (match) {
+    return new Date(parseInt(match[1], 10), parseInt(match[2], 10) - 1, parseInt(match[3], 10));
+  }
+
   return null;
 }
 
-// Helper for formatting Y-axis numbers cleanly (e.g. 25.0k, 500, 1.2M)
-function formatYAxisLabel(val) {
-  if (val >= 1000000) return `${(val / 1000000).toFixed(1)}M`;
-  if (val >= 1000) return `${(val / 1000).toFixed(1)}k`;
-  if (val === 0) return '0';
-  return val.toString();
+// Helper for formatting Y-axis INR currency cleanly (e.g. ₹50K, ₹10K, ₹500, ₹0)
+function formatYAxisINR(val) {
+  if (val >= 1000000) return `₹${(val / 1000000).toFixed(1)}M`;
+  if (val >= 1000) {
+    const kVal = val / 1000;
+    return `₹${kVal % 1 === 0 ? kVal.toFixed(0) : kVal.toFixed(1)}K`;
+  }
+  if (val === 0) return '₹0';
+  return `₹${Math.round(val)}`;
 }
 
 export default function AdminDashboard({ onSelectTab }) {
@@ -103,7 +117,7 @@ export default function AdminDashboard({ onSelectTab }) {
 
     transactions.forEach((t) => {
       const amt = parseTxnAmount(t.amount);
-      const isGold = (t.asset || t.assetType || '').toLowerCase().includes('gold');
+      const isGold = (t.asset || t.assetType || t.metal || '').toLowerCase().includes('gold');
       if (isGold) {
         gVal += amt;
         gCount += 1;
@@ -140,6 +154,7 @@ export default function AdminDashboard({ onSelectTab }) {
       map[y] = {
         key: y.toString(),
         label: y.toString(),
+        fullLabel: `Year ${y}`,
         totalValue: 0,
         goldValue: 0,
         silverValue: 0,
@@ -155,7 +170,7 @@ export default function AdminDashboard({ onSelectTab }) {
       const y = d.getFullYear();
       if (map[y]) {
         const amt = parseTxnAmount(t.amount);
-        const isGold = (t.asset || t.assetType || '').toLowerCase().includes('gold');
+        const isGold = (t.asset || t.assetType || t.metal || '').toLowerCase().includes('gold');
         map[y].totalValue += amt;
         map[y].count += 1;
         if (isGold) {
@@ -171,6 +186,7 @@ export default function AdminDashboard({ onSelectTab }) {
     const items = years.map((y) => map[y]);
     let max = Math.max(...items.map((i) => i.totalValue), 0);
     if (max === 0) max = 50000;
+    else if (max < 10000) max = 10000;
     else max = Math.ceil(max / 10000) * 10000;
 
     return { items, maxVal: max };
@@ -189,10 +205,12 @@ export default function AdminDashboard({ onSelectTab }) {
       const yyyy = d.getFullYear();
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const key = `${yyyy}-${mm}`;
+      const shortLabel = d.toLocaleDateString('en-US', { month: 'short' }); // e.g. "Sep", "Oct", "Nov"
+      const fullLabel = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }); // e.g. "August 2026"
       months.push({
         key,
-        label: key,
-        shortLabel: d.toLocaleDateString('en-US', { month: 'short' }),
+        label: shortLabel,
+        fullLabel,
         totalValue: 0,
         goldValue: 0,
         silverValue: 0,
@@ -213,7 +231,7 @@ export default function AdminDashboard({ onSelectTab }) {
       const key = `${yyyy}-${mm}`;
       if (map[key]) {
         const amt = parseTxnAmount(t.amount);
-        const isGold = (t.asset || t.assetType || '').toLowerCase().includes('gold');
+        const isGold = (t.asset || t.assetType || t.metal || '').toLowerCase().includes('gold');
         map[key].totalValue += amt;
         map[key].count += 1;
         if (isGold) {
@@ -229,7 +247,8 @@ export default function AdminDashboard({ onSelectTab }) {
     let max = Math.max(...months.map((i) => i.totalValue), 0);
     if (max === 0) max = 30000;
     else if (max < 5000) max = 5000;
-    else max = Math.ceil(max / 5000) * 5000;
+    else if (max < 20000) max = Math.ceil(max / 5000) * 5000;
+    else max = Math.ceil(max / 10000) * 10000;
 
     return { items: months, maxVal: max };
   }, [transactions, referenceDate]);
@@ -239,18 +258,24 @@ export default function AdminDashboard({ onSelectTab }) {
   // =========================================================================
   const dailyChartData = useMemo(() => {
     const days = [];
-    const refTime = referenceDate.getTime();
+    const refYear = referenceDate.getFullYear();
+    const refMonth = referenceDate.getMonth();
+    const refDay = referenceDate.getDate();
 
     for (let i = 29; i >= 0; i--) {
-      const d = new Date(refTime - i * 24 * 60 * 60 * 1000);
+      const d = new Date(refYear, refMonth, refDay - i);
       const yyyy = d.getFullYear();
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const dd = String(d.getDate()).padStart(2, '0');
       const key = `${yyyy}-${mm}-${dd}`;
+      const shortLabel = d.toLocaleDateString('en-US', { month: 'short', day: '2-digit' }); // e.g. "Aug 01"
+      const fullLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); // e.g. "Aug 20, 2026"
+      
       days.push({
         key,
-        label: key,
-        shortLabel: `${mm}-${dd}`,
+        label: shortLabel,
+        fullLabel,
+        dayIdx: 29 - i,
         totalValue: 0,
         goldValue: 0,
         silverValue: 0,
@@ -272,7 +297,7 @@ export default function AdminDashboard({ onSelectTab }) {
       const key = `${yyyy}-${mm}-${dd}`;
       if (map[key]) {
         const amt = parseTxnAmount(t.amount);
-        const isGold = (t.asset || t.assetType || '').toLowerCase().includes('gold');
+        const isGold = (t.asset || t.assetType || t.metal || '').toLowerCase().includes('gold');
         map[key].totalValue += amt;
         map[key].count += 1;
         if (isGold) {
@@ -286,10 +311,11 @@ export default function AdminDashboard({ onSelectTab }) {
     });
 
     let max = Math.max(...days.map((i) => i.totalValue), 0);
-    if (max === 0) max = 12;
-    else if (max < 10) max = 10;
-    else if (max < 100) max = Math.ceil(max / 10) * 10;
-    else max = Math.ceil(max / 100) * 100;
+    if (max === 0) max = 1000;
+    else if (max < 500) max = 500;
+    else if (max < 1000) max = 1000;
+    else if (max < 5000) max = Math.ceil(max / 1000) * 1000;
+    else max = Math.ceil(max / 5000) * 5000;
 
     return { items: days, maxVal: max };
   }, [transactions, referenceDate]);
@@ -385,8 +411,16 @@ export default function AdminDashboard({ onSelectTab }) {
     );
   };
 
-  // Reusable Bar Chart Component with clean proportions and tooltips
-  const renderBarChart = ({ title, subtitle, icon, data, maxVal, barMaxWidth = '38px', showEveryNthLabel = 1 }) => {
+  // Reusable Bar Chart Component with clean INR labels and tooltips
+  const renderBarChart = ({ 
+    title, 
+    subtitle, 
+    icon, 
+    data, 
+    maxVal, 
+    barMaxWidth = '38px',
+    isDaily = false
+  }) => {
     const yTicks = [
       maxVal,
       maxVal * 0.8,
@@ -414,35 +448,36 @@ export default function AdminDashboard({ onSelectTab }) {
           position: 'relative',
           display: 'flex',
           alignItems: 'flex-end',
-          paddingLeft: '45px',
+          paddingLeft: '50px',
           paddingRight: '12px',
           borderBottom: '1px solid #e5e7eb'
         }}>
-          {/* Y-axis tick labels */}
+          {/* Y-axis tick labels with INR currency */}
           <div style={{
             position: 'absolute',
             left: 0,
             top: 0,
             bottom: 0,
-            width: '40px',
+            width: '45px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
             fontSize: '9.5px',
+            fontWeight: '500',
             color: '#9ca3af',
             userSelect: 'none',
             textAlign: 'right',
             paddingRight: '6px'
           }}>
             {yTicks.map((t, idx) => (
-              <span key={idx}>{formatYAxisLabel(t)}</span>
+              <span key={idx}>{formatYAxisINR(t)}</span>
             ))}
           </div>
 
           {/* Background Dashed Grid Lines */}
           <div style={{
             position: 'absolute',
-            left: '45px',
+            left: '50px',
             right: '12px',
             top: 0,
             bottom: 0,
@@ -467,10 +502,10 @@ export default function AdminDashboard({ onSelectTab }) {
             height: '100%',
             alignItems: 'flex-end',
             zIndex: 2,
-            gap: '4px'
+            gap: isDaily ? '2px' : '4px'
           }}>
             {data.map((item, idx) => {
-              const heightPct = maxVal > 0 ? Math.min(100, Math.max(item.totalValue > 0 ? 3 : 0, (item.totalValue / maxVal) * 100)) : 0;
+              const heightPct = maxVal > 0 ? Math.min(100, Math.max(item.totalValue > 0 ? 4 : 0, (item.totalValue / maxVal) * 100)) : 0;
               const isHovered = hoveredBar && hoveredBar.key === item.key;
 
               return (
@@ -486,7 +521,7 @@ export default function AdminDashboard({ onSelectTab }) {
                     flexDirection: 'column',
                     justifyContent: 'flex-end',
                     alignItems: 'center',
-                    cursor: item.totalValue > 0 ? 'pointer' : 'default',
+                    cursor: 'pointer',
                     position: 'relative'
                   }}
                 >
@@ -497,7 +532,8 @@ export default function AdminDashboard({ onSelectTab }) {
                       backgroundColor: isHovered ? '#4f46e5' : '#6366f1',
                       borderRadius: '3px 3px 0 0',
                       transition: 'all 0.15s ease',
-                      opacity: item.totalValue > 0 ? 1 : 0
+                      opacity: item.totalValue > 0 ? 1 : 0.15,
+                      minHeight: item.totalValue > 0 ? '4px' : '0px'
                     }}
                   />
                 </div>
@@ -514,22 +550,37 @@ export default function AdminDashboard({ onSelectTab }) {
               transform: 'translateX(-50%)',
               backgroundColor: '#1e293b',
               color: '#ffffff',
-              padding: '6px 12px',
+              padding: '8px 14px',
               borderRadius: '6px',
               fontSize: '11px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
               zIndex: 20,
               pointerEvents: 'none',
               whiteSpace: 'nowrap',
               textAlign: 'center'
             }}>
-              <div style={{ fontWeight: '700', color: '#f8fafc' }}>{hoveredBar.label}</div>
-              <div style={{ color: '#a5b4fc', fontWeight: '600' }}>
-                ₹{hoveredBar.totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              <div style={{ fontWeight: '700', color: '#f8fafc', marginBottom: '2px' }}>
+                {hoveredBar.fullLabel || hoveredBar.label}
               </div>
-              {hoveredBar.count > 0 && (
-                <div style={{ fontSize: '10px', color: '#cbd5e1', marginTop: '2px' }}>
-                  {hoveredBar.count} orders (Gold: ₹{hoveredBar.goldValue.toFixed(0)} · Silver: ₹{hoveredBar.silverValue.toFixed(0)})
+              <div style={{ color: '#a5b4fc', fontWeight: '700', fontSize: '12px' }}>
+                Transaction Value: ₹{hoveredBar.totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              {hoveredBar.count > 0 ? (
+                <div style={{ fontSize: '10px', color: '#cbd5e1', marginTop: '4px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                  {hoveredBar.goldCount > 0 && (
+                    <span style={{ color: '#fcd34d' }}>
+                      Gold: ₹{hoveredBar.goldValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })} ({hoveredBar.goldCount})
+                    </span>
+                  )}
+                  {hoveredBar.silverCount > 0 && (
+                    <span style={{ color: '#e2e8f0' }}>
+                      Silver: ₹{hoveredBar.silverValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })} ({hoveredBar.silverCount})
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '2px' }}>
+                  No transactions recorded
                 </div>
               )}
             </div>
@@ -540,7 +591,7 @@ export default function AdminDashboard({ onSelectTab }) {
         <div style={{
           display: 'flex',
           justifyContent: 'space-around',
-          paddingLeft: '45px',
+          paddingLeft: '50px',
           paddingRight: '12px',
           marginTop: '6px',
           fontSize: '10px',
@@ -548,7 +599,12 @@ export default function AdminDashboard({ onSelectTab }) {
           userSelect: 'none'
         }}>
           {data.map((item, idx) => {
-            const showLabel = idx % showEveryNthLabel === 0 || item.totalValue > 0;
+            // For daily, show clean spaced labels (every 5th day and last day)
+            let isVisible = true;
+            if (isDaily) {
+              isVisible = idx === 0 || idx === 5 || idx === 10 || idx === 15 || idx === 20 || idx === 25 || idx === data.length - 1;
+            }
+
             return (
               <div
                 key={item.key || idx}
@@ -556,7 +612,7 @@ export default function AdminDashboard({ onSelectTab }) {
                   flex: 1,
                   maxWidth: barMaxWidth,
                   textAlign: 'center',
-                  visibility: showLabel ? 'visible' : 'hidden',
+                  visibility: isVisible ? 'visible' : 'hidden',
                   fontWeight: item.totalValue > 0 ? '700' : '400',
                   color: item.totalValue > 0 ? 'var(--admin-text-main-light)' : '#9ca3af',
                   whiteSpace: 'nowrap',
@@ -745,7 +801,7 @@ export default function AdminDashboard({ onSelectTab }) {
         data: annualChartData.items,
         maxVal: annualChartData.maxVal,
         barMaxWidth: '56px',
-        showEveryNthLabel: 1
+        isDaily: false
       })}
 
       {/* 5. B. Monthly Transactions (Last 12 Months) */}
@@ -756,7 +812,7 @@ export default function AdminDashboard({ onSelectTab }) {
         data: monthlyChartData.items,
         maxVal: monthlyChartData.maxVal,
         barMaxWidth: '40px',
-        showEveryNthLabel: 1
+        isDaily: false
       })}
 
       {/* 6. C. Daily Transactions (Last 30 Days) */}
@@ -767,7 +823,7 @@ export default function AdminDashboard({ onSelectTab }) {
         data: dailyChartData.items,
         maxVal: dailyChartData.maxVal,
         barMaxWidth: '16px',
-        showEveryNthLabel: 3
+        isDaily: true
       })}
 
       {/* 7. Footer Rates Updated Timestamp */}
