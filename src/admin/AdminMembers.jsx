@@ -191,7 +191,7 @@ export default function AdminMembers() {
       deleteMember(selectedMember.id);
     }
     setShowDeleteConfirm(false);
-    setToastMessage(`Member ${selectedMember.username} has been deactivated.`);
+    setToastMessage(`Member ${selectedMember.username || 'user'} has been deactivated.`);
     setTimeout(() => {
       setSelectedMemberId(null);
       setToastMessage('');
@@ -290,7 +290,7 @@ export default function AdminMembers() {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
                 <h2 style={{ fontSize: '20px', fontWeight: '800', margin: 0, color: 'var(--admin-text-main-light)' }}>
-                  {selectedMember.username}
+                  {selectedMember.username || 'Member'}
                 </h2>
                 <span className="admin-badge-gray" style={{ fontSize: '11px' }}>
                   ID: #{selectedMember.id}
@@ -302,7 +302,7 @@ export default function AdminMembers() {
 
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '14px', fontSize: '12.5px', color: '#6b7280' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  <Phone size={13} /> {selectedMember.mobile}
+                  <Phone size={13} /> {selectedMember.mobile || '-'}
                 </span>
                 <span>•</span>
                 <span>Joined: {selectedMember.created || 'Jan 2026'}</span>
@@ -712,7 +712,7 @@ export default function AdminMembers() {
               </div>
 
               <p style={{ fontSize: '13.5px', color: '#4b5563', lineHeight: '1.4', marginBottom: '18px' }}>
-                Are you sure you want to deactivate member <strong style={{ color: '#111827' }}>{selectedMember.username}</strong> (ID: #{selectedMember.id})? This will mark their status as Inactive.
+                Are you sure you want to deactivate member <strong style={{ color: '#111827' }}>{selectedMember.username || 'user'}</strong> (ID: #{selectedMember.id})? This will mark their status as Inactive.
               </p>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
