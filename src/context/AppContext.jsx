@@ -585,6 +585,11 @@ export function AppProvider({ children }) {
     if (silverInputVal !== undefined) setCustomSilverInput(silverInputVal);
   };
 
+  // Theme Toggle Action
+  const toggleAdminTheme = () => {
+    setAdminTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
+
   // Member Actions
   const deleteMember = (id) => {
     setMembers((prev) => prev.map((m) => {
