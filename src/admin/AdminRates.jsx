@@ -5,6 +5,8 @@ export default function AdminRates() {
   const { 
     goldRate, 
     silverRate, 
+    apiGoldRate = 13818.88,
+    apiSilverRate = 206.17,
     isGoldCustom, 
     isSilverCustom, 
     customGoldInput, 
@@ -14,14 +16,33 @@ export default function AdminRates() {
 
   const [goldCustom, setGoldCustom] = useState(Boolean(isGoldCustom));
   const [silverCustom, setSilverCustom] = useState(Boolean(isSilverCustom));
-  const [goldInput, setGoldInput] = useState(customGoldInput || (goldRate ? goldRate.toString() : ''));
-  const [silverInput, setSilverInput] = useState(customSilverInput || (silverRate ? silverRate.toString() : ''));
+  const [goldInput, setGoldInput] = useState(customGoldInput || (goldRate ? goldRate.toString() : '13818.88'));
+  const [silverInput, setSilverInput] = useState(customSilverInput || (silverRate ? silverRate.toString() : '206.17'));
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  const liveGoldRate = apiGoldRate || 13818.88;
+  const liveSilverRate = apiSilverRate || 206.17;
+
+  const handleToggleGold = () => {
+    const nextCustom = !goldCustom;
+    setGoldCustom(nextCustom);
+    if (nextCustom && !goldInput) {
+      setGoldInput(liveGoldRate.toString());
+    }
+  };
+
+  const handleToggleSilver = () => {
+    const nextCustom = !silverCustom;
+    setSilverCustom(nextCustom);
+    if (nextCustom && !silverInput) {
+      setSilverInput(liveSilverRate.toString());
+    }
+  };
 
   const handleSave = (e) => {
     e.preventDefault();
-    const gVal = parseFloat(goldInput) || goldRate;
-    const sVal = parseFloat(silverInput) || silverRate;
+    const gVal = goldCustom ? (parseFloat(goldInput) || liveGoldRate) : liveGoldRate;
+    const sVal = silverCustom ? (parseFloat(silverInput) || liveSilverRate) : liveSilverRate;
 
     if (typeof saveRates === 'function') {
       saveRates({
@@ -45,7 +66,7 @@ export default function AdminRates() {
       <div className="admin-page-header">
         <h1 className="admin-page-title">Rates</h1>
         <p className="admin-page-sub">
-          Set custom gold and silver rates (₹/gram). Custom rate must be at least the current API rate.
+          Toggle between live API rates and custom overrides (₹/gram). In API mode, rates automatically update and are read-only.
         </p>
       </div>
 
@@ -85,7 +106,7 @@ export default function AdminRates() {
                       Gold
                     </label>
                     <span className="admin-rate-subtext">
-                      Current API: ₹{(goldRate || 13818.88).toLocaleString('en-IN')}/g
+                      Live API: ₹{liveGoldRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/g
                     </span>
                   </div>
                 </div>
@@ -94,20 +115,20 @@ export default function AdminRates() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
                   <span style={{
                     fontWeight: !goldCustom ? '700' : '500',
-                    color: !goldCustom ? 'var(--admin-text-main-dark)' : 'var(--admin-text-muted-dark)'
+                    color: !goldCustom ? 'var(--admin-text-value-dark)' : 'var(--admin-text-muted-dark)'
                   }}>
                     API
                   </span>
 
                   <div
-                    onClick={() => setGoldCustom(!goldCustom)}
+                    onClick={handleToggleGold}
                     role="button"
                     tabIndex={0}
                     aria-label="Toggle custom gold rate"
                     style={{
                       width: '46px',
                       height: '26px',
-                      backgroundColor: goldCustom ? '#10b981' : '#cbd5e1',
+                      backgroundColor: goldCustom ? '#10b981' : '#64748b',
                       borderRadius: '14px',
                       padding: '3px',
                       cursor: 'pointer',
@@ -130,21 +151,32 @@ export default function AdminRates() {
 
                   <span style={{
                     fontWeight: goldCustom ? '700' : '500',
-                    color: goldCustom ? 'var(--admin-text-main-dark)' : 'var(--admin-text-muted-dark)'
+                    color: goldCustom ? 'var(--admin-text-value-dark)' : 'var(--admin-text-muted-dark)'
                   }}>
                     Custom
                   </span>
                 </div>
               </div>
 
+              {/* Gold Rate Input - ReadOnly in API Mode, Editable in Custom Mode */}
               <input
-                type="number"
-                step="0.01"
+                type={goldCustom ? "number" : "text"}
+                step={goldCustom ? "0.01" : undefined}
+                disabled={!goldCustom}
+                readOnly={!goldCustom}
                 placeholder="e.g. 13850.00"
-                value={goldInput}
+                value={goldCustom ? goldInput : `₹${liveGoldRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/g`}
                 onChange={(e) => setGoldInput(e.target.value)}
                 className="admin-input"
-                style={{ height: '44px', fontSize: '15px', fontWeight: '600' }}
+                style={{
+                  height: '44px',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  cursor: !goldCustom ? 'not-allowed' : 'text',
+                  opacity: !goldCustom ? 0.75 : 1,
+                  backgroundColor: !goldCustom ? 'rgba(15, 23, 42, 0.4)' : undefined,
+                  borderColor: !goldCustom ? 'var(--admin-border-dark)' : undefined
+                }}
               />
             </div>
 
@@ -175,7 +207,7 @@ export default function AdminRates() {
                       Silver
                     </label>
                     <span className="admin-rate-subtext">
-                      Current API: ₹{(silverRate || 206.17).toLocaleString('en-IN')}/g
+                      Live API: ₹{liveSilverRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/g
                     </span>
                   </div>
                 </div>
@@ -184,20 +216,20 @@ export default function AdminRates() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
                   <span style={{
                     fontWeight: !silverCustom ? '700' : '500',
-                    color: !silverCustom ? 'var(--admin-text-main-dark)' : 'var(--admin-text-muted-dark)'
+                    color: !silverCustom ? 'var(--admin-text-value-dark)' : 'var(--admin-text-muted-dark)'
                   }}>
                     API
                   </span>
 
                   <div
-                    onClick={() => setSilverCustom(!silverCustom)}
+                    onClick={handleToggleSilver}
                     role="button"
                     tabIndex={0}
                     aria-label="Toggle custom silver rate"
                     style={{
                       width: '46px',
                       height: '26px',
-                      backgroundColor: silverCustom ? '#10b981' : '#cbd5e1',
+                      backgroundColor: silverCustom ? '#10b981' : '#64748b',
                       borderRadius: '14px',
                       padding: '3px',
                       cursor: 'pointer',
@@ -220,39 +252,50 @@ export default function AdminRates() {
 
                   <span style={{
                     fontWeight: silverCustom ? '700' : '500',
-                    color: silverCustom ? 'var(--admin-text-main-dark)' : 'var(--admin-text-muted-dark)'
+                    color: silverCustom ? 'var(--admin-text-value-dark)' : 'var(--admin-text-muted-dark)'
                   }}>
                     Custom
                   </span>
                 </div>
               </div>
 
+              {/* Silver Rate Input - ReadOnly in API Mode, Editable in Custom Mode */}
               <input
-                type="number"
-                step="0.01"
+                type={silverCustom ? "number" : "text"}
+                step={silverCustom ? "0.01" : undefined}
+                disabled={!silverCustom}
+                readOnly={!silverCustom}
                 placeholder="e.g. 210.00"
-                value={silverInput}
+                value={silverCustom ? silverInput : `₹${liveSilverRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/g`}
                 onChange={(e) => setSilverInput(e.target.value)}
                 className="admin-input"
-                style={{ height: '44px', fontSize: '15px', fontWeight: '600' }}
+                style={{
+                  height: '44px',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  cursor: !silverCustom ? 'not-allowed' : 'text',
+                  opacity: !silverCustom ? 0.75 : 1,
+                  backgroundColor: !silverCustom ? 'rgba(15, 23, 42, 0.4)' : undefined,
+                  borderColor: !silverCustom ? 'var(--admin-border-dark)' : undefined
+                }}
               />
             </div>
           </div>
 
           {/* Save Button & Note */}
-          <div style={{ borderTop: '1px solid var(--admin-border-light)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ borderTop: '1px solid var(--admin-border-dark)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
               <button type="submit" className="admin-btn-orange" style={{ padding: '10px 24px', fontSize: '14.5px' }}>
                 Save Rates
               </button>
               {savedSuccess && (
                 <span style={{ fontSize: '13.5px', color: '#10b981', fontWeight: '700' }}>
-                  ✓ Rates saved & updated across the portal!
+                  ✓ Rates configuration saved & updated!
                 </span>
               )}
             </div>
 
-            <div style={{ fontSize: '12px', color: 'var(--admin-text-muted-light)' }}>
+            <div style={{ fontSize: '12px', color: 'var(--admin-text-muted-dark)' }}>
               Custom rates remain active until today 11:59 PM, after which they will automatically revert to live API rates.
             </div>
           </div>

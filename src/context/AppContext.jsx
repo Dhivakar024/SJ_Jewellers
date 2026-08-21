@@ -199,18 +199,29 @@ const INITIAL_PENDING_VERIFICATIONS = [
   }
 ];
 
+export const API_GOLD_RATE = 13818.88;
+export const API_SILVER_RATE = 206.17;
+
 export function AppProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(LOGGED_OUT_USER);
 
   // Live and Custom Rates
   const [goldRate, setGoldRate] = useState(() => {
-    const saved = localStorage.getItem('sj_goldRate');
-    return saved ? parseFloat(saved) : 13818.88;
+    const isCustom = localStorage.getItem('sj_isGoldCustom') === 'true';
+    if (isCustom) {
+      const saved = localStorage.getItem('sj_goldRate');
+      return saved ? parseFloat(saved) : API_GOLD_RATE;
+    }
+    return API_GOLD_RATE;
   });
 
   const [silverRate, setSilverRate] = useState(() => {
-    const saved = localStorage.getItem('sj_silverRate');
-    return saved ? parseFloat(saved) : 206.17;
+    const isCustom = localStorage.getItem('sj_isSilverCustom') === 'true';
+    if (isCustom) {
+      const saved = localStorage.getItem('sj_silverRate');
+      return saved ? parseFloat(saved) : API_SILVER_RATE;
+    }
+    return API_SILVER_RATE;
   });
 
   const [isGoldCustom, setIsGoldCustom] = useState(() => {
@@ -577,10 +588,28 @@ export function AppProvider({ children }) {
 
   // Rate Management Actions
   const saveRates = ({ newGoldRate, newSilverRate, goldCustom, silverCustom, goldInputVal, silverInputVal }) => {
-    if (newGoldRate) setGoldRate(parseFloat(newGoldRate));
-    if (newSilverRate) setSilverRate(parseFloat(newSilverRate));
-    if (goldCustom !== undefined) setIsGoldCustom(goldCustom);
-    if (silverCustom !== undefined) setIsSilverCustom(silverCustom);
+    if (goldCustom !== undefined) {
+      setIsGoldCustom(goldCustom);
+      if (goldCustom) {
+        setGoldRate(parseFloat(goldInputVal || newGoldRate) || API_GOLD_RATE);
+      } else {
+        setGoldRate(API_GOLD_RATE);
+      }
+    } else if (newGoldRate) {
+      setGoldRate(parseFloat(newGoldRate));
+    }
+
+    if (silverCustom !== undefined) {
+      setIsSilverCustom(silverCustom);
+      if (silverCustom) {
+        setSilverRate(parseFloat(silverInputVal || newSilverRate) || API_SILVER_RATE);
+      } else {
+        setSilverRate(API_SILVER_RATE);
+      }
+    } else if (newSilverRate) {
+      setSilverRate(parseFloat(newSilverRate));
+    }
+
     if (goldInputVal !== undefined) setCustomGoldInput(goldInputVal);
     if (silverInputVal !== undefined) setCustomSilverInput(silverInputVal);
   };
@@ -609,6 +638,8 @@ export function AppProvider({ children }) {
         setGoldRate,
         silverRate,
         setSilverRate,
+        apiGoldRate: API_GOLD_RATE,
+        apiSilverRate: API_SILVER_RATE,
         isGoldCustom,
         setIsGoldCustom,
         isSilverCustom,

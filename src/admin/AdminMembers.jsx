@@ -424,21 +424,39 @@ export default function AdminMembers() {
               </p>
             </div>
 
-            {/* Gold / Silver Tabs */}
-            <div className="admin-tab-pill-container">
+            {/* Gold / Silver Filter Buttons - Matching Withdrawal Page Pill Style & Fixed Equal Dimensions */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <button
                 onClick={() => setActiveTab('gold')}
                 style={{
-                  padding: '7px 16px',
-                  borderRadius: '6px',
-                  border: activeTab === 'gold' ? '1px solid #d97706' : 'none',
-                  backgroundColor: activeTab === 'gold' ? '#1e293b' : 'transparent',
-                  color: activeTab === 'gold' ? '#e7b84b' : 'var(--admin-text-secondary-dark)',
-                  fontSize: '13px',
-                  fontWeight: '700',
+                  height: '40px',
+                  width: '135px',
+                  padding: '0 20px',
+                  borderRadius: '20px',
+                  border: activeTab === 'gold' ? 'none' : '1px solid var(--admin-border-dark)',
+                  backgroundColor: activeTab === 'gold' ? '#d97706' : 'var(--admin-card-bg-dark)',
+                  color: activeTab === 'gold' ? '#ffffff' : 'var(--admin-text-secondary-dark)',
+                  fontSize: '14.5px',
+                  fontWeight: '600',
                   cursor: 'pointer',
-                  boxShadow: activeTab === 'gold' ? '0 1px 3px rgba(0,0,0,0.2)' : 'none',
-                  transition: 'all 0.15s ease'
+                  transition: 'all 0.15s ease',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: activeTab === 'gold' ? '0 2px 8px rgba(217, 119, 6, 0.25)' : 'none',
+                  boxSizing: 'border-box'
+                }}
+                onMouseEnter={(e) => {
+                  if (activeTab !== 'gold') {
+                    e.currentTarget.style.backgroundColor = '#1e293b';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== 'gold') {
+                    e.currentTarget.style.backgroundColor = 'var(--admin-card-bg-dark)';
+                    e.currentTarget.style.transform = 'none';
+                  }
                 }}
               >
                 Gold ({(memberTransactions?.allGold || []).length})
@@ -447,16 +465,34 @@ export default function AdminMembers() {
               <button
                 onClick={() => setActiveTab('silver')}
                 style={{
-                  padding: '7px 16px',
-                  borderRadius: '6px',
-                  border: activeTab === 'silver' ? '1px solid #475569' : 'none',
-                  backgroundColor: activeTab === 'silver' ? '#1e293b' : 'transparent',
-                  color: activeTab === 'silver' ? '#cbd5e1' : 'var(--admin-text-secondary-dark)',
-                  fontSize: '13px',
-                  fontWeight: '700',
+                  height: '40px',
+                  width: '135px',
+                  padding: '0 20px',
+                  borderRadius: '20px',
+                  border: activeTab === 'silver' ? 'none' : '1px solid var(--admin-border-dark)',
+                  backgroundColor: activeTab === 'silver' ? '#475569' : 'var(--admin-card-bg-dark)',
+                  color: activeTab === 'silver' ? '#ffffff' : 'var(--admin-text-secondary-dark)',
+                  fontSize: '14.5px',
+                  fontWeight: '600',
                   cursor: 'pointer',
-                  boxShadow: activeTab === 'silver' ? '0 1px 3px rgba(0,0,0,0.2)' : 'none',
-                  transition: 'all 0.15s ease'
+                  transition: 'all 0.15s ease',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: activeTab === 'silver' ? '0 2px 8px rgba(71, 85, 105, 0.25)' : 'none',
+                  boxSizing: 'border-box'
+                }}
+                onMouseEnter={(e) => {
+                  if (activeTab !== 'silver') {
+                    e.currentTarget.style.backgroundColor = '#1e293b';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== 'silver') {
+                    e.currentTarget.style.backgroundColor = 'var(--admin-card-bg-dark)';
+                    e.currentTarget.style.transform = 'none';
+                  }
                 }}
               >
                 Silver ({(memberTransactions?.allSilver || []).length})
