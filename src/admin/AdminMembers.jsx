@@ -507,27 +507,43 @@ export default function AdminMembers() {
               ))}
             </div>
 
-            {/* Date Range Filters */}
+            {/* Date Range Filters with Working Calendar Picker */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280' }}>From:</span>
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="admin-input"
-                style={{ height: '32px', padding: '0 8px', fontSize: '12px', width: '130px' }}
-              />
+              <span style={{ fontSize: '13px', fontWeight: '600', color: '#6b7280' }}>From:</span>
+              <div className="admin-date-wrapper">
+                <Calendar size={14} className="admin-date-icon" />
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  onClick={(e) => {
+                    try {
+                      if (e.target.showPicker) e.target.showPicker();
+                    } catch (err) {}
+                  }}
+                  className="admin-input"
+                  style={{ height: '34px', paddingLeft: '32px', paddingRight: '8px', fontSize: '13px', width: '145px', cursor: 'pointer' }}
+                />
+              </div>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280' }}>To:</span>
-              <input
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="admin-input"
-                style={{ height: '32px', padding: '0 8px', fontSize: '12px', width: '130px' }}
-              />
+              <span style={{ fontSize: '13px', fontWeight: '600', color: '#6b7280' }}>To:</span>
+              <div className="admin-date-wrapper">
+                <Calendar size={14} className="admin-date-icon" />
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  onClick={(e) => {
+                    try {
+                      if (e.target.showPicker) e.target.showPicker();
+                    } catch (err) {}
+                  }}
+                  className="admin-input"
+                  style={{ height: '34px', paddingLeft: '32px', paddingRight: '8px', fontSize: '13px', width: '145px', cursor: 'pointer' }}
+                />
+              </div>
             </div>
 
             {/* Grams Range Filters */}
