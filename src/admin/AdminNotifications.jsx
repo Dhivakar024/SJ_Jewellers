@@ -1,31 +1,31 @@
 import React, { useState } from 'react';
-import { CheckCircle2, X } from 'lucide-react';
+import { CheckCircle2, X, AlertTriangle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export default function AdminNotifications() {
-  const { withdrawals, pendingVerifications, approveWithdrawal, verifyCustomer } = useApp();
+  const { withdrawals = [], pendingVerifications = [], approveWithdrawal, verifyCustomer } = useApp() || {};
 
   const [selectedWithdrawal, setSelectedWithdrawal] = useState(null);
   const [selectedVerification, setSelectedVerification] = useState(null);
 
-  const pendingWithdrawals = withdrawals.filter((w) => w.status === 'Pending');
+  const pendingWithdrawals = withdrawals.filter((w) => w && w.status === 'Pending');
 
   const handleConfirmPaid = () => {
-    if (selectedWithdrawal) {
+    if (selectedWithdrawal && typeof approveWithdrawal === 'function') {
       approveWithdrawal(selectedWithdrawal.id);
       setSelectedWithdrawal(null);
     }
   };
 
   const handleVerifyAccount = () => {
-    if (selectedVerification) {
+    if (selectedVerification && typeof verifyCustomer === 'function') {
       verifyCustomer(selectedVerification.id, selectedVerification.name);
       setSelectedVerification(null);
     }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', boxSizing: 'border-box' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', boxSizing: 'border-box' }}>
       
       {/* 1. Page Header */}
       <div className="admin-page-header">
@@ -68,7 +68,7 @@ export default function AdminNotifications() {
           </span>
         </div>
 
-        {/* Withdrawal List */}
+        {/* Interactive Withdrawal List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {pendingWithdrawals.length === 0 ? (
             <div style={{ fontSize: '13px', color: '#059669', padding: '8px 0' }}>
@@ -78,31 +78,27 @@ export default function AdminNotifications() {
             pendingWithdrawals.map((w) => (
               <div
                 key={w.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '12px 14px',
-                  borderRadius: '8px',
-                  border: '1px solid #a7f3d0',
-                  backgroundColor: '#ffffff'
-                }}
+                className="admin-notification-item withdrawal"
+                onClick={() => setSelectedWithdrawal(w)}
               >
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: '700', color: '#059669' }}>
+                  <div style={{ fontSize: '14.5px', fontWeight: '700', color: '#059669' }}>
                     {w.customer} · {w.metal}
                   </div>
-                  <div style={{ fontSize: '13.5px', fontWeight: '700', marginTop: '2px', color: '#111827' }}>
-                    {w.grams} · ₹{parseFloat(w.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  <div style={{ fontSize: '13.5px', fontWeight: '700', marginTop: '2px', color: 'var(--admin-text-main-light)' }}>
+                    {w.grams} · ₹{parseFloat(w.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--admin-text-muted-light)', marginTop: '2px' }}>
                     Mobile: {w.mobile} · {w.date}
                   </div>
                 </div>
 
                 <button
                   className="admin-btn-outline-green"
-                  onClick={() => setSelectedWithdrawal(w)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedWithdrawal(w);
+                  }}
                 >
                   Confirm paid
                 </button>
@@ -126,7 +122,7 @@ export default function AdminNotifications() {
               Pending user verifications
             </h3>
             <p style={{ fontSize: '12.5px', color: '#b45309', margin: '2px 0 0 0' }}>
-              Click a user to view full details and verify their account.
+              Click any customer card to view full details and verify their account.
             </p>
           </div>
 
@@ -145,7 +141,7 @@ export default function AdminNotifications() {
           </span>
         </div>
 
-        {/* Verification List */}
+        {/* Interactive Customer Verification List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {pendingVerifications.length === 0 ? (
             <div style={{ fontSize: '13px', color: '#b45309', padding: '8px 0' }}>
@@ -155,30 +151,26 @@ export default function AdminNotifications() {
             pendingVerifications.map((v) => (
               <div
                 key={v.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '12px 14px',
-                  borderRadius: '8px',
-                  border: '1px solid #fde68a',
-                  backgroundColor: '#ffffff'
-                }}
+                className="admin-notification-item verification"
+                onClick={() => setSelectedVerification(v)}
               >
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: '700', color: '#b45309' }}>
+                  <div style={{ fontSize: '14.5px', fontWeight: '700', color: '#b45309' }}>
                     {v.name}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
+                  <div style={{ fontSize: '12.5px', color: 'var(--admin-text-secondary-light)', marginTop: '2px' }}>
                     Mobile: {v.mobile} · Role: {v.role}
                   </div>
-                  <div style={{ fontSize: '11.5px', color: '#9ca3af', marginTop: '2px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--admin-text-muted-light)', marginTop: '2px' }}>
                     Created: {v.created}
                   </div>
                 </div>
 
                 <button
-                  onClick={() => setSelectedVerification(v)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedVerification(v);
+                  }}
                   style={{
                     backgroundColor: '#fef3c7',
                     color: '#92400e',
@@ -209,106 +201,72 @@ export default function AdminNotifications() {
       {selectedWithdrawal && (
         <div className="admin-modal-overlay" onClick={() => setSelectedWithdrawal(null)}>
           <div className="admin-modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 6px 0' }}>
-              Confirm amount paid
+            <h3 style={{ fontSize: '17px', fontWeight: '700', margin: '0 0 8px 0', color: 'var(--admin-text-main-light)' }}>
+              Confirm payment
             </h3>
-            <p style={{ fontSize: '12px', color: '#6b7280', margin: '0 0 16px 0', lineHeight: 1.4 }}>
-              Confirm that you have transferred the withdrawal amount to the customer.
+            <p style={{ fontSize: '13.5px', color: 'var(--admin-text-secondary-light)', marginBottom: '18px' }}>
+              Confirm that ₹{parseFloat(selectedWithdrawal.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })} has been transferred to {selectedWithdrawal.customer}.
             </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12.5px', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
-                <span style={{ color: '#6b7280' }}>Customer</span>
-                <span style={{ fontWeight: '600' }}>{selectedWithdrawal.customer}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
-                <span style={{ color: '#6b7280' }}>Mobile</span>
-                <span style={{ fontWeight: '600' }}>{selectedWithdrawal.mobile}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
-                <span style={{ color: '#6b7280' }}>Metal</span>
-                <span style={{ fontWeight: '600' }}>{selectedWithdrawal.metal}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
-                <span style={{ color: '#6b7280' }}>Grams</span>
-                <span style={{ fontWeight: '600' }}>{selectedWithdrawal.grams}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
-                <span style={{ color: '#6b7280' }}>Amount</span>
-                <span style={{ fontWeight: '700', color: 'var(--admin-orange)' }}>
-                  ₹{parseFloat(selectedWithdrawal.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0' }}>
-                <span style={{ color: '#6b7280' }}>Requested at</span>
-                <span style={{ color: '#6b7280' }}>{selectedWithdrawal.date}</span>
-              </div>
-            </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
               <button
+                type="button"
                 className="admin-btn-secondary"
                 onClick={() => setSelectedWithdrawal(null)}
               >
                 Cancel
               </button>
               <button
+                type="button"
                 className="admin-btn-green"
                 onClick={handleConfirmPaid}
               >
-                Confirm amount paid
+                Confirm Paid
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 5. Modal: Verify Customer */}
+      {/* 5. Modal: Review & Verify Customer */}
       {selectedVerification && (
         <div className="admin-modal-overlay" onClick={() => setSelectedVerification(null)}>
           <div className="admin-modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 6px 0' }}>
-              Verify customer
+            <h3 style={{ fontSize: '17px', fontWeight: '700', margin: '0 0 12px 0', color: 'var(--admin-text-main-light)' }}>
+              Verify customer account
             </h3>
-            <p style={{ fontSize: '12px', color: '#6b7280', margin: '0 0 16px 0', lineHeight: 1.4 }}>
-              Review customer details and verify their account.
-            </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12.5px', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
-                <span style={{ color: '#6b7280' }}>Name</span>
-                <span style={{ fontWeight: '600' }}>{selectedVerification.name}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
-                <span style={{ color: '#6b7280' }}>Mobile</span>
-                <span style={{ fontWeight: '600' }}>{selectedVerification.mobile}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
-                <span style={{ color: '#6b7280' }}>Role</span>
-                <span style={{ fontWeight: '600' }}>{selectedVerification.role}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--admin-border-light)' }}>
-                <span style={{ color: '#6b7280' }}>Mobile verified</span>
-                <span style={{ fontWeight: '700', color: '#10b981' }}>{selectedVerification.mobileVerified}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0' }}>
-                <span style={{ color: '#6b7280' }}>Created at</span>
-                <span style={{ color: '#6b7280' }}>{selectedVerification.created}</span>
-              </div>
+            <div style={{
+              backgroundColor: 'rgba(241, 245, 249, 0.6)',
+              borderRadius: '8px',
+              padding: '12px 14px',
+              fontSize: '13px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+              marginBottom: '18px',
+              color: 'var(--admin-text-secondary-light)'
+            }}>
+              <div><strong>Name:</strong> {selectedVerification.name}</div>
+              <div><strong>Mobile:</strong> {selectedVerification.mobile}</div>
+              <div><strong>Role:</strong> {selectedVerification.role}</div>
+              <div><strong>Account Created:</strong> {selectedVerification.created}</div>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
               <button
+                type="button"
                 className="admin-btn-secondary"
                 onClick={() => setSelectedVerification(null)}
               >
-                Cancel
+                Close
               </button>
               <button
+                type="button"
                 className="admin-btn-green"
                 onClick={handleVerifyAccount}
               >
-                Verify account
+                Approve & Verify
               </button>
             </div>
           </div>

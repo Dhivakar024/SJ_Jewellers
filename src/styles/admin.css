@@ -3,20 +3,25 @@
    ========================================================================== */
 
 :root {
-  --admin-bg-light: #f9fafb;
+  /* Light Theme - Softer, Premium Financial Contrast */
+  --admin-bg-light: #f8fafc;
   --admin-card-bg-light: #ffffff;
-  --admin-border-light: #e5e7eb;
-  --admin-border-subtle: #f3f4f6;
-  --admin-text-main-light: #111827;
-  --admin-text-muted-light: #6b7280;
+  --admin-border-light: #e2e8f0;
+  --admin-border-subtle: #f1f5f9;
+  --admin-text-main-light: #172033;
+  --admin-text-secondary-light: #475569;
+  --admin-text-muted-light: #64748b;
   --admin-sidebar-bg-light: #ffffff;
   --admin-sidebar-active-bg-light: #eef4ff;
   --admin-sidebar-active-text-light: #2563eb;
   
+  /* Dark Theme - High Contrast & Clear Hierarchy */
   --admin-bg-dark: #0b0f19;
   --admin-card-bg-dark: #151d2f;
-  --admin-border-dark: #222f46;
+  --admin-border-dark: #334155;
+  --admin-border-subtle-dark: #1e293b;
   --admin-text-main-dark: #f8fafc;
+  --admin-text-secondary-dark: #cbd5e1;
   --admin-text-muted-dark: #94a3b8;
   --admin-sidebar-bg-dark: #0f172a;
   --admin-sidebar-active-bg-dark: #1e293b;
@@ -161,22 +166,22 @@
   border-radius: 8px;
   border: none;
   background: transparent;
-  color: #4b5563;
+  color: var(--admin-text-secondary-light);
   font-size: 14.5px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: all 0.15s ease;
   width: 100%;
   text-align: left;
   box-sizing: border-box;
 }
 
 .admin-portal.dark .admin-nav-item {
-  color: var(--admin-text-muted-dark);
+  color: var(--admin-text-secondary-dark);
 }
 
 .admin-nav-item:hover {
-  background-color: #f3f4f6;
+  background-color: #f1f5f9;
   color: var(--admin-text-main-light);
 }
 
@@ -194,6 +199,7 @@
 .admin-portal.dark .admin-nav-item.active {
   background-color: var(--admin-sidebar-active-bg-dark);
   color: var(--admin-sidebar-active-text-dark);
+  font-weight: 600;
 }
 
 .admin-nav-item-left {
@@ -242,7 +248,7 @@
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.8px;
-  color: #9ca3af;
+  color: var(--admin-text-muted-light);
   padding: 18px 14px 6px 14px;
   text-transform: uppercase;
   text-align: left;
@@ -250,7 +256,7 @@
 }
 
 .admin-portal.dark .admin-section-heading {
-  color: #64748b;
+  color: var(--admin-text-muted-dark);
 }
 
 /* ==========================================================================
@@ -307,10 +313,10 @@
 }
 
 .admin-header-btn {
-  background: #f3f4f6;
-  border: none;
+  background: #f1f5f9;
+  border: 1px solid var(--admin-border-light);
   cursor: pointer;
-  color: #4b5563;
+  color: var(--admin-text-secondary-light);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -325,17 +331,20 @@
 
 .admin-portal.dark .admin-header-btn {
   background: #1e293b;
-  color: var(--admin-text-muted-dark);
+  border-color: var(--admin-border-dark);
+  color: var(--admin-text-secondary-dark);
 }
 
 .admin-header-btn:hover {
-  background-color: #e5e7eb;
+  background-color: #e2e8f0;
   color: var(--admin-text-main-light);
+  transform: translateY(-1px);
 }
 
 .admin-portal.dark .admin-header-btn:hover {
   background-color: #334155;
   color: var(--admin-text-main-dark);
+  transform: translateY(-1px);
 }
 
 .admin-header-badge-dot {
@@ -403,15 +412,16 @@
   border: 1px solid var(--admin-border-light);
   border-radius: 12px;
   padding: 20px 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   text-align: left;
   box-sizing: border-box;
+  transition: all 180ms ease;
 }
 
 .admin-portal.dark .admin-card {
   background-color: var(--admin-card-bg-dark);
   border-color: var(--admin-border-dark);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
 /* ==========================================================================
@@ -426,7 +436,7 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -436,6 +446,8 @@
 
 .admin-btn-orange:hover {
   background-color: var(--admin-orange-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(234, 88, 12, 0.25);
 }
 
 .admin-btn-green {
@@ -447,12 +459,18 @@
   font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   line-height: 1.2;
+}
+
+.admin-btn-green:hover {
+  background-color: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.25);
 }
 
 .admin-btn-outline-green {
@@ -468,8 +486,26 @@
   line-height: 1.2;
 }
 
+.admin-portal.dark .admin-btn-outline-green {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border-color: #059669;
+}
+
+.admin-btn-outline-green:hover {
+  background-color: #d1fae5;
+  border-color: #6ee7b7;
+  transform: translateY(-1px);
+}
+
+.admin-portal.dark .admin-btn-outline-green:hover {
+  background-color: rgba(16, 185, 129, 0.28);
+  border-color: #10b981;
+  transform: translateY(-1px);
+}
+
 .admin-btn-secondary {
-  background-color: #f3f4f6;
+  background-color: #f1f5f9;
   color: var(--admin-text-main-light);
   border: 1px solid var(--admin-border-light);
   border-radius: 8px;
@@ -478,11 +514,23 @@
   font-weight: 600;
   cursor: pointer;
   line-height: 1.2;
-  transition: background-color 0.12s ease;
+  transition: all 0.15s ease;
+}
+
+.admin-portal.dark .admin-btn-secondary {
+  background-color: #1e293b;
+  color: var(--admin-text-main-dark);
+  border-color: var(--admin-border-dark);
 }
 
 .admin-btn-secondary:hover {
-  background-color: #e5e7eb;
+  background-color: #e2e8f0;
+  transform: translateY(-1px);
+}
+
+.admin-portal.dark .admin-btn-secondary:hover {
+  background-color: #334155;
+  transform: translateY(-1px);
 }
 
 /* ==========================================================================
@@ -499,7 +547,7 @@
   color: var(--admin-text-main-light);
   outline: none;
   box-sizing: border-box;
-  transition: border-color 0.15s ease;
+  transition: all 0.15s ease;
   font-family: inherit;
 }
 
@@ -511,6 +559,7 @@
 
 .admin-input:focus {
   border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 .admin-select {
@@ -524,12 +573,18 @@
   outline: none;
   cursor: pointer;
   font-family: inherit;
+  transition: all 0.15s ease;
 }
 
 .admin-portal.dark .admin-select {
   background-color: #0f172a;
   border-color: var(--admin-border-dark);
   color: var(--admin-text-main-dark);
+}
+
+.admin-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 /* Date Input Wrapper with Calendar Icon */
@@ -548,10 +603,14 @@
   position: absolute;
   left: 10px;
   pointer-events: none;
-  color: #6b7280;
+  color: var(--admin-text-muted-light);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.admin-portal.dark .admin-date-wrapper .admin-date-icon {
+  color: var(--admin-text-muted-dark);
 }
 
 .admin-input[type="date"]::-webkit-calendar-picker-indicator {
@@ -571,7 +630,7 @@
   border-radius: 12px;
   border: 1px solid var(--admin-border-light);
   background-color: var(--admin-card-bg-light);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
 .admin-portal.dark .admin-table-container {
@@ -599,7 +658,7 @@
 }
 
 .admin-portal.dark .admin-table th {
-  color: var(--admin-text-muted-dark);
+  color: var(--admin-text-secondary-dark);
   border-bottom-color: var(--admin-border-dark);
   background-color: #101626;
 }
@@ -630,6 +689,11 @@
   line-height: 1.2;
 }
 
+.admin-portal.dark .admin-badge-green {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
 .admin-badge-yellow {
   display: inline-flex;
   align-items: center;
@@ -640,6 +704,11 @@
   background-color: #fef3c7;
   color: #b45309;
   line-height: 1.2;
+}
+
+.admin-portal.dark .admin-badge-yellow {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
 }
 
 .admin-badge-gray {
@@ -654,6 +723,11 @@
   line-height: 1.2;
 }
 
+.admin-portal.dark .admin-badge-gray {
+  background-color: #1e293b;
+  color: #cbd5e1;
+}
+
 /* Modal */
 .admin-modal-overlay {
   position: fixed;
@@ -661,7 +735,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.45);
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -675,13 +750,76 @@
   width: 100%;
   max-width: 480px;
   padding: 26px 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
   box-sizing: border-box;
 }
 
 .admin-portal.dark .admin-modal-box {
   background-color: #1e293b;
+  border: 1px solid var(--admin-border-dark);
   color: #ffffff;
+}
+
+/* ==========================================================================
+   8. NOTIFICATION INTERACTIVE CARDS
+   ========================================================================== */
+.admin-notification-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 180ms ease;
+  box-sizing: border-box;
+}
+
+.admin-notification-item.withdrawal {
+  border: 1px solid #a7f3d0;
+  background-color: #ffffff;
+}
+
+.admin-portal.dark .admin-notification-item.withdrawal {
+  border-color: #065f46;
+  background-color: #064e3b;
+}
+
+.admin-notification-item.withdrawal:hover {
+  background-color: #f0fdf4;
+  border-color: #34d399;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+  transform: translateY(-1px);
+}
+
+.admin-portal.dark .admin-notification-item.withdrawal:hover {
+  background-color: #047857;
+  border-color: #10b981;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  transform: translateY(-1px);
+}
+
+.admin-notification-item.verification {
+  border: 1px solid #fde68a;
+  background-color: #ffffff;
+}
+
+.admin-portal.dark .admin-notification-item.verification {
+  border-color: #78350f;
+  background-color: #3b1d04;
+}
+
+.admin-notification-item.verification:hover {
+  background-color: #fffdf5;
+  border-color: #f59e0b;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+  transform: translateY(-1px);
+}
+
+.admin-portal.dark .admin-notification-item.verification:hover {
+  background-color: #572605;
+  border-color: #fbbf24;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  transform: translateY(-1px);
 }
 
 /* Responsive Overrides */
