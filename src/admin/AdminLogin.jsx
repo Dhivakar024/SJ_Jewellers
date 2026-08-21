@@ -43,26 +43,26 @@ export default function AdminLogin({ onLoginSuccess }) {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '24px',
+      padding: '20px',
       boxSizing: 'border-box',
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
     }}>
       <div style={{
         width: '100%',
-        maxWidth: '440px',
+        maxWidth: '390px',
         backgroundColor: '#35415f',
-        borderRadius: '16px',
+        borderRadius: '14px',
         border: '1px solid rgba(255, 255, 255, 0.12)',
-        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.35)',
-        padding: '36px 32px 36px 32px',
+        boxShadow: '0 16px 40px rgba(0, 0, 0, 0.32)',
+        padding: '28px 26px 30px 26px',
         boxSizing: 'border-box',
         color: '#ffffff'
       }}>
         
         {/* Card Header Title */}
-        <div style={{ marginBottom: '14px' }}>
+        <div>
           <h1 style={{
-            fontSize: '26px',
+            fontSize: '24px',
             fontWeight: '700',
             color: '#ffffff',
             margin: 0,
@@ -79,7 +79,7 @@ export default function AdminLogin({ onLoginSuccess }) {
           fontSize: '15px',
           fontWeight: '500',
           color: '#9aa5be',
-          marginBottom: '26px'
+          margin: '8px 0 20px 0'
         }}>
           Admin login
         </div>
@@ -89,32 +89,32 @@ export default function AdminLogin({ onLoginSuccess }) {
           <div style={{
             backgroundColor: 'rgba(239, 68, 68, 0.18)',
             border: '1px solid #ef4444',
-            borderRadius: '10px',
-            padding: '10px 14px',
-            marginBottom: '18px',
+            borderRadius: '8px',
+            padding: '9px 12px',
+            marginBottom: '14px',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
             color: '#fca5a5',
-            fontSize: '13px',
+            fontSize: '12.5px',
             fontWeight: '600'
           }}>
-            <AlertCircle size={16} style={{ flexShrink: 0 }} />
+            <AlertCircle size={15} style={{ flexShrink: 0 }} />
             <span>{errorMsg}</span>
           </div>
         )}
 
         {/* Login Form */}
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           
           {/* Username Input */}
           <div>
             <label style={{
               display: 'block',
-              fontSize: '13.5px',
+              fontSize: '14px',
               fontWeight: '500',
               color: '#d1d9e6',
-              marginBottom: '7px'
+              marginBottom: '6px'
             }}>
               Username
             </label>
@@ -125,11 +125,11 @@ export default function AdminLogin({ onLoginSuccess }) {
               onChange={(e) => setUsernameOrEmail(e.target.value)}
               style={{
                 width: '100%',
-                height: '52px',
-                borderRadius: '12px',
+                height: '50px',
+                borderRadius: '11px',
                 border: '1px solid transparent',
                 backgroundColor: '#e9eff8',
-                padding: '0 16px',
+                padding: '0 15px',
                 fontSize: '15px',
                 fontWeight: '500',
                 color: '#101828',
@@ -152,10 +152,10 @@ export default function AdminLogin({ onLoginSuccess }) {
           <div>
             <label style={{
               display: 'block',
-              fontSize: '13.5px',
+              fontSize: '14px',
               fontWeight: '500',
               color: '#d1d9e6',
-              marginBottom: '7px'
+              marginBottom: '6px'
             }}>
               Password
             </label>
@@ -167,11 +167,11 @@ export default function AdminLogin({ onLoginSuccess }) {
                 onChange={(e) => setPassword(e.target.value)}
                 style={{
                   width: '100%',
-                  height: '52px',
-                  borderRadius: '12px',
+                  height: '50px',
+                  borderRadius: '11px',
                   border: '1px solid transparent',
                   backgroundColor: '#e9eff8',
-                  padding: '0 44px 0 16px',
+                  padding: '0 42px 0 15px',
                   fontSize: '15px',
                   fontWeight: '500',
                   color: '#101828',
@@ -193,7 +193,7 @@ export default function AdminLogin({ onLoginSuccess }) {
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
                   position: 'absolute',
-                  right: '14px',
+                  right: '12px',
                   top: '50%',
                   transform: 'translateY(-50%)',
                   background: 'transparent',
@@ -206,7 +206,7 @@ export default function AdminLogin({ onLoginSuccess }) {
                 }}
                 title={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
               </button>
             </div>
           </div>
@@ -217,16 +217,16 @@ export default function AdminLogin({ onLoginSuccess }) {
             disabled={isLoading}
             style={{
               width: '100%',
-              height: '52px',
-              borderRadius: '12px',
+              height: '50px',
+              borderRadius: '11px',
               border: 'none',
               background: 'linear-gradient(180deg, #ffa000 0%, #d95a00 100%)',
               color: '#111827',
               fontSize: '16px',
               fontWeight: '700',
               cursor: isLoading ? 'not-allowed' : 'pointer',
-              marginTop: '8px',
-              boxShadow: '0 4px 14px rgba(217, 90, 0, 0.35)',
+              marginTop: '4px',
+              boxShadow: '0 4px 12px rgba(217, 90, 0, 0.3)',
               transition: 'all 0.15s ease',
               display: 'flex',
               alignItems: 'center',
