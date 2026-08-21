@@ -6,23 +6,35 @@
   /* Light Theme - Softer, Premium Financial Contrast */
   --admin-bg-light: #f8fafc;
   --admin-card-bg-light: #ffffff;
+  --admin-card-subtle-light: #f8fafc;
   --admin-border-light: #e2e8f0;
   --admin-border-subtle: #f1f5f9;
   --admin-text-main-light: #172033;
+  --admin-text-value-light: #111827;
+  --admin-text-heading-light: #111827;
   --admin-text-secondary-light: #475569;
   --admin-text-muted-light: #64748b;
+  --admin-text-very-muted-light: #94a3b8;
+  --admin-gold-text-light: #b45309;
+  --admin-silver-text-light: #475569;
   --admin-sidebar-bg-light: #ffffff;
   --admin-sidebar-active-bg-light: #eef4ff;
   --admin-sidebar-active-text-light: #2563eb;
   
   /* Dark Theme - High Contrast & Clear Hierarchy */
-  --admin-bg-dark: #0b0f19;
-  --admin-card-bg-dark: #151d2f;
-  --admin-border-dark: #334155;
+  --admin-bg-dark: #0b1120;
+  --admin-card-bg-dark: #151e31;
+  --admin-card-subtle-dark: #182238;
+  --admin-border-dark: #293650;
   --admin-border-subtle-dark: #1e293b;
   --admin-text-main-dark: #f8fafc;
+  --admin-text-value-dark: #ffffff;
+  --admin-text-heading-dark: #f1f5f9;
   --admin-text-secondary-dark: #cbd5e1;
   --admin-text-muted-dark: #94a3b8;
+  --admin-text-very-muted-dark: #7c8aa5;
+  --admin-gold-text-dark: #e7b84b;
+  --admin-silver-text-dark: #cbd5e1;
   --admin-sidebar-bg-dark: #0f172a;
   --admin-sidebar-active-bg-dark: #1e293b;
   --admin-sidebar-active-text-dark: #60a5fa;
@@ -133,7 +145,7 @@
 }
 
 .admin-portal.dark .admin-sidebar-brand-title {
-  color: var(--admin-text-main-dark);
+  color: var(--admin-text-heading-dark);
 }
 
 .admin-sidebar-brand-sub {
@@ -256,7 +268,7 @@
 }
 
 .admin-portal.dark .admin-section-heading {
-  color: var(--admin-text-muted-dark);
+  color: var(--admin-text-very-muted-dark);
 }
 
 /* ==========================================================================
@@ -302,7 +314,7 @@
 }
 
 .admin-portal.dark .admin-header-title {
-  color: var(--admin-text-main-dark);
+  color: var(--admin-text-heading-dark);
 }
 
 .admin-header-actions {
@@ -381,7 +393,7 @@
 .admin-page-title {
   font-size: 24px;
   font-weight: 800;
-  color: var(--admin-text-main-light);
+  color: var(--admin-text-heading-light);
   margin: 0 0 4px 0;
   letter-spacing: -0.3px;
   text-align: left;
@@ -389,7 +401,7 @@
 }
 
 .admin-portal.dark .admin-page-title {
-  color: var(--admin-text-main-dark);
+  color: var(--admin-text-heading-dark);
 }
 
 .admin-page-sub {
@@ -422,6 +434,12 @@
   background-color: var(--admin-card-bg-dark);
   border-color: var(--admin-border-dark);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+/* Sub-cards & Filter Bars in Dark Mode */
+.admin-portal.dark .admin-card-subtle {
+  background-color: var(--admin-card-subtle-dark);
+  border-color: var(--admin-border-dark);
 }
 
 /* ==========================================================================
@@ -519,7 +537,7 @@
 
 .admin-portal.dark .admin-btn-secondary {
   background-color: #1e293b;
-  color: var(--admin-text-main-dark);
+  color: var(--admin-text-secondary-dark);
   border-color: var(--admin-border-dark);
 }
 
@@ -530,6 +548,7 @@
 
 .admin-portal.dark .admin-btn-secondary:hover {
   background-color: #334155;
+  color: var(--admin-text-main-dark);
   transform: translateY(-1px);
 }
 
@@ -553,13 +572,27 @@
 
 .admin-portal.dark .admin-input {
   background-color: #0f172a;
-  border-color: var(--admin-border-dark);
-  color: var(--admin-text-main-dark);
+  border-color: #334155;
+  color: #f8fafc;
+  color-scheme: dark;
 }
 
 .admin-input:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.admin-portal.dark .admin-input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+
+.admin-input::placeholder {
+  color: var(--admin-text-muted-light);
+}
+
+.admin-portal.dark .admin-input::placeholder {
+  color: var(--admin-text-muted-dark);
 }
 
 .admin-select {
@@ -578,8 +611,9 @@
 
 .admin-portal.dark .admin-select {
   background-color: #0f172a;
-  border-color: var(--admin-border-dark);
-  color: var(--admin-text-main-dark);
+  border-color: #334155;
+  color: #f8fafc;
+  color-scheme: dark;
 }
 
 .admin-select:focus {
@@ -595,7 +629,7 @@
 }
 
 .admin-date-wrapper .admin-input {
-  padding-left: 32px;
+  padding-left: 34px;
   cursor: pointer;
 }
 
@@ -610,12 +644,17 @@
 }
 
 .admin-portal.dark .admin-date-wrapper .admin-date-icon {
-  color: var(--admin-text-muted-dark);
+  color: #cbd5e1;
 }
 
 .admin-input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
   opacity: 0.75;
+}
+
+.admin-portal.dark .admin-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.85;
 }
 
 .admin-input[type="date"]::-webkit-calendar-picker-indicator:hover {
@@ -651,7 +690,7 @@
   font-size: 12.5px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--admin-text-muted-light);
+  color: var(--admin-text-secondary-light);
   border-bottom: 1px solid var(--admin-border-light);
   background-color: #fafbfc;
   line-height: 1.2;
@@ -660,7 +699,7 @@
 .admin-portal.dark .admin-table th {
   color: var(--admin-text-secondary-dark);
   border-bottom-color: var(--admin-border-dark);
-  background-color: #101626;
+  background-color: #101728;
 }
 
 .admin-table td {
@@ -735,7 +774,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
@@ -755,9 +794,9 @@
 }
 
 .admin-portal.dark .admin-modal-box {
-  background-color: #1e293b;
+  background-color: #151e31;
   border: 1px solid var(--admin-border-dark);
-  color: #ffffff;
+  color: #f8fafc;
 }
 
 /* ==========================================================================
@@ -823,38 +862,6 @@
   transform: translateY(-1px);
 }
 
-/* Rates Page Themed Text Contrast */
-.admin-rate-gold-label {
-  font-size: 15.5px;
-  font-weight: 700;
-  color: #92400e;
-  line-height: 1.2;
-}
-
-.admin-portal.dark .admin-rate-gold-label {
-  color: #fbbf24;
-}
-
-.admin-rate-silver-label {
-  font-size: 15.5px;
-  font-weight: 700;
-  color: #334155;
-  line-height: 1.2;
-}
-
-.admin-portal.dark .admin-rate-silver-label {
-  color: #e2e8f0;
-}
-
-.admin-rate-subtext {
-  font-size: 12.5px;
-  color: var(--admin-text-muted-light);
-}
-
-.admin-portal.dark .admin-rate-subtext {
-  color: var(--admin-text-muted-dark);
-}
-
 /* Verification Customer Cards High Contrast Classes */
 .admin-verification-name {
   font-size: 15px;
@@ -913,6 +920,238 @@
   background-color: #d97706;
   color: #ffffff;
   transform: translateY(-1px);
+}
+
+/* Rates Page Themed Text Contrast */
+.admin-rate-gold-label {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: #92400e;
+  line-height: 1.2;
+}
+
+.admin-portal.dark .admin-rate-gold-label {
+  color: #fbbf24;
+}
+
+.admin-rate-silver-label {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: #334155;
+  line-height: 1.2;
+}
+
+.admin-portal.dark .admin-rate-silver-label {
+  color: #e2e8f0;
+}
+
+.admin-rate-subtext {
+  font-size: 12.5px;
+  color: var(--admin-text-muted-light);
+}
+
+.admin-portal.dark .admin-rate-subtext {
+  color: var(--admin-text-muted-dark);
+}
+
+/* ==========================================================================
+   9. MEMBERS PAGE THEMED CONTRAST SYSTEM
+   ========================================================================== */
+.admin-member-header-name {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0;
+  color: var(--admin-text-heading-light);
+}
+
+.admin-portal.dark .admin-member-header-name {
+  color: var(--admin-text-value-dark);
+}
+
+.admin-member-header-sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--admin-text-secondary-light);
+}
+
+.admin-portal.dark .admin-member-header-sub {
+  color: var(--admin-text-secondary-dark);
+}
+
+/* Member Detail Holdings Cards */
+.admin-holdings-card-gold {
+  background-color: #fffdf5;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-portal.dark .admin-holdings-card-gold {
+  background-color: var(--admin-card-bg-dark);
+  border-color: #854d0e;
+}
+
+.admin-holdings-title-gold {
+  font-size: 14px;
+  font-weight: 700;
+  color: #92400e;
+}
+
+.admin-portal.dark .admin-holdings-title-gold {
+  color: #e7b84b;
+}
+
+.admin-holdings-value-gold {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--admin-text-value-light);
+  letter-spacing: -0.3px;
+}
+
+.admin-portal.dark .admin-holdings-value-gold {
+  color: #ffffff;
+}
+
+.admin-holdings-sub-gold {
+  font-size: 13px;
+  color: var(--admin-text-secondary-light);
+}
+
+.admin-portal.dark .admin-holdings-sub-gold {
+  color: var(--admin-text-secondary-dark);
+}
+
+.admin-holdings-card-silver {
+  background-color: #fafbfc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-portal.dark .admin-holdings-card-silver {
+  background-color: var(--admin-card-bg-dark);
+  border-color: var(--admin-border-dark);
+}
+
+.admin-holdings-title-silver {
+  font-size: 14px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.admin-portal.dark .admin-holdings-title-silver {
+  color: #cbd5e1;
+}
+
+.admin-holdings-value-silver {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--admin-text-value-light);
+  letter-spacing: -0.3px;
+}
+
+.admin-portal.dark .admin-holdings-value-silver {
+  color: #ffffff;
+}
+
+.admin-holdings-sub-silver {
+  font-size: 13px;
+  color: var(--admin-text-secondary-light);
+}
+
+.admin-portal.dark .admin-holdings-sub-silver {
+  color: var(--admin-text-secondary-dark);
+}
+
+/* Filter Bar in Member Details */
+.admin-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  background-color: #f8fafc;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--admin-border-light);
+}
+
+.admin-portal.dark .admin-filter-bar {
+  background-color: #101728;
+  border-color: var(--admin-border-dark);
+}
+
+.admin-filter-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--admin-text-secondary-light);
+}
+
+.admin-portal.dark .admin-filter-label {
+  color: var(--admin-text-secondary-dark);
+}
+
+/* Tabs Container in Member Details */
+.admin-tab-pill-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f1f5f9;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.admin-portal.dark .admin-tab-pill-container {
+  background-color: #0f172a;
+  border: 1px solid var(--admin-border-dark);
+}
+
+/* Danger Zone */
+.admin-danger-zone {
+  background-color: #fffaf9;
+  border: 1px solid #fee2e2;
+  border-radius: 12px;
+  padding: 20px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-portal.dark .admin-danger-zone {
+  background-color: #1e1318;
+  border-color: #7f1d1d;
+}
+
+.admin-danger-title {
+  font-size: 15.5px;
+  font-weight: 800;
+  margin: 0;
+  color: #991b1b;
+}
+
+.admin-portal.dark .admin-danger-title {
+  color: #fca5a5;
+}
+
+.admin-danger-desc {
+  font-size: 13px;
+  color: #7f1d1d;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.admin-portal.dark .admin-danger-desc {
+  color: #fecaca;
 }
 
 /* Responsive Overrides */

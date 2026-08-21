@@ -367,7 +367,7 @@ function InteractiveDonutCard({
         justifyContent: 'center',
         gap: '20px',
         marginTop: '10px',
-        fontSize: '12px',
+        fontSize: '12.5px',
         userSelect: 'none'
       }}>
         {/* Gold Legend Item */}
@@ -392,10 +392,10 @@ function InteractiveDonutCard({
             height: '8px',
             borderRadius: '50%',
             backgroundColor: goldColor,
-            border: !showGold ? '1px dashed #9ca3af' : 'none'
+            border: !showGold ? '1px dashed var(--admin-text-muted-dark)' : 'none'
           }}></span>
           <span style={{
-            color: '#4b5563',
+            color: 'var(--admin-text-secondary-dark)',
             fontWeight: showGold ? '700' : '400',
             textDecoration: !showGold ? 'line-through' : 'none'
           }}>
@@ -425,10 +425,10 @@ function InteractiveDonutCard({
             height: '8px',
             borderRadius: '50%',
             backgroundColor: silverColor,
-            border: !showSilver ? '1px dashed #9ca3af' : 'none'
+            border: !showSilver ? '1px dashed var(--admin-text-muted-dark)' : 'none'
           }}></span>
           <span style={{
-            color: '#4b5563',
+            color: 'var(--admin-text-secondary-dark)',
             fontWeight: showSilver ? '700' : '400',
             textDecoration: !showSilver ? 'line-through' : 'none'
           }}>
@@ -438,7 +438,7 @@ function InteractiveDonutCard({
       </div>
 
       {/* Subtext */}
-      <div style={{ textAlign: 'center', fontSize: '11.5px', color: '#6b7280', marginTop: '6px' }}>
+      <div style={{ textAlign: 'center', fontSize: '12px', color: 'var(--admin-text-muted-dark)', marginTop: '6px' }}>
         {subtext}
       </div>
     </div>
@@ -710,11 +710,11 @@ export default function AdminDashboard({ onSelectTab }) {
       <div className="admin-card" style={{ textAlign: 'left', overflow: 'visible', position: 'relative' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
           {icon}
-          <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--admin-text-main-light)' }}>
+          <span style={{ fontSize: '15px', fontWeight: '700', color: 'var(--admin-text-heading-dark)' }}>
             {title}
           </span>
         </div>
-        <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '20px' }}>
+        <div style={{ fontSize: '13px', color: 'var(--admin-text-secondary-dark)', marginBottom: '20px' }}>
           {subtitle}
         </div>
 
@@ -726,7 +726,7 @@ export default function AdminDashboard({ onSelectTab }) {
           alignItems: 'flex-end',
           paddingLeft: '56px',
           paddingRight: '16px',
-          borderBottom: '1px solid #e5e7eb'
+          borderBottom: '1px solid var(--admin-border-dark)'
         }}>
           {/* Y-axis tick labels with INR currency */}
           <div style={{
@@ -740,7 +740,7 @@ export default function AdminDashboard({ onSelectTab }) {
             justifyContent: 'space-between',
             fontSize: '11px',
             fontWeight: '600',
-            color: '#9ca3af',
+            color: 'var(--admin-text-muted-dark)',
             userSelect: 'none',
             textAlign: 'right',
             paddingRight: '8px'
@@ -870,8 +870,8 @@ export default function AdminDashboard({ onSelectTab }) {
           paddingLeft: '56px',
           paddingRight: '16px',
           marginTop: '10px',
-          fontSize: '11px',
-          color: '#9ca3af',
+          fontSize: '11.5px',
+          color: 'var(--admin-text-muted-dark)',
           userSelect: 'none'
         }}>
           {safeData.map((item, idx) => {
@@ -889,7 +889,7 @@ export default function AdminDashboard({ onSelectTab }) {
                   textAlign: 'center',
                   visibility: isVisible ? 'visible' : 'hidden',
                   fontWeight: item.totalValue > 0 ? '700' : '500',
-                  color: item.totalValue > 0 ? 'var(--admin-text-main-light)' : '#9ca3af',
+                  color: item.totalValue > 0 ? 'var(--admin-text-value-dark)' : 'var(--admin-text-muted-dark)',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis'
@@ -924,18 +924,12 @@ export default function AdminDashboard({ onSelectTab }) {
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: '20px'
       }}>
-        {/* Gold (24K) Card - Subtle Champagne Gold Tint */}
-        <div className="admin-card" style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '14px',
-          backgroundColor: '#FFF8E1',
-          border: '1px solid #fde68a'
-        }}>
+        {/* Gold (24K) Card */}
+        <div className="admin-holdings-card-gold" style={{ borderLeft: '4px solid #D4A017' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{
-              width: '32px',
-              height: '32px',
+              width: '34px',
+              height: '34px',
               borderRadius: '50%',
               backgroundColor: '#fef3c7',
               color: '#D4A017',
@@ -951,33 +945,27 @@ export default function AdminDashboard({ onSelectTab }) {
           </div>
 
           <div style={{ textAlign: 'left' }}>
-            <div style={{ fontSize: '13px', fontWeight: '600', color: '#4b5563' }}>
+            <div className="admin-holdings-title-gold">
               Gold (24K)
             </div>
-            <div style={{ fontSize: '24px', fontWeight: '800', margin: '2px 0 1px 0', letterSpacing: '-0.2px', color: 'var(--admin-text-main-light)' }}>
+            <div className="admin-holdings-value-gold" style={{ margin: '4px 0 2px 0' }}>
               ₹{goldRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div style={{ fontSize: '11.5px', color: '#6b7280' }}>
+            <div className="admin-holdings-sub-gold">
               per gram · INR
             </div>
           </div>
         </div>
 
-        {/* Silver Card - Subtle Silver Gray Tint */}
-        <div className="admin-card" style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '14px',
-          backgroundColor: '#F3F5F7',
-          border: '1px solid #d9dee3'
-        }}>
+        {/* Silver Card */}
+        <div className="admin-holdings-card-silver" style={{ borderLeft: '4px solid #94a3b8' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{
-              width: '32px',
-              height: '32px',
+              width: '34px',
+              height: '34px',
               borderRadius: '50%',
-              backgroundColor: '#e5e7eb',
-              color: '#6b7280',
+              backgroundColor: '#f1f5f9',
+              color: '#64748b',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -990,13 +978,13 @@ export default function AdminDashboard({ onSelectTab }) {
           </div>
 
           <div style={{ textAlign: 'left' }}>
-            <div style={{ fontSize: '13px', fontWeight: '600', color: '#4b5563' }}>
+            <div className="admin-holdings-title-silver">
               Silver
             </div>
-            <div style={{ fontSize: '24px', fontWeight: '800', margin: '2px 0 1px 0', letterSpacing: '-0.2px', color: 'var(--admin-text-main-light)' }}>
+            <div className="admin-holdings-value-silver" style={{ margin: '4px 0 2px 0' }}>
               ₹{silverRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div style={{ fontSize: '11.5px', color: '#6b7280' }}>
+            <div className="admin-holdings-sub-silver">
               per gram · INR
             </div>
           </div>
@@ -1034,7 +1022,7 @@ export default function AdminDashboard({ onSelectTab }) {
       {renderBarChart({
         title: 'Annual transactions (last 5 years)',
         subtitle: 'Annual transaction value (INR)',
-        icon: <BarChart2 size={16} color="#6b7280" />,
+        icon: <BarChart2 size={16} color="var(--admin-text-muted-dark)" />,
         data: annualChartData.items,
         maxVal: annualChartData.maxVal,
         barMaxWidth: '64px',
@@ -1045,7 +1033,7 @@ export default function AdminDashboard({ onSelectTab }) {
       {renderBarChart({
         title: 'Monthly transactions (last 12 months)',
         subtitle: 'Monthly transaction value (INR)',
-        icon: <Calendar size={16} color="#6b7280" />,
+        icon: <Calendar size={16} color="var(--admin-text-muted-dark)" />,
         data: monthlyChartData.items,
         maxVal: monthlyChartData.maxVal,
         barMaxWidth: '44px',
@@ -1056,7 +1044,7 @@ export default function AdminDashboard({ onSelectTab }) {
       {renderBarChart({
         title: 'Daily transactions (last 30 days)',
         subtitle: 'Daily transaction value (INR)',
-        icon: <BarChart2 size={16} color="#6b7280" />,
+        icon: <BarChart2 size={16} color="var(--admin-text-muted-dark)" />,
         data: dailyChartData.items,
         maxVal: dailyChartData.maxVal,
         barMaxWidth: '20px',
@@ -1064,7 +1052,7 @@ export default function AdminDashboard({ onSelectTab }) {
       })}
 
       {/* 7. Footer Rates Updated Timestamp */}
-      <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '8px', textAlign: 'left' }}>
+      <div style={{ fontSize: '12px', color: 'var(--admin-text-muted-dark)', marginTop: '8px', textAlign: 'left' }}>
         Rates updated: {updatedTimestamp}
       </div>
 

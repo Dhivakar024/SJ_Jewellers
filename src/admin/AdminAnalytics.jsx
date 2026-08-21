@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 
 export default function AdminAnalytics() {
-  const { goldRate, silverRate, transactions, withdrawals } = useApp();
+  const { goldRate, silverRate, transactions, withdrawals } = useApp() || {};
 
   const [period, setPeriod] = useState('Monthly (current month)');
   const [quarter, setQuarter] = useState('Q1 (Jan-Mar)');
@@ -31,8 +31,10 @@ export default function AdminAnalytics() {
   // Overall holdings calculations
   const totalGoldBought = 1.857;
   const totalSilverBought = 77.055;
-  const totalGoldCurrentValue = totalGoldBought * goldRate;
-  const totalSilverCurrentValue = totalSilverBought * silverRate;
+  const safeGoldRate = goldRate || 13818.88;
+  const safeSilverRate = silverRate || 206.17;
+  const totalGoldCurrentValue = totalGoldBought * safeGoldRate;
+  const totalSilverCurrentValue = totalSilverBought * safeSilverRate;
 
   // Period specific metrics
   const isMonthly = period === 'Monthly (current month)';
@@ -50,7 +52,7 @@ export default function AdminAnalytics() {
   const periodWithdrawalValue = isMonthly ? 0.00 : 13950.01;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', boxSizing: 'border-box' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', boxSizing: 'border-box' }}>
       
       {/* 1. Page Header */}
       <div className="admin-page-header">
@@ -61,12 +63,12 @@ export default function AdminAnalytics() {
       </div>
 
       {/* 2. Filter Bar */}
-      <div className="admin-card" style={{ padding: '14px 18px' }}>
+      <div className="admin-card" style={{ padding: '16px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '12.5px', fontWeight: '600' }}>Period</span>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-secondary-dark)' }}>Period</span>
               <select
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
@@ -83,7 +85,7 @@ export default function AdminAnalytics() {
             {period === 'Quarterly' && (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '12.5px', fontWeight: '600' }}>Quarter</span>
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-secondary-dark)' }}>Quarter</span>
                   <select
                     value={quarter}
                     onChange={(e) => setQuarter(e.target.value)}
@@ -97,7 +99,7 @@ export default function AdminAnalytics() {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '12.5px', fontWeight: '600' }}>Year</span>
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-secondary-dark)' }}>Year</span>
                   <select
                     value={year}
                     onChange={(e) => setYear(e.target.value)}
@@ -114,31 +116,31 @@ export default function AdminAnalytics() {
             {period === 'Custom date range' && (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '12.5px', fontWeight: '600' }}>From</span>
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-secondary-dark)' }}>From</span>
                   <input
                     type="date"
                     value={fromDate}
                     onChange={(e) => setFromDate(e.target.value)}
                     className="admin-input"
-                    style={{ width: '140px' }}
+                    style={{ width: '150px' }}
                   />
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '12.5px', fontWeight: '600' }}>To</span>
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-secondary-dark)' }}>To</span>
                   <input
                     type="date"
                     value={toDate}
                     onChange={(e) => setToDate(e.target.value)}
                     className="admin-input"
-                    style={{ width: '140px' }}
+                    style={{ width: '150px' }}
                   />
                 </div>
               </>
             )}
           </div>
 
-          <div style={{ fontSize: '11.5px', color: '#9ca3af' }}>
+          <div style={{ fontSize: '12.5px', color: 'var(--admin-text-muted-dark)' }}>
             {dateRangeText}
           </div>
         </div>
@@ -148,39 +150,39 @@ export default function AdminAnalytics() {
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '16px'
+        gap: '20px'
       }}>
-        {/* Gold (all customers) - Subtle Champagne Gold Tint */}
-        <div className="admin-card" style={{
-          backgroundColor: '#FFF8E1',
-          border: '1px solid #fde68a',
-          borderLeft: '4px solid #D4A017'
-        }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 10px 0', color: '#92400e' }}>
+        {/* Gold (all customers) */}
+        <div className="admin-holdings-card-gold" style={{ borderLeft: '4px solid #D4A017' }}>
+          <h3 className="admin-holdings-title-gold" style={{ margin: '0 0 8px 0', fontSize: '15.5px' }}>
             Gold (all customers)
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '13px' }}>
-            <div style={{ color: '#78350f' }}>Current API rate: ₹{goldRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm</div>
-            <div style={{ color: '#78350f' }}>Total gold bought: {totalGoldBought.toFixed(3)} g</div>
-            <div style={{ fontWeight: '800', color: 'var(--admin-orange)', marginTop: '2px', fontSize: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '13.5px' }}>
+            <div className="admin-holdings-sub-gold">
+              Current API rate: ₹{safeGoldRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm
+            </div>
+            <div className="admin-holdings-sub-gold">
+              Total gold bought: {totalGoldBought.toFixed(3)} g
+            </div>
+            <div style={{ fontWeight: '800', color: 'var(--admin-orange)', marginTop: '4px', fontSize: '15px' }}>
               Current value of all gold: ₹{totalGoldCurrentValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           </div>
         </div>
 
-        {/* Silver (all customers) - Subtle Silver Gray Tint */}
-        <div className="admin-card" style={{
-          backgroundColor: '#F3F5F7',
-          border: '1px solid #d9dee3',
-          borderLeft: '4px solid #94a3b8'
-        }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 10px 0', color: '#334155' }}>
+        {/* Silver (all customers) */}
+        <div className="admin-holdings-card-silver" style={{ borderLeft: '4px solid #94a3b8' }}>
+          <h3 className="admin-holdings-title-silver" style={{ margin: '0 0 8px 0', fontSize: '15.5px' }}>
             Silver (all customers)
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '13px' }}>
-            <div style={{ color: '#475569' }}>Current API rate: ₹{silverRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm</div>
-            <div style={{ color: '#475569' }}>Total silver bought: {totalSilverBought.toFixed(3)} g</div>
-            <div style={{ fontWeight: '700', marginTop: '2px', color: '#0f172a', fontSize: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '13.5px' }}>
+            <div className="admin-holdings-sub-silver">
+              Current API rate: ₹{safeSilverRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm
+            </div>
+            <div className="admin-holdings-sub-silver">
+              Total silver bought: {totalSilverBought.toFixed(3)} g
+            </div>
+            <div style={{ fontWeight: '800', color: 'var(--admin-text-value-dark)', marginTop: '4px', fontSize: '15px' }}>
               Current value of all silver: ₹{totalSilverCurrentValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           </div>
@@ -191,12 +193,14 @@ export default function AdminAnalytics() {
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '16px'
+        gap: '20px'
       }}>
         {/* Gold Period Breakdown */}
         <div className="admin-card">
-          <h3 style={{ fontSize: '14px', fontWeight: '700', margin: '0 0 4px 0' }}>Gold</h3>
-          <div style={{ fontSize: '11.5px', color: '#6b7280', marginBottom: '14px', lineHeight: 1.3 }}>
+          <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 4px 0', color: 'var(--admin-text-heading-dark)' }}>
+            Gold
+          </h3>
+          <div style={{ fontSize: '12.5px', color: 'var(--admin-text-secondary-dark)', marginBottom: '14px', lineHeight: 1.4 }}>
             {goldPeriodGrams > 0 ? (
               <>Total: {goldPeriodGrams.toFixed(3)} g · Avg rate ₹{goldPeriodAvgRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm<br />Value: ₹{goldPeriodValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</>
             ) : (
@@ -204,7 +208,7 @@ export default function AdminAnalytics() {
             )}
           </div>
 
-          <div style={{ fontSize: '11.5px', fontWeight: '600', marginBottom: '8px' }}>
+          <div style={{ fontSize: '12.5px', fontWeight: '600', marginBottom: '8px', color: 'var(--admin-text-secondary-dark)' }}>
             Gold (total grams by period)
           </div>
 
@@ -212,21 +216,21 @@ export default function AdminAnalytics() {
             /* Empty State */
             <div style={{
               height: '140px',
-              border: '1px dashed #cbd5e1',
+              border: '1px dashed var(--admin-border-dark)',
               borderRadius: '6px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#9ca3af',
-              fontSize: '12px'
+              color: 'var(--admin-text-muted-dark)',
+              fontSize: '12.5px'
             }}>
               No gold data in this period
             </div>
           ) : (
             /* Gold Bar Chart */
             <div style={{ position: 'relative' }}>
-              <div style={{ height: '140px', position: 'relative', display: 'flex', alignItems: 'flex-end', paddingLeft: '35px', borderBottom: '1px solid #e5e7eb' }}>
-                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '30px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '9.5px', color: '#9ca3af' }}>
+              <div style={{ height: '140px', position: 'relative', display: 'flex', alignItems: 'flex-end', paddingLeft: '35px', borderBottom: '1px solid var(--admin-border-dark)' }}>
+                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '30px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '10px', color: 'var(--admin-text-muted-dark)' }}>
                   <span>1</span>
                   <span>0.8</span>
                   <span>0.6</span>
@@ -236,12 +240,12 @@ export default function AdminAnalytics() {
                 </div>
 
                 <div style={{ position: 'absolute', left: '35px', right: 0, top: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', pointerEvents: 'none' }}>
-                  <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
-                  <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
-                  <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
-                  <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
-                  <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
-                  <div style={{ borderTop: '1px solid #e5e7eb', width: '100%' }}></div>
+                  <div style={{ borderTop: '1px dashed var(--admin-border-dark)', width: '100%' }}></div>
+                  <div style={{ borderTop: '1px dashed var(--admin-border-dark)', width: '100%' }}></div>
+                  <div style={{ borderTop: '1px dashed var(--admin-border-dark)', width: '100%' }}></div>
+                  <div style={{ borderTop: '1px dashed var(--admin-border-dark)', width: '100%' }}></div>
+                  <div style={{ borderTop: '1px dashed var(--admin-border-dark)', width: '100%' }}></div>
+                  <div style={{ borderTop: '1px solid var(--admin-border-dark)', width: '100%' }}></div>
                 </div>
 
                 {/* Bars */}
@@ -271,20 +275,20 @@ export default function AdminAnalytics() {
                   top: '15px',
                   left: '50%',
                   transform: 'translateX(-50%)',
-                  backgroundColor: '#ffffff',
-                  border: '1px solid #e5e7eb',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                  backgroundColor: '#1e293b',
+                  border: '1px solid var(--admin-border-dark)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
                   borderRadius: '6px',
                   padding: '6px 12px',
-                  fontSize: '11px',
+                  fontSize: '11.5px',
                   zIndex: 10
                 }}>
-                  <div style={{ color: '#6b7280' }}>Mon Mar 16 2026 00:00:00 GMT+0000</div>
+                  <div style={{ color: '#cbd5e1' }}>Mon Mar 16 2026 00:00:00 GMT+0000</div>
                   <div style={{ fontWeight: '700', color: 'var(--admin-gold-pie)' }}>Gold (g): {hoveredGoldBar}</div>
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'space-around', paddingLeft: '35px', marginTop: '6px', fontSize: '10px', color: '#9ca3af' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-around', paddingLeft: '35px', marginTop: '6px', fontSize: '10.5px', color: 'var(--admin-text-muted-dark)' }}>
                 <span>{isQuarterly ? '160 (Coordinated Universal Time)' : '2026-03'}</span>
                 {isAnnual && <span>2026-04</span>}
               </div>
@@ -294,19 +298,21 @@ export default function AdminAnalytics() {
 
         {/* Silver Period Breakdown */}
         <div className="admin-card">
-          <h3 style={{ fontSize: '14px', fontWeight: '700', margin: '0 0 4px 0' }}>Silver</h3>
-          <div style={{ fontSize: '11.5px', color: '#6b7280', marginBottom: '14px', lineHeight: 1.3 }}>
+          <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 4px 0', color: 'var(--admin-text-heading-dark)' }}>
+            Silver
+          </h3>
+          <div style={{ fontSize: '12.5px', color: 'var(--admin-text-secondary-dark)', marginBottom: '14px', lineHeight: 1.4 }}>
             Total: {silverPeriodGrams.toFixed(3)} g · Avg rate ₹{silverPeriodAvgRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm<br />
             Value: ₹{silverPeriodValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </div>
 
-          <div style={{ fontSize: '11.5px', fontWeight: '600', marginBottom: '8px' }}>
+          <div style={{ fontSize: '12.5px', fontWeight: '600', marginBottom: '8px', color: 'var(--admin-text-secondary-dark)' }}>
             Silver (total grams by period)
           </div>
 
           {/* Silver Bar Chart */}
-          <div style={{ height: '140px', position: 'relative', display: 'flex', alignItems: 'flex-end', paddingLeft: '35px', borderBottom: '1px solid #e5e7eb' }}>
-            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '30px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '9.5px', color: '#9ca3af' }}>
+          <div style={{ height: '140px', position: 'relative', display: 'flex', alignItems: 'flex-end', paddingLeft: '35px', borderBottom: '1px solid var(--admin-border-dark)' }}>
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '30px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '10px', color: 'var(--admin-text-muted-dark)' }}>
               <span>{isMonthly ? '0.04' : '80'}</span>
               <span>{isMonthly ? '0.03' : '60'}</span>
               <span>{isMonthly ? '0.02' : '40'}</span>
@@ -315,11 +321,11 @@ export default function AdminAnalytics() {
             </div>
 
             <div style={{ position: 'absolute', left: '35px', right: 0, top: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', pointerEvents: 'none' }}>
-              <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
-              <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
-              <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
-              <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
-              <div style={{ borderTop: '1px solid #e5e7eb', width: '100%' }}></div>
+              <div style={{ borderTop: '1px dashed var(--admin-border-dark)', width: '100%' }}></div>
+              <div style={{ borderTop: '1px dashed var(--admin-border-dark)', width: '100%' }}></div>
+              <div style={{ borderTop: '1px dashed var(--admin-border-dark)', width: '100%' }}></div>
+              <div style={{ borderTop: '1px dashed var(--admin-border-dark)', width: '100%' }}></div>
+              <div style={{ borderTop: '1px solid var(--admin-border-dark)', width: '100%' }}></div>
             </div>
 
             {/* Bar */}
@@ -337,7 +343,7 @@ export default function AdminAnalytics() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', paddingLeft: '35px', marginTop: '6px', fontSize: '10px', color: '#9ca3af' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', paddingLeft: '35px', marginTop: '6px', fontSize: '10.5px', color: 'var(--admin-text-muted-dark)' }}>
             <span>{isMonthly ? 'Mon Aug 03 2026 00:00:00 GMT+0000 (Coordinated Universal Time)' : isQuarterly ? 'Mon Mar 16 2026 00:00:00 GMT+0000 (Coordinated Universal Time)' : '2026-03'}</span>
           </div>
         </div>
@@ -345,11 +351,13 @@ export default function AdminAnalytics() {
 
       {/* 5. Bottom Total Withdrawal (period) Card */}
       <div className="admin-card">
-        <h3 style={{ fontSize: '14px', fontWeight: '700', margin: '0 0 4px 0' }}>Total withdrawal (period)</h3>
-        <div style={{ fontSize: '22px', fontWeight: '800', letterSpacing: '-0.2px', margin: '2px 0' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 4px 0', color: 'var(--admin-text-heading-dark)' }}>
+          Total withdrawal (period)
+        </h3>
+        <div style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.3px', margin: '4px 0 2px 0', color: 'var(--admin-text-value-dark)' }}>
           ₹{periodWithdrawalValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
         </div>
-        <div style={{ fontSize: '11px', color: '#9ca3af' }}>
+        <div style={{ fontSize: '12px', color: 'var(--admin-text-muted-dark)' }}>
           Sum of all completed withdrawals between {dateRangeText.replace('Showing ', '')}
         </div>
       </div>

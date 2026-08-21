@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, User, DollarSign, Calendar, Filter, X, Trash2, AlertTriangle, CheckCircle, ShieldCheck, Phone } from 'lucide-react';
+import { ArrowLeft, Calendar, X, Trash2, AlertTriangle, CheckCircle, Phone } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export default function AdminMembers() {
@@ -53,7 +53,6 @@ export default function AdminMembers() {
       if (cust && cust === username) return true;
       if (uId && uId === memberId) return true;
       if (tMobile && mobileDigits && tMobile.includes(mobileDigits)) return true;
-      // Default initial mock transactions match testuser / ID 1
       if ((memberId === '1' || username === 'testuser') && !cust && !uId) return true;
       return false;
     }).map((t) => {
@@ -198,19 +197,15 @@ export default function AdminMembers() {
     }, 1500);
   };
 
-  // Helper for Status Badge styling
   const renderStatusBadge = (status) => {
     const s = (status || '').toLowerCase();
-    if (s === 'success' || s === 'approved') {
-      return <span className="admin-badge-green">{status}</span>;
+    if (s.includes('success') || s.includes('approved') || s.includes('completed')) {
+      return <span className="admin-badge-green">Success</span>;
     }
-    if (s === 'pending' || s === 'processing') {
-      return <span className="admin-badge-yellow">{status}</span>;
+    if (s.includes('pending') || s.includes('processing')) {
+      return <span className="admin-badge-yellow">Pending</span>;
     }
-    if (s === 'failed' || s === 'cancelled' || s === 'rejected') {
-      return <span style={{ padding: '3px 8px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '700', backgroundColor: '#fee2e2', color: '#dc2626' }}>{status}</span>;
-    }
-    return <span className="admin-badge-gray">{status}</span>;
+    return <span className="admin-badge-gray">{status || 'Completed'}</span>;
   };
 
   // =========================================================================
@@ -259,8 +254,8 @@ export default function AdminMembers() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '6px 14px',
-              fontSize: '12.5px',
+              padding: '7px 16px',
+              fontSize: '13px',
               cursor: 'pointer'
             }}
           >
@@ -289,7 +284,7 @@ export default function AdminMembers() {
 
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                <h2 style={{ fontSize: '20px', fontWeight: '800', margin: 0, color: 'var(--admin-text-main-light)' }}>
+                <h2 className="admin-member-header-name">
                   {selectedMember.username || 'Member'}
                 </h2>
                 <span className="admin-badge-gray" style={{ fontSize: '11px' }}>
@@ -300,7 +295,7 @@ export default function AdminMembers() {
                 </span>
               </div>
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '14px', fontSize: '12.5px', color: '#6b7280' }}>
+              <div className="admin-member-header-sub">
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                   <Phone size={13} /> {selectedMember.mobile || '-'}
                 </span>
@@ -353,14 +348,14 @@ export default function AdminMembers() {
           gap: '20px'
         }}>
           {/* Total Gold bought Card */}
-          <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="admin-holdings-card-gold">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '13px', fontWeight: '700', color: '#4b5563' }}>
+              <span className="admin-holdings-title-gold">
                 Total Gold bought
               </span>
               <div style={{
-                width: '30px',
-                height: '30px',
+                width: '32px',
+                height: '32px',
                 borderRadius: '50%',
                 backgroundColor: '#fef3c7',
                 color: '#d97706',
@@ -368,48 +363,48 @@ export default function AdminMembers() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: '800',
-                fontSize: '14px'
+                fontSize: '15px'
               }}>
                 $
               </div>
             </div>
 
-            <div style={{ fontSize: '26px', fontWeight: '800', color: 'var(--admin-text-main-light)', letterSpacing: '-0.3px' }}>
+            <div className="admin-holdings-value-gold">
               {safeGoldGrams.toFixed(4)} gm
             </div>
 
-            <div style={{ fontSize: '12px', color: '#6b7280' }}>
+            <div className="admin-holdings-sub-gold">
               Valuation: ₹{(safeGoldGrams * goldRate).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · (₹{goldRate.toLocaleString('en-IN')}/gm)
             </div>
           </div>
 
           {/* Total Silver bought Card */}
-          <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="admin-holdings-card-silver">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '13px', fontWeight: '700', color: '#4b5563' }}>
+              <span className="admin-holdings-title-silver">
                 Total Silver bought
               </span>
               <div style={{
-                width: '30px',
-                height: '30px',
+                width: '32px',
+                height: '32px',
                 borderRadius: '50%',
-                backgroundColor: '#f3f4f6',
-                color: '#6b7280',
+                backgroundColor: '#f1f5f9',
+                color: '#64748b',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: '800',
-                fontSize: '14px'
+                fontSize: '15px'
               }}>
                 $
               </div>
             </div>
 
-            <div style={{ fontSize: '26px', fontWeight: '800', color: 'var(--admin-text-main-light)', letterSpacing: '-0.3px' }}>
+            <div className="admin-holdings-value-silver">
               {safeSilverGrams.toFixed(4)} gm
             </div>
 
-            <div style={{ fontSize: '12px', color: '#6b7280' }}>
+            <div className="admin-holdings-sub-silver">
               Valuation: ₹{(safeSilverGrams * silverRate).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · (₹{silverRate.toLocaleString('en-IN')}/gm)
             </div>
           </div>
@@ -419,30 +414,30 @@ export default function AdminMembers() {
         <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '20px' }}>
           
           {/* Header & Tabs */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', borderBottom: '1px solid var(--admin-border-light)', paddingBottom: '12px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', borderBottom: '1px solid var(--admin-border-dark)', paddingBottom: '12px' }}>
             <div>
-              <h3 style={{ fontSize: '16px', fontWeight: '800', margin: '0 0 2px 0', color: 'var(--admin-text-main-light)' }}>
+              <h3 style={{ fontSize: '17px', fontWeight: '800', margin: '0 0 2px 0', color: 'var(--admin-text-heading-dark)' }}>
                 Transaction History
               </h3>
-              <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>
+              <p style={{ fontSize: '13px', color: 'var(--admin-text-secondary-dark)', margin: 0 }}>
                 Gold and silver transactions and withdrawal logs for this member
               </p>
             </div>
 
             {/* Gold / Silver Tabs */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#f3f4f6', padding: '3px', borderRadius: '8px' }}>
+            <div className="admin-tab-pill-container">
               <button
                 onClick={() => setActiveTab('gold')}
                 style={{
-                  padding: '6px 14px',
+                  padding: '7px 16px',
                   borderRadius: '6px',
-                  border: 'none',
-                  backgroundColor: activeTab === 'gold' ? '#ffffff' : 'transparent',
-                  color: activeTab === 'gold' ? '#d97706' : '#4b5563',
-                  fontSize: '12.5px',
+                  border: activeTab === 'gold' ? '1px solid #d97706' : 'none',
+                  backgroundColor: activeTab === 'gold' ? '#1e293b' : 'transparent',
+                  color: activeTab === 'gold' ? '#e7b84b' : 'var(--admin-text-secondary-dark)',
+                  fontSize: '13px',
                   fontWeight: '700',
                   cursor: 'pointer',
-                  boxShadow: activeTab === 'gold' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                  boxShadow: activeTab === 'gold' ? '0 1px 3px rgba(0,0,0,0.2)' : 'none',
                   transition: 'all 0.15s ease'
                 }}
               >
@@ -452,15 +447,15 @@ export default function AdminMembers() {
               <button
                 onClick={() => setActiveTab('silver')}
                 style={{
-                  padding: '6px 14px',
+                  padding: '7px 16px',
                   borderRadius: '6px',
-                  border: 'none',
-                  backgroundColor: activeTab === 'silver' ? '#ffffff' : 'transparent',
-                  color: activeTab === 'silver' ? '#2563eb' : '#4b5563',
-                  fontSize: '12.5px',
+                  border: activeTab === 'silver' ? '1px solid #475569' : 'none',
+                  backgroundColor: activeTab === 'silver' ? '#1e293b' : 'transparent',
+                  color: activeTab === 'silver' ? '#cbd5e1' : 'var(--admin-text-secondary-dark)',
+                  fontSize: '13px',
                   fontWeight: '700',
                   cursor: 'pointer',
-                  boxShadow: activeTab === 'silver' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                  boxShadow: activeTab === 'silver' ? '0 1px 3px rgba(0,0,0,0.2)' : 'none',
                   transition: 'all 0.15s ease'
                 }}
               >
@@ -470,19 +465,10 @@ export default function AdminMembers() {
           </div>
 
           {/* Filters Bar */}
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            gap: '12px',
-            backgroundColor: '#fafbfc',
-            padding: '12px 14px',
-            borderRadius: '8px',
-            border: '1px solid var(--admin-border-light)'
-          }}>
+          <div className="admin-filter-bar">
             {/* Type Pills */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280' }}>Type:</span>
+              <span className="admin-filter-label">Type:</span>
               {[
                 { id: 'all', label: 'All' },
                 { id: 'purchases', label: 'Purchases' },
@@ -492,14 +478,15 @@ export default function AdminMembers() {
                   key={opt.id}
                   onClick={() => setFilterType(opt.id)}
                   style={{
-                    padding: '4px 10px',
+                    padding: '5px 12px',
                     borderRadius: '16px',
                     border: 'none',
-                    backgroundColor: filterType === opt.id ? 'var(--admin-orange)' : '#e5e7eb',
-                    color: filterType === opt.id ? '#ffffff' : '#374151',
-                    fontSize: '11.5px',
+                    backgroundColor: filterType === opt.id ? 'var(--admin-orange)' : '#1e293b',
+                    color: filterType === opt.id ? '#ffffff' : 'var(--admin-text-secondary-dark)',
+                    fontSize: '12px',
                     fontWeight: '600',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
                   }}
                 >
                   {opt.label}
@@ -509,7 +496,7 @@ export default function AdminMembers() {
 
             {/* Date Range Filters with Working Calendar Picker */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '13px', fontWeight: '600', color: '#6b7280' }}>From:</span>
+              <span className="admin-filter-label">From:</span>
               <div className="admin-date-wrapper">
                 <Calendar size={14} className="admin-date-icon" />
                 <input
@@ -522,13 +509,13 @@ export default function AdminMembers() {
                     } catch (err) {}
                   }}
                   className="admin-input"
-                  style={{ height: '34px', paddingLeft: '32px', paddingRight: '8px', fontSize: '13px', width: '145px', cursor: 'pointer' }}
+                  style={{ height: '36px', paddingLeft: '34px', paddingRight: '8px', fontSize: '13px', width: '150px', cursor: 'pointer' }}
                 />
               </div>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '13px', fontWeight: '600', color: '#6b7280' }}>To:</span>
+              <span className="admin-filter-label">To:</span>
               <div className="admin-date-wrapper">
                 <Calendar size={14} className="admin-date-icon" />
                 <input
@@ -541,14 +528,14 @@ export default function AdminMembers() {
                     } catch (err) {}
                   }}
                   className="admin-input"
-                  style={{ height: '34px', paddingLeft: '32px', paddingRight: '8px', fontSize: '13px', width: '145px', cursor: 'pointer' }}
+                  style={{ height: '36px', paddingLeft: '34px', paddingRight: '8px', fontSize: '13px', width: '150px', cursor: 'pointer' }}
                 />
               </div>
             </div>
 
             {/* Grams Range Filters */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280' }}>Grams:</span>
+              <span className="admin-filter-label">Grams:</span>
               <input
                 type="number"
                 step="0.0001"
@@ -556,9 +543,9 @@ export default function AdminMembers() {
                 value={minGrams}
                 onChange={(e) => setMinGrams(e.target.value)}
                 className="admin-input"
-                style={{ height: '32px', padding: '0 8px', fontSize: '12px', width: '80px' }}
+                style={{ height: '36px', padding: '0 10px', fontSize: '13px', width: '85px' }}
               />
-              <span style={{ color: '#9ca3af' }}>-</span>
+              <span style={{ color: 'var(--admin-text-muted-dark)' }}>-</span>
               <input
                 type="number"
                 step="0.0001"
@@ -566,7 +553,7 @@ export default function AdminMembers() {
                 value={maxGrams}
                 onChange={(e) => setMaxGrams(e.target.value)}
                 className="admin-input"
-                style={{ height: '32px', padding: '0 8px', fontSize: '12px', width: '80px' }}
+                style={{ height: '36px', padding: '0 10px', fontSize: '13px', width: '85px' }}
               />
             </div>
 
@@ -574,18 +561,13 @@ export default function AdminMembers() {
             {(filterType !== 'all' || fromDate || toDate || minGrams || maxGrams) && (
               <button
                 onClick={handleClearFilters}
+                className="admin-btn-secondary"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '4px',
-                  padding: '4px 10px',
-                  borderRadius: '6px',
-                  border: '1px solid #d1d5db',
-                  backgroundColor: '#ffffff',
-                  color: '#4b5563',
-                  fontSize: '11.5px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
+                  padding: '5px 12px',
+                  fontSize: '12px',
                   marginLeft: 'auto'
                 }}
               >
@@ -617,32 +599,32 @@ export default function AdminMembers() {
 
                     return (
                       <tr key={txn.id || idx}>
-                        <td style={{ fontWeight: '600', color: 'var(--admin-text-main-light)' }}>
+                        <td style={{ fontWeight: '600', color: 'var(--admin-text-secondary-dark)' }}>
                           {txn.displayDate}
                         </td>
 
                         <td>
                           <span style={{
-                            padding: '3px 8px',
+                            padding: '4px 10px',
                             borderRadius: '6px',
-                            fontSize: '11px',
+                            fontSize: '11.5px',
                             fontWeight: '700',
-                            backgroundColor: txn.type === 'Purchase' ? '#ecfdf5' : '#eff6ff',
-                            color: txn.type === 'Purchase' ? '#047857' : '#1d4ed8'
+                            backgroundColor: txn.type === 'Purchase' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+                            color: txn.type === 'Purchase' ? '#34d399' : '#60a5fa'
                           }}>
                             {txn.type}
                           </span>
                         </td>
 
-                        <td style={{ fontWeight: '700', color: 'var(--admin-text-main-light)' }}>
+                        <td style={{ fontWeight: '700', color: 'var(--admin-text-value-dark)' }}>
                           {tGrams.toFixed(4)} gm
                         </td>
 
-                        <td style={{ color: '#4b5563' }}>
+                        <td style={{ color: 'var(--admin-text-secondary-dark)' }}>
                           ₹{tRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
 
-                        <td style={{ fontWeight: '700', color: 'var(--admin-text-main-light)' }}>
+                        <td style={{ fontWeight: '700', color: 'var(--admin-text-value-dark)' }}>
                           ₹{tAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
 
@@ -650,7 +632,7 @@ export default function AdminMembers() {
                           {renderStatusBadge(txn.displayStatus)}
                         </td>
 
-                        <td style={{ color: '#6b7280' }}>
+                        <td style={{ color: 'var(--admin-text-secondary-dark)' }}>
                           {txn.displayPayment}
                         </td>
                       </tr>
@@ -658,7 +640,7 @@ export default function AdminMembers() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan="7" style={{ textAlign: 'center', padding: '36px 16px', color: '#9ca3af' }}>
+                    <td colSpan="7" style={{ textAlign: 'center', padding: '36px 16px', color: 'var(--admin-text-muted-dark)' }}>
                       No {activeTab} transactions found for this member matching the filter criteria.
                     </td>
                   </tr>
@@ -669,25 +651,15 @@ export default function AdminMembers() {
         </div>
 
         {/* 5. Delete / Ban Member Danger Zone */}
-        <div style={{
-          backgroundColor: '#fffaf9',
-          border: '1px solid #fee2e2',
-          borderRadius: '12px',
-          padding: '20px 24px',
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '16px'
-        }}>
+        <div className="admin-danger-zone">
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <Trash2 size={16} color="#dc2626" />
-              <h4 style={{ fontSize: '15px', fontWeight: '800', margin: 0, color: '#991b1b' }}>
+              <Trash2 size={16} color="#ef4444" />
+              <h4 className="admin-danger-title">
                 Deactivate Member
               </h4>
             </div>
-            <p style={{ fontSize: '12.5px', color: '#7f1d1d', margin: 0, lineHeight: '1.4' }}>
+            <p className="admin-danger-desc">
               Deactivating will disable this user's active status. Historical transactions and audit records will remain preserved.
             </p>
           </div>
@@ -708,6 +680,8 @@ export default function AdminMembers() {
               gap: '6px',
               transition: 'background-color 0.15s ease'
             }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
           >
             <Trash2 size={14} />
             <span>Delete Member</span>
@@ -719,16 +693,16 @@ export default function AdminMembers() {
           <div className="admin-modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
             <div className="admin-modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <AlertTriangle size={20} color="#dc2626" />
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <AlertTriangle size={20} color="#ef4444" />
                 </div>
-                <h3 style={{ fontSize: '17px', fontWeight: '800', margin: 0, color: 'var(--admin-text-main-light)' }}>
+                <h3 style={{ fontSize: '17px', fontWeight: '800', margin: 0, color: 'var(--admin-text-value-dark)' }}>
                   Confirm Member Deactivation
                 </h3>
               </div>
 
-              <p style={{ fontSize: '13.5px', color: '#4b5563', lineHeight: '1.4', marginBottom: '18px' }}>
-                Are you sure you want to deactivate member <strong style={{ color: '#111827' }}>{selectedMember.username || 'user'}</strong> (ID: #{selectedMember.id})? This will mark their status as Inactive.
+              <p style={{ fontSize: '13.5px', color: 'var(--admin-text-secondary-dark)', lineHeight: '1.4', marginBottom: '18px' }}>
+                Are you sure you want to deactivate member <strong style={{ color: 'var(--admin-text-value-dark)' }}>{selectedMember.username || 'user'}</strong> (ID: #{selectedMember.id})? This will mark their status as Inactive.
               </p>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
@@ -826,14 +800,14 @@ export default function AdminMembers() {
 
               return (
                 <tr key={m.id || idx}>
-                  <td style={{ color: '#6b7280', fontWeight: '600' }}>{m.id}</td>
+                  <td style={{ color: 'var(--admin-text-secondary-dark)', fontWeight: '600' }}>#{m.id}</td>
                   
                   {/* Username in orange/terracotta color */}
                   <td style={{ fontWeight: '700', color: 'var(--admin-orange)' }}>
                     {m.username}
                   </td>
 
-                  <td style={{ fontWeight: '500' }}>
+                  <td style={{ fontWeight: '500', color: 'var(--admin-text-secondary-dark)' }}>
                     {m.mobile}
                   </td>
 
@@ -861,7 +835,7 @@ export default function AdminMembers() {
                     </span>
                   </td>
 
-                  <td style={{ color: '#6b7280' }}>
+                  <td style={{ color: 'var(--admin-text-secondary-dark)' }}>
                     {m.created}
                   </td>
 
@@ -870,23 +844,23 @@ export default function AdminMembers() {
                     <button
                       onClick={() => setSelectedMemberId(m.id)}
                       style={{
-                        backgroundColor: '#eef2ff',
-                        color: '#4f46e5',
-                        border: '1px solid #c7d2fe',
+                        backgroundColor: '#1e293b',
+                        color: '#60a5fa',
+                        border: '1px solid #3b82f6',
                         borderRadius: '6px',
-                        padding: '4px 12px',
-                        fontSize: '12px',
+                        padding: '5px 14px',
+                        fontSize: '12.5px',
                         fontWeight: '700',
                         cursor: 'pointer',
                         transition: 'all 0.15s ease'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#4f46e5';
+                        e.currentTarget.style.backgroundColor = '#2563eb';
                         e.currentTarget.style.color = '#ffffff';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#eef2ff';
-                        e.currentTarget.style.color = '#4f46e5';
+                        e.currentTarget.style.backgroundColor = '#1e293b';
+                        e.currentTarget.style.color = '#60a5fa';
                       }}
                     >
                       View
