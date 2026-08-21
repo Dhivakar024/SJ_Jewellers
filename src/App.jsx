@@ -164,8 +164,9 @@ function MainContent() {
       return (
         <AdminLogin
           onLoginSuccess={() => {
-            setAdminTab('dashboard');
-            window.location.hash = 'admin/dashboard';
+            const targetTab = getAdminTabFromUrl();
+            setAdminTab(targetTab);
+            window.location.hash = `admin/${targetTab}`;
           }}
         />
       );

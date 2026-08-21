@@ -3,7 +3,19 @@ import { ArrowLeft, User, DollarSign, Calendar, Filter, X, Trash2, AlertTriangle
 import { useApp } from '../context/AppContext';
 
 export default function AdminMembers() {
-  const { members = [], transactions = [], withdrawals = [], goldRate = 13818.88, silverRate = 206.17, deleteMember } = useApp() || {};
+  const context = useApp() || {};
+  const rawMembers = context.members;
+  const rawTransactions = context.transactions;
+  const rawWithdrawals = context.withdrawals;
+  const rawGoldRate = context.goldRate;
+  const rawSilverRate = context.silverRate;
+  const deleteMember = context.deleteMember;
+
+  const members = Array.isArray(rawMembers) ? rawMembers : [];
+  const transactions = Array.isArray(rawTransactions) ? rawTransactions : [];
+  const withdrawals = Array.isArray(rawWithdrawals) ? rawWithdrawals : [];
+  const goldRate = typeof rawGoldRate === 'number' && !isNaN(rawGoldRate) ? rawGoldRate : (parseFloat(rawGoldRate) || 13818.88);
+  const silverRate = typeof rawSilverRate === 'number' && !isNaN(rawSilverRate) ? rawSilverRate : (parseFloat(rawSilverRate) || 206.17);
 
   const [selectedMemberId, setSelectedMemberId] = useState(null);
   const [activeTab, setActiveTab] = useState('gold'); // 'gold' | 'silver'
@@ -18,7 +30,7 @@ export default function AdminMembers() {
   // Selected Member Lookup
   const selectedMember = useMemo(() => {
     if (!selectedMemberId) return null;
-    return members.find((m) => m.id === selectedMemberId || m.id === selectedMemberId.toString());
+    return members.find((m) => m && (m.id === selectedMemberId || m.id === selectedMemberId.toString()));
   }, [members, selectedMemberId]);
 
   // Aggregate and calculate all transactions & withdrawals for selected member
@@ -32,7 +44,8 @@ export default function AdminMembers() {
     const mobileDigits = (selectedMember.mobile || '').replace(/[^0-9]/g, '');
 
     // Match purchases
-    const purchases = (transactions || []).filter((t) => {
+    const purchases = transactions.filter((t) => {
+      if (!t) return false;
       const cust = (t.customer || t.username || '').toLowerCase().trim();
       const uId = (t.userId || '').toString().trim();
       const tMobile = (t.mobile || '').replace(/[^0-9]/g, '');
@@ -63,7 +76,8 @@ export default function AdminMembers() {
     });
 
     // Match withdrawals
-    const memberWithdrawals = (withdrawals || []).filter((w) => {
+    const memberWithdrawals = withdrawals.filter((w) => {
+      if (!w) return false;
       const cust = (w.customer || w.username || '').toLowerCase().trim();
       const uId = (w.userId || '').toString().trim();
       const wMobile = (w.mobile || '').replace(/[^0-9]/g, '');
@@ -113,7 +127,7 @@ export default function AdminMembers() {
 
   // Total Gold & Silver Bought calculations
   const totalGoldBoughtGrams = useMemo(() => {
-    const sum = memberTransactions.goldPurchases.reduce((acc, p) => acc + p.displayGrams, 0);
+    const sum = (memberTransactions?.goldPurchases || []).reduce((acc, p) => acc + (p?.displayGrams || 0), 0);
     if (sum === 0 && (selectedMember?.id === '1' || selectedMember?.username === 'testuser')) {
       return 1.8570;
     }
@@ -121,7 +135,7 @@ export default function AdminMembers() {
   }, [memberTransactions, selectedMember]);
 
   const totalSilverBoughtGrams = useMemo(() => {
-    const sum = memberTransactions.silverPurchases.reduce((acc, p) => acc + p.displayGrams, 0);
+    const sum = (memberTransactions?.silverPurchases || []).reduce((acc, p) => acc + (p?.displayGrams || 0), 0);
     if (sum === 0 && (selectedMember?.id === '1' || selectedMember?.username === 'testuser')) {
       return 77.0550;
     }
@@ -130,9 +144,10 @@ export default function AdminMembers() {
 
   // Dynamic filter application
   const filteredList = useMemo(() => {
-    const list = activeTab === 'gold' ? memberTransactions.allGold : memberTransactions.allSilver;
+    const list = activeTab === 'gold' ? (memberTransactions?.allGold || []) : (memberTransactions?.allSilver || []);
     
     return list.filter((item) => {
+      if (!item) return false;
       // Type Filter
       if (filterType === 'purchases' && item.type !== 'Purchase') return false;
       if (filterType === 'withdrawals' && item.type !== 'Withdrawal') return false;
@@ -150,7 +165,7 @@ export default function AdminMembers() {
       }
 
       // Min/Max Grams Filter
-      const grams = item.displayGrams;
+      const grams = typeof item.displayGrams === 'number' ? item.displayGrams : 0;
       if (minGrams !== '' && !isNaN(parseFloat(minGrams))) {
         if (grams < parseFloat(minGrams)) return false;
       }
@@ -205,6 +220,9 @@ export default function AdminMembers() {
     const isVerified = selectedMember.verified === 'Yes';
     const isMobileVerified = selectedMember.mobileVerified === 'Yes';
     const isActive = selectedMember.active === 'Yes';
+
+    const safeGoldGrams = typeof totalGoldBoughtGrams === 'number' && !isNaN(totalGoldBoughtGrams) ? totalGoldBoughtGrams : 0;
+    const safeSilverGrams = typeof totalSilverBoughtGrams === 'number' && !isNaN(totalSilverBoughtGrams) ? totalSilverBoughtGrams : 0;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', boxSizing: 'border-box' }}>
@@ -357,11 +375,11 @@ export default function AdminMembers() {
             </div>
 
             <div style={{ fontSize: '26px', fontWeight: '800', color: 'var(--admin-text-main-light)', letterSpacing: '-0.3px' }}>
-              {totalGoldBoughtGrams.toFixed(4)} gm
+              {safeGoldGrams.toFixed(4)} gm
             </div>
 
             <div style={{ fontSize: '12px', color: '#6b7280' }}>
-              Valuation: ₹{(totalGoldBoughtGrams * goldRate).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · (₹{goldRate.toLocaleString('en-IN')}/gm)
+              Valuation: ₹{(safeGoldGrams * goldRate).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · (₹{goldRate.toLocaleString('en-IN')}/gm)
             </div>
           </div>
 
@@ -388,11 +406,11 @@ export default function AdminMembers() {
             </div>
 
             <div style={{ fontSize: '26px', fontWeight: '800', color: 'var(--admin-text-main-light)', letterSpacing: '-0.3px' }}>
-              {totalSilverBoughtGrams.toFixed(4)} gm
+              {safeSilverGrams.toFixed(4)} gm
             </div>
 
             <div style={{ fontSize: '12px', color: '#6b7280' }}>
-              Valuation: ₹{(totalSilverBoughtGrams * silverRate).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · (₹{silverRate.toLocaleString('en-IN')}/gm)
+              Valuation: ₹{(safeSilverGrams * silverRate).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · (₹{silverRate.toLocaleString('en-IN')}/gm)
             </div>
           </div>
         </div>
@@ -428,7 +446,7 @@ export default function AdminMembers() {
                   transition: 'all 0.15s ease'
                 }}
               >
-                Gold ({memberTransactions.allGold.length})
+                Gold ({(memberTransactions?.allGold || []).length})
               </button>
 
               <button
@@ -446,7 +464,7 @@ export default function AdminMembers() {
                   transition: 'all 0.15s ease'
                 }}
               >
-                Silver ({memberTransactions.allSilver.length})
+                Silver ({(memberTransactions?.allSilver || []).length})
               </button>
             </div>
           </div>
@@ -576,46 +594,52 @@ export default function AdminMembers() {
               </thead>
               <tbody>
                 {filteredList.length > 0 ? (
-                  filteredList.map((txn, idx) => (
-                    <tr key={txn.id || idx}>
-                      <td style={{ fontWeight: '600', color: 'var(--admin-text-main-light)' }}>
-                        {txn.displayDate}
-                      </td>
+                  filteredList.map((txn, idx) => {
+                    const tRate = typeof txn.displayRate === 'number' && !isNaN(txn.displayRate) ? txn.displayRate : 0;
+                    const tAmount = typeof txn.displayAmount === 'number' && !isNaN(txn.displayAmount) ? txn.displayAmount : 0;
+                    const tGrams = typeof txn.displayGrams === 'number' && !isNaN(txn.displayGrams) ? txn.displayGrams : 0;
 
-                      <td>
-                        <span style={{
-                          padding: '3px 8px',
-                          borderRadius: '6px',
-                          fontSize: '11px',
-                          fontWeight: '700',
-                          backgroundColor: txn.type === 'Purchase' ? '#ecfdf5' : '#eff6ff',
-                          color: txn.type === 'Purchase' ? '#047857' : '#1d4ed8'
-                        }}>
-                          {txn.type}
-                        </span>
-                      </td>
+                    return (
+                      <tr key={txn.id || idx}>
+                        <td style={{ fontWeight: '600', color: 'var(--admin-text-main-light)' }}>
+                          {txn.displayDate}
+                        </td>
 
-                      <td style={{ fontWeight: '700', color: 'var(--admin-text-main-light)' }}>
-                        {txn.displayGrams.toFixed(4)} gm
-                      </td>
+                        <td>
+                          <span style={{
+                            padding: '3px 8px',
+                            borderRadius: '6px',
+                            fontSize: '11px',
+                            fontWeight: '700',
+                            backgroundColor: txn.type === 'Purchase' ? '#ecfdf5' : '#eff6ff',
+                            color: txn.type === 'Purchase' ? '#047857' : '#1d4ed8'
+                          }}>
+                            {txn.type}
+                          </span>
+                        </td>
 
-                      <td style={{ color: '#4b5563' }}>
-                        ₹{txn.displayRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </td>
+                        <td style={{ fontWeight: '700', color: 'var(--admin-text-main-light)' }}>
+                          {tGrams.toFixed(4)} gm
+                        </td>
 
-                      <td style={{ fontWeight: '700', color: 'var(--admin-text-main-light)' }}>
-                        ₹{txn.displayAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </td>
+                        <td style={{ color: '#4b5563' }}>
+                          ₹{tRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
 
-                      <td>
-                        {renderStatusBadge(txn.displayStatus)}
-                      </td>
+                        <td style={{ fontWeight: '700', color: 'var(--admin-text-main-light)' }}>
+                          ₹{tAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
 
-                      <td style={{ color: '#6b7280' }}>
-                        {txn.displayPayment}
-                      </td>
-                    </tr>
-                  ))
+                        <td>
+                          {renderStatusBadge(txn.displayStatus)}
+                        </td>
+
+                        <td style={{ color: '#6b7280' }}>
+                          {txn.displayPayment}
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td colSpan="7" style={{ textAlign: 'center', padding: '36px 16px', color: '#9ca3af' }}>
@@ -778,13 +802,14 @@ export default function AdminMembers() {
             </tr>
           </thead>
           <tbody>
-            {members.map((m) => {
+            {members.map((m, idx) => {
+              if (!m) return null;
               const isVerified = m.verified === 'Yes';
               const isMobileVerified = m.mobileVerified === 'Yes';
               const isActive = m.active === 'Yes';
 
               return (
-                <tr key={m.id}>
+                <tr key={m.id || idx}>
                   <td style={{ color: '#6b7280', fontWeight: '600' }}>{m.id}</td>
                   
                   {/* Username in orange/terracotta color */}
