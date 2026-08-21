@@ -189,8 +189,8 @@ function InteractiveDonutCard({
     <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', minHeight: '340px', boxSizing: 'border-box', position: 'relative' }}>
       {/* Title */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-        <Clock size={16} color="#6b7280" />
-        <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--admin-text-main-light)' }}>
+        <Clock size={16} color="var(--admin-text-muted)" />
+        <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--admin-text-heading)' }}>
           {title}
         </span>
       </div>
@@ -392,10 +392,10 @@ function InteractiveDonutCard({
             height: '8px',
             borderRadius: '50%',
             backgroundColor: goldColor,
-            border: !showGold ? '1px dashed var(--admin-text-muted-dark)' : 'none'
+            border: !showGold ? '1px dashed var(--admin-text-muted)' : 'none'
           }}></span>
           <span style={{
-            color: 'var(--admin-text-secondary-dark)',
+            color: 'var(--admin-text-secondary)',
             fontWeight: showGold ? '700' : '400',
             textDecoration: !showGold ? 'line-through' : 'none'
           }}>
@@ -425,10 +425,10 @@ function InteractiveDonutCard({
             height: '8px',
             borderRadius: '50%',
             backgroundColor: silverColor,
-            border: !showSilver ? '1px dashed var(--admin-text-muted-dark)' : 'none'
+            border: !showSilver ? '1px dashed var(--admin-text-muted)' : 'none'
           }}></span>
           <span style={{
-            color: 'var(--admin-text-secondary-dark)',
+            color: 'var(--admin-text-secondary)',
             fontWeight: showSilver ? '700' : '400',
             textDecoration: !showSilver ? 'line-through' : 'none'
           }}>
@@ -438,7 +438,7 @@ function InteractiveDonutCard({
       </div>
 
       {/* Subtext */}
-      <div style={{ textAlign: 'center', fontSize: '12px', color: 'var(--admin-text-muted-dark)', marginTop: '6px' }}>
+      <div style={{ textAlign: 'center', fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '6px' }}>
         {subtext}
       </div>
     </div>
@@ -710,11 +710,11 @@ export default function AdminDashboard({ onSelectTab }) {
       <div className="admin-card" style={{ textAlign: 'left', overflow: 'visible', position: 'relative' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
           {icon}
-          <span style={{ fontSize: '15px', fontWeight: '700', color: 'var(--admin-text-heading-dark)' }}>
+          <span style={{ fontSize: '15px', fontWeight: '700', color: 'var(--admin-text-heading)' }}>
             {title}
           </span>
         </div>
-        <div style={{ fontSize: '13px', color: 'var(--admin-text-secondary-dark)', marginBottom: '20px' }}>
+        <div style={{ fontSize: '13px', color: 'var(--admin-text-secondary)', marginBottom: '20px' }}>
           {subtitle}
         </div>
 
@@ -726,7 +726,7 @@ export default function AdminDashboard({ onSelectTab }) {
           alignItems: 'flex-end',
           paddingLeft: '56px',
           paddingRight: '16px',
-          borderBottom: '1px solid var(--admin-border-dark)'
+          borderBottom: '1px solid var(--admin-border)'
         }}>
           {/* Y-axis tick labels with INR currency */}
           <div style={{
@@ -740,7 +740,7 @@ export default function AdminDashboard({ onSelectTab }) {
             justifyContent: 'space-between',
             fontSize: '11px',
             fontWeight: '600',
-            color: 'var(--admin-text-muted-dark)',
+            color: 'var(--admin-text-muted)',
             userSelect: 'none',
             textAlign: 'right',
             paddingRight: '8px'
@@ -762,12 +762,12 @@ export default function AdminDashboard({ onSelectTab }) {
             justifyContent: 'space-between',
             pointerEvents: 'none'
           }}>
-            <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
-            <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
-            <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
-            <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
-            <div style={{ borderTop: '1px dashed #f3f4f6', width: '100%' }}></div>
-            <div style={{ borderTop: '1px solid #e5e7eb', width: '100%' }}></div>
+            <div style={{ borderTop: '1px dashed var(--admin-border-subtle)', width: '100%' }}></div>
+            <div style={{ borderTop: '1px dashed var(--admin-border-subtle)', width: '100%' }}></div>
+            <div style={{ borderTop: '1px dashed var(--admin-border-subtle)', width: '100%' }}></div>
+            <div style={{ borderTop: '1px dashed var(--admin-border-subtle)', width: '100%' }}></div>
+            <div style={{ borderTop: '1px dashed var(--admin-border-subtle)', width: '100%' }}></div>
+            <div style={{ borderTop: '1px solid var(--admin-border)', width: '100%' }}></div>
           </div>
 
           {/* Bars Container */}
@@ -824,38 +824,39 @@ export default function AdminDashboard({ onSelectTab }) {
               top: '14px',
               left: '50%',
               transform: 'translateX(-50%)',
-              backgroundColor: '#1e293b',
-              color: '#ffffff',
+              backgroundColor: 'var(--admin-bg-card)',
+              color: 'var(--admin-text-main)',
+              border: '1px solid var(--admin-border)',
               padding: '10px 16px',
               borderRadius: '8px',
               fontSize: '12px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
               zIndex: 20,
               pointerEvents: 'none',
               whiteSpace: 'nowrap',
               textAlign: 'center'
             }}>
-              <div style={{ fontWeight: '700', color: '#f8fafc', marginBottom: '3px' }}>
+              <div style={{ fontWeight: '700', color: 'var(--admin-text-value)', marginBottom: '3px' }}>
                 {hoveredBar.fullLabel || hoveredBar.label}
               </div>
-              <div style={{ color: '#a5b4fc', fontWeight: '700', fontSize: '13px' }}>
+              <div style={{ color: '#4f46e5', fontWeight: '700', fontSize: '13px' }}>
                 Transaction Value: ₹{hoveredBar.totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
               {hoveredBar.count > 0 ? (
-                <div style={{ fontSize: '11px', color: '#cbd5e1', marginTop: '6px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                <div style={{ fontSize: '11px', color: 'var(--admin-text-secondary)', marginTop: '6px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
                   {hoveredBar.goldCount > 0 && (
-                    <span style={{ color: '#fcd34d' }}>
+                    <span style={{ color: 'var(--admin-gold-text)' }}>
                       Gold: ₹{hoveredBar.goldValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })} ({hoveredBar.goldCount})
                     </span>
                   )}
                   {hoveredBar.silverCount > 0 && (
-                    <span style={{ color: '#e2e8f0' }}>
+                    <span style={{ color: 'var(--admin-silver-text)' }}>
                       Silver: ₹{hoveredBar.silverValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })} ({hoveredBar.silverCount})
                     </span>
                   )}
                 </div>
               ) : (
-                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--admin-text-muted)', marginTop: '3px' }}>
                   No transactions recorded
                 </div>
               )}
@@ -871,7 +872,7 @@ export default function AdminDashboard({ onSelectTab }) {
           paddingRight: '16px',
           marginTop: '10px',
           fontSize: '11.5px',
-          color: 'var(--admin-text-muted-dark)',
+          color: 'var(--admin-text-muted)',
           userSelect: 'none'
         }}>
           {safeData.map((item, idx) => {
@@ -889,7 +890,7 @@ export default function AdminDashboard({ onSelectTab }) {
                   textAlign: 'center',
                   visibility: isVisible ? 'visible' : 'hidden',
                   fontWeight: item.totalValue > 0 ? '700' : '500',
-                  color: item.totalValue > 0 ? 'var(--admin-text-value-dark)' : 'var(--admin-text-muted-dark)',
+                  color: item.totalValue > 0 ? 'var(--admin-text-value)' : 'var(--admin-text-muted)',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis'
@@ -1022,7 +1023,7 @@ export default function AdminDashboard({ onSelectTab }) {
       {renderBarChart({
         title: 'Annual transactions (last 5 years)',
         subtitle: 'Annual transaction value (INR)',
-        icon: <BarChart2 size={16} color="var(--admin-text-muted-dark)" />,
+        icon: <BarChart2 size={16} color="var(--admin-text-muted)" />,
         data: annualChartData.items,
         maxVal: annualChartData.maxVal,
         barMaxWidth: '64px',
@@ -1033,7 +1034,7 @@ export default function AdminDashboard({ onSelectTab }) {
       {renderBarChart({
         title: 'Monthly transactions (last 12 months)',
         subtitle: 'Monthly transaction value (INR)',
-        icon: <Calendar size={16} color="var(--admin-text-muted-dark)" />,
+        icon: <Calendar size={16} color="var(--admin-text-muted)" />,
         data: monthlyChartData.items,
         maxVal: monthlyChartData.maxVal,
         barMaxWidth: '44px',
@@ -1044,7 +1045,7 @@ export default function AdminDashboard({ onSelectTab }) {
       {renderBarChart({
         title: 'Daily transactions (last 30 days)',
         subtitle: 'Daily transaction value (INR)',
-        icon: <BarChart2 size={16} color="var(--admin-text-muted-dark)" />,
+        icon: <BarChart2 size={16} color="var(--admin-text-muted)" />,
         data: dailyChartData.items,
         maxVal: dailyChartData.maxVal,
         barMaxWidth: '20px',
@@ -1052,7 +1053,7 @@ export default function AdminDashboard({ onSelectTab }) {
       })}
 
       {/* 7. Footer Rates Updated Timestamp */}
-      <div style={{ fontSize: '12px', color: 'var(--admin-text-muted-dark)', marginTop: '8px', textAlign: 'left' }}>
+      <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '8px', textAlign: 'left' }}>
         Rates updated: {updatedTimestamp}
       </div>
 

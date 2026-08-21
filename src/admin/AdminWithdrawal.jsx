@@ -35,7 +35,7 @@ export default function AdminWithdrawal() {
 
       {/* 2. Filter Pills - Enlarged & Comfortable */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--admin-text-secondary-dark)' }}>Show:</span>
+        <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--admin-text-secondary)' }}>Show:</span>
         {['All', 'Gold', 'Silver'].map((opt) => {
           const isActive = filterMetal === opt;
           return (
@@ -46,11 +46,11 @@ export default function AdminWithdrawal() {
                 height: '40px',
                 padding: '0 20px',
                 borderRadius: '20px',
-                border: isActive ? 'none' : '1px solid var(--admin-border-dark)',
+                border: isActive ? 'none' : '1px solid var(--admin-border)',
                 backgroundColor: isActive 
                   ? (opt === 'All' ? 'var(--admin-orange)' : opt === 'Gold' ? '#d97706' : '#475569') 
-                  : 'var(--admin-card-bg-dark)',
-                color: isActive ? '#ffffff' : 'var(--admin-text-secondary-dark)',
+                  : 'var(--admin-bg-card)',
+                color: isActive ? '#ffffff' : 'var(--admin-text-secondary)',
                 fontSize: '14.5px',
                 fontWeight: '600',
                 cursor: 'pointer',
@@ -58,18 +58,18 @@ export default function AdminWithdrawal() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: isActive ? '0 2px 8px rgba(0, 0, 0, 0.2)' : 'none',
+                boxShadow: isActive ? '0 2px 8px rgba(0, 0, 0, 0.18)' : 'none',
                 boxSizing: 'border-box'
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.backgroundColor = '#1e293b';
+                  e.currentTarget.style.backgroundColor = 'var(--admin-border-subtle)';
                   e.currentTarget.style.transform = 'translateY(-1px)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.backgroundColor = 'var(--admin-card-bg-dark)';
+                  e.currentTarget.style.backgroundColor = 'var(--admin-bg-card)';
                   e.currentTarget.style.transform = 'none';
                 }
               }}
@@ -82,13 +82,13 @@ export default function AdminWithdrawal() {
 
       {/* 3. Summary Box Card */}
       <div className="admin-card">
-        <div style={{ fontSize: '13px', color: 'var(--admin-text-secondary-dark)', fontWeight: '600' }}>
+        <div style={{ fontSize: '13px', color: 'var(--admin-text-secondary)', fontWeight: '600' }}>
           Total withdrawal amount
         </div>
-        <div style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.3px', margin: '4px 0 2px 0', color: 'var(--admin-text-value-dark)' }}>
+        <div style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.3px', margin: '4px 0 2px 0', color: 'var(--admin-text-value)' }}>
           ₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
-        <div style={{ fontSize: '12px', color: 'var(--admin-text-muted-dark)' }}>
+        <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)' }}>
           {filterMetal === 'All' ? 'All metals' : `${filterMetal} only`} · {filteredWithdrawals.length} withdrawal(s)
         </div>
       </div>
@@ -114,28 +114,28 @@ export default function AdminWithdrawal() {
 
               return (
                 <tr key={w.id}>
-                  <td style={{ color: 'var(--admin-text-secondary-dark)', whiteSpace: 'nowrap', fontWeight: '600' }}>
+                  <td style={{ color: 'var(--admin-text-secondary)', whiteSpace: 'nowrap', fontWeight: '600' }}>
                     {w.date}
                   </td>
 
                   <td>
-                    <div style={{ fontWeight: '700', color: 'var(--admin-text-value-dark)' }}>{w.customer}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--admin-text-muted-dark)', marginTop: '2px' }}>{w.mobile}</div>
+                    <div style={{ fontWeight: '700', color: 'var(--admin-text-value)' }}>{w.customer}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '2px' }}>{w.mobile}</div>
                   </td>
 
-                  <td style={{ fontWeight: '600', color: w.metal === 'Gold' ? 'var(--admin-gold-text-dark)' : 'var(--admin-silver-text-dark)' }}>
+                  <td style={{ fontWeight: '600', color: w.metal === 'Gold' ? 'var(--admin-gold-text)' : 'var(--admin-silver-text)' }}>
                     {w.metal}
                   </td>
 
-                  <td style={{ fontWeight: '700', color: 'var(--admin-text-value-dark)' }}>
+                  <td style={{ fontWeight: '700', color: 'var(--admin-text-value)' }}>
                     {w.grams}
                   </td>
 
-                  <td style={{ fontWeight: '600', color: 'var(--admin-text-secondary-dark)' }}>
+                  <td style={{ fontWeight: '600', color: 'var(--admin-text-secondary)' }}>
                     ₹{parseFloat(w.rate || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </td>
 
-                  <td style={{ fontWeight: '800', color: 'var(--admin-text-value-dark)' }}>
+                  <td style={{ fontWeight: '800', color: 'var(--admin-text-value)' }}>
                     ₹{parseFloat(w.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </td>
 
@@ -145,7 +145,7 @@ export default function AdminWithdrawal() {
                         {w.status}
                       </span>
                       {w.paidDate && (
-                        <span style={{ fontSize: '11px', color: 'var(--admin-text-muted-dark)' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)' }}>
                           Amount paid · {w.paidDate}
                         </span>
                       )}
@@ -162,7 +162,7 @@ export default function AdminWithdrawal() {
                         Approve & mark paid
                       </button>
                     ) : (
-                      <span style={{ color: 'var(--admin-text-muted-dark)' }}>—</span>
+                      <span style={{ color: 'var(--admin-text-muted)' }}>—</span>
                     )}
                   </td>
                 </tr>
@@ -176,40 +176,40 @@ export default function AdminWithdrawal() {
       {selectedWithdrawal && (
         <div className="admin-modal-overlay" onClick={() => setSelectedWithdrawal(null)}>
           <div className="admin-modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: '17px', fontWeight: '800', margin: '0 0 6px 0', color: 'var(--admin-text-heading-dark)' }}>
+            <h3 style={{ fontSize: '17px', fontWeight: '800', margin: '0 0 6px 0', color: 'var(--admin-text-heading)' }}>
               Confirm approval
             </h3>
-            <p style={{ fontSize: '13px', color: 'var(--admin-text-secondary-dark)', margin: '0 0 16px 0', lineHeight: 1.4 }}>
+            <p style={{ fontSize: '13px', color: 'var(--admin-text-secondary)', margin: '0 0 16px 0', lineHeight: 1.4 }}>
               Please confirm the details below. This will mark the withdrawal as approved and amount paid.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border-dark)' }}>
-                <span style={{ color: 'var(--admin-text-secondary-dark)' }}>Date</span>
-                <span style={{ fontWeight: '600', color: 'var(--admin-text-value-dark)' }}>{selectedWithdrawal.date}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border)' }}>
+                <span style={{ color: 'var(--admin-text-secondary)' }}>Date</span>
+                <span style={{ fontWeight: '600', color: 'var(--admin-text-value)' }}>{selectedWithdrawal.date}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border-dark)' }}>
-                <span style={{ color: 'var(--admin-text-secondary-dark)' }}>Customer</span>
-                <span style={{ fontWeight: '600', color: 'var(--admin-text-value-dark)' }}>{selectedWithdrawal.customer}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border)' }}>
+                <span style={{ color: 'var(--admin-text-secondary)' }}>Customer</span>
+                <span style={{ fontWeight: '600', color: 'var(--admin-text-value)' }}>{selectedWithdrawal.customer}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border-dark)' }}>
-                <span style={{ color: 'var(--admin-text-secondary-dark)' }}>Mobile</span>
-                <span style={{ fontWeight: '600', color: 'var(--admin-text-value-dark)' }}>{selectedWithdrawal.mobile}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border)' }}>
+                <span style={{ color: 'var(--admin-text-secondary)' }}>Mobile</span>
+                <span style={{ fontWeight: '600', color: 'var(--admin-text-value)' }}>{selectedWithdrawal.mobile}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border-dark)' }}>
-                <span style={{ color: 'var(--admin-text-secondary-dark)' }}>Metal</span>
-                <span style={{ fontWeight: '600', color: 'var(--admin-text-value-dark)' }}>{selectedWithdrawal.metal}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border)' }}>
+                <span style={{ color: 'var(--admin-text-secondary)' }}>Metal</span>
+                <span style={{ fontWeight: '600', color: 'var(--admin-text-value)' }}>{selectedWithdrawal.metal}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border-dark)' }}>
-                <span style={{ color: 'var(--admin-text-secondary-dark)' }}>Grams</span>
-                <span style={{ fontWeight: '600', color: 'var(--admin-text-value-dark)' }}>{selectedWithdrawal.grams} g</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border)' }}>
+                <span style={{ color: 'var(--admin-text-secondary)' }}>Grams</span>
+                <span style={{ fontWeight: '600', color: 'var(--admin-text-value)' }}>{selectedWithdrawal.grams} g</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border-dark)' }}>
-                <span style={{ color: 'var(--admin-text-secondary-dark)' }}>Rate (₹/gm)</span>
-                <span style={{ fontWeight: '600', color: 'var(--admin-text-value-dark)' }}>₹{parseFloat(selectedWithdrawal.rate || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--admin-border)' }}>
+                <span style={{ color: 'var(--admin-text-secondary)' }}>Rate (₹/gm)</span>
+                <span style={{ fontWeight: '600', color: 'var(--admin-text-value)' }}>₹{parseFloat(selectedWithdrawal.rate || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
-                <span style={{ color: 'var(--admin-text-secondary-dark)' }}>Amount (₹)</span>
+                <span style={{ color: 'var(--admin-text-secondary)' }}>Amount (₹)</span>
                 <span style={{ fontWeight: '800', color: 'var(--admin-orange)' }}>
                   ₹{parseFloat(selectedWithdrawal.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </span>

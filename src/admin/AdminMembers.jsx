@@ -414,12 +414,12 @@ export default function AdminMembers() {
         <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '20px' }}>
           
           {/* Header & Tabs */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', borderBottom: '1px solid var(--admin-border-dark)', paddingBottom: '12px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '12px' }}>
             <div>
-              <h3 style={{ fontSize: '17px', fontWeight: '800', margin: '0 0 2px 0', color: 'var(--admin-text-heading-dark)' }}>
+              <h3 style={{ fontSize: '17px', fontWeight: '800', margin: '0 0 2px 0', color: 'var(--admin-text-heading)' }}>
                 Transaction History
               </h3>
-              <p style={{ fontSize: '13px', color: 'var(--admin-text-secondary-dark)', margin: 0 }}>
+              <p style={{ fontSize: '13px', color: 'var(--admin-text-secondary)', margin: 0 }}>
                 Gold and silver transactions and withdrawal logs for this member
               </p>
             </div>
@@ -433,9 +433,9 @@ export default function AdminMembers() {
                   width: '135px',
                   padding: '0 20px',
                   borderRadius: '20px',
-                  border: activeTab === 'gold' ? 'none' : '1px solid var(--admin-border-dark)',
-                  backgroundColor: activeTab === 'gold' ? '#d97706' : 'var(--admin-card-bg-dark)',
-                  color: activeTab === 'gold' ? '#ffffff' : 'var(--admin-text-secondary-dark)',
+                  border: activeTab === 'gold' ? 'none' : '1px solid var(--admin-border)',
+                  backgroundColor: activeTab === 'gold' ? '#d97706' : 'var(--admin-bg-card)',
+                  color: activeTab === 'gold' ? '#ffffff' : 'var(--admin-text-secondary)',
                   fontSize: '14.5px',
                   fontWeight: '600',
                   cursor: 'pointer',
@@ -448,13 +448,13 @@ export default function AdminMembers() {
                 }}
                 onMouseEnter={(e) => {
                   if (activeTab !== 'gold') {
-                    e.currentTarget.style.backgroundColor = '#1e293b';
+                    e.currentTarget.style.backgroundColor = 'var(--admin-border-subtle)';
                     e.currentTarget.style.transform = 'translateY(-1px)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (activeTab !== 'gold') {
-                    e.currentTarget.style.backgroundColor = 'var(--admin-card-bg-dark)';
+                    e.currentTarget.style.backgroundColor = 'var(--admin-bg-card)';
                     e.currentTarget.style.transform = 'none';
                   }
                 }}
@@ -469,9 +469,9 @@ export default function AdminMembers() {
                   width: '135px',
                   padding: '0 20px',
                   borderRadius: '20px',
-                  border: activeTab === 'silver' ? 'none' : '1px solid var(--admin-border-dark)',
-                  backgroundColor: activeTab === 'silver' ? '#475569' : 'var(--admin-card-bg-dark)',
-                  color: activeTab === 'silver' ? '#ffffff' : 'var(--admin-text-secondary-dark)',
+                  border: activeTab === 'silver' ? 'none' : '1px solid var(--admin-border)',
+                  backgroundColor: activeTab === 'silver' ? '#475569' : 'var(--admin-bg-card)',
+                  color: activeTab === 'silver' ? '#ffffff' : 'var(--admin-text-secondary)',
                   fontSize: '14.5px',
                   fontWeight: '600',
                   cursor: 'pointer',
@@ -484,13 +484,13 @@ export default function AdminMembers() {
                 }}
                 onMouseEnter={(e) => {
                   if (activeTab !== 'silver') {
-                    e.currentTarget.style.backgroundColor = '#1e293b';
+                    e.currentTarget.style.backgroundColor = 'var(--admin-border-subtle)';
                     e.currentTarget.style.transform = 'translateY(-1px)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (activeTab !== 'silver') {
-                    e.currentTarget.style.backgroundColor = 'var(--admin-card-bg-dark)';
+                    e.currentTarget.style.backgroundColor = 'var(--admin-bg-card)';
                     e.currentTarget.style.transform = 'none';
                   }
                 }}
@@ -517,8 +517,8 @@ export default function AdminMembers() {
                     padding: '5px 12px',
                     borderRadius: '16px',
                     border: 'none',
-                    backgroundColor: filterType === opt.id ? 'var(--admin-orange)' : '#1e293b',
-                    color: filterType === opt.id ? '#ffffff' : 'var(--admin-text-secondary-dark)',
+                    backgroundColor: filterType === opt.id ? 'var(--admin-orange)' : 'var(--admin-border-subtle)',
+                    color: filterType === opt.id ? '#ffffff' : 'var(--admin-text-secondary)',
                     fontSize: '12px',
                     fontWeight: '600',
                     cursor: 'pointer',
@@ -581,7 +581,7 @@ export default function AdminMembers() {
                 className="admin-input"
                 style={{ height: '36px', padding: '0 10px', fontSize: '13px', width: '85px' }}
               />
-              <span style={{ color: 'var(--admin-text-muted-dark)' }}>-</span>
+              <span style={{ color: 'var(--admin-text-muted)' }}>-</span>
               <input
                 type="number"
                 step="0.0001"
@@ -635,7 +635,7 @@ export default function AdminMembers() {
 
                     return (
                       <tr key={txn.id || idx}>
-                        <td style={{ fontWeight: '600', color: 'var(--admin-text-secondary-dark)' }}>
+                        <td style={{ fontWeight: '600', color: 'var(--admin-text-secondary)' }}>
                           {txn.displayDate}
                         </td>
 
@@ -645,22 +645,22 @@ export default function AdminMembers() {
                             borderRadius: '6px',
                             fontSize: '11.5px',
                             fontWeight: '700',
-                            backgroundColor: txn.type === 'Purchase' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(59, 130, 246, 0.2)',
-                            color: txn.type === 'Purchase' ? '#34d399' : '#60a5fa'
+                            backgroundColor: txn.type === 'Purchase' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+                            color: txn.type === 'Purchase' ? '#047857' : '#1d4ed8'
                           }}>
                             {txn.type}
                           </span>
                         </td>
 
-                        <td style={{ fontWeight: '700', color: 'var(--admin-text-value-dark)' }}>
+                        <td style={{ fontWeight: '700', color: 'var(--admin-text-value)' }}>
                           {tGrams.toFixed(4)} gm
                         </td>
 
-                        <td style={{ color: 'var(--admin-text-secondary-dark)' }}>
+                        <td style={{ color: 'var(--admin-text-secondary)' }}>
                           ₹{tRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
 
-                        <td style={{ fontWeight: '700', color: 'var(--admin-text-value-dark)' }}>
+                        <td style={{ fontWeight: '700', color: 'var(--admin-text-value)' }}>
                           ₹{tAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
 
@@ -668,7 +668,7 @@ export default function AdminMembers() {
                           {renderStatusBadge(txn.displayStatus)}
                         </td>
 
-                        <td style={{ color: 'var(--admin-text-secondary-dark)' }}>
+                        <td style={{ color: 'var(--admin-text-secondary)' }}>
                           {txn.displayPayment}
                         </td>
                       </tr>
@@ -676,7 +676,7 @@ export default function AdminMembers() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan="7" style={{ textAlign: 'center', padding: '36px 16px', color: 'var(--admin-text-muted-dark)' }}>
+                    <td colSpan="7" style={{ textAlign: 'center', padding: '36px 16px', color: 'var(--admin-text-muted)' }}>
                       No {activeTab} transactions found for this member matching the filter criteria.
                     </td>
                   </tr>
@@ -729,16 +729,16 @@ export default function AdminMembers() {
           <div className="admin-modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
             <div className="admin-modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'rgba(239, 68, 68, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <AlertTriangle size={20} color="#ef4444" />
                 </div>
-                <h3 style={{ fontSize: '17px', fontWeight: '800', margin: 0, color: 'var(--admin-text-value-dark)' }}>
+                <h3 style={{ fontSize: '17px', fontWeight: '800', margin: 0, color: 'var(--admin-text-value)' }}>
                   Confirm Member Deactivation
                 </h3>
               </div>
 
-              <p style={{ fontSize: '13.5px', color: 'var(--admin-text-secondary-dark)', lineHeight: '1.4', marginBottom: '18px' }}>
-                Are you sure you want to deactivate member <strong style={{ color: 'var(--admin-text-value-dark)' }}>{selectedMember.username || 'user'}</strong> (ID: #{selectedMember.id})? This will mark their status as Inactive.
+              <p style={{ fontSize: '13.5px', color: 'var(--admin-text-secondary)', lineHeight: '1.4', marginBottom: '18px' }}>
+                Are you sure you want to deactivate member <strong style={{ color: 'var(--admin-text-value)' }}>{selectedMember.username || 'user'}</strong> (ID: #{selectedMember.id})? This will mark their status as Inactive.
               </p>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
@@ -836,14 +836,14 @@ export default function AdminMembers() {
 
               return (
                 <tr key={m.id || idx}>
-                  <td style={{ color: 'var(--admin-text-secondary-dark)', fontWeight: '600' }}>#{m.id}</td>
+                  <td style={{ color: 'var(--admin-text-secondary)', fontWeight: '600' }}>#{m.id}</td>
                   
                   {/* Username in orange/terracotta color */}
                   <td style={{ fontWeight: '700', color: 'var(--admin-orange)' }}>
                     {m.username}
                   </td>
 
-                  <td style={{ fontWeight: '500', color: 'var(--admin-text-secondary-dark)' }}>
+                  <td style={{ fontWeight: '500', color: 'var(--admin-text-secondary)' }}>
                     {m.mobile}
                   </td>
 
@@ -871,7 +871,7 @@ export default function AdminMembers() {
                     </span>
                   </td>
 
-                  <td style={{ color: 'var(--admin-text-secondary-dark)' }}>
+                  <td style={{ color: 'var(--admin-text-secondary)' }}>
                     {m.created}
                   </td>
 
@@ -880,9 +880,9 @@ export default function AdminMembers() {
                     <button
                       onClick={() => setSelectedMemberId(m.id)}
                       style={{
-                        backgroundColor: '#1e293b',
-                        color: '#60a5fa',
-                        border: '1px solid #3b82f6',
+                        backgroundColor: 'var(--admin-border-subtle)',
+                        color: 'var(--admin-sidebar-active-text)',
+                        border: '1px solid var(--admin-border)',
                         borderRadius: '6px',
                         padding: '5px 14px',
                         fontSize: '12.5px',
@@ -891,12 +891,12 @@ export default function AdminMembers() {
                         transition: 'all 0.15s ease'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#2563eb';
+                        e.currentTarget.style.backgroundColor = 'var(--admin-sidebar-active-text)';
                         e.currentTarget.style.color = '#ffffff';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#1e293b';
-                        e.currentTarget.style.color = '#60a5fa';
+                        e.currentTarget.style.backgroundColor = 'var(--admin-border-subtle)';
+                        e.currentTarget.style.color = 'var(--admin-sidebar-active-text)';
                       }}
                     >
                       View

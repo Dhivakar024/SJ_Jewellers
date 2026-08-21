@@ -67,13 +67,13 @@ export default function AdminSettings() {
 
       {/* 2. Username Section */}
       <div className="admin-card">
-        <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 14px 0', color: 'var(--admin-text-heading-dark)' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 14px 0', color: 'var(--admin-text-heading)' }}>
           Username
         </h3>
 
         <form onSubmit={handleSaveUsername} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-secondary-dark)', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-secondary)', marginBottom: '6px' }}>
               Account username
             </label>
             <input
@@ -85,7 +85,7 @@ export default function AdminSettings() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-secondary-dark)', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-secondary)', marginBottom: '6px' }}>
               Password (to confirm change)
             </label>
             <input
@@ -112,15 +112,15 @@ export default function AdminSettings() {
 
       {/* 3. Auto Logout (Inactivity) Section */}
       <div className="admin-card">
-        <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 4px 0', color: 'var(--admin-text-heading-dark)' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 4px 0', color: 'var(--admin-text-heading)' }}>
           Auto logout (inactivity)
         </h3>
-        <p style={{ fontSize: '13px', color: 'var(--admin-text-secondary-dark)', margin: '0 0 14px 0' }}>
+        <p style={{ fontSize: '13px', color: 'var(--admin-text-secondary)', margin: '0 0 14px 0' }}>
           Log out automatically after this much time with no activity (mouse, keyboard, touch, scroll).
         </p>
 
         <div>
-          <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-secondary-dark)', marginBottom: '6px' }}>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-secondary)', marginBottom: '6px' }}>
             Logout after
           </label>
           <select
@@ -140,7 +140,7 @@ export default function AdminSettings() {
 
       {/* 4. Change Password Section */}
       <div className="admin-card">
-        <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 14px 0', color: 'var(--admin-text-heading-dark)' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 14px 0', color: 'var(--admin-text-heading)' }}>
           Change password
         </h3>
 
@@ -152,7 +152,7 @@ export default function AdminSettings() {
 
         <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-secondary-dark)', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-secondary)', marginBottom: '6px' }}>
               Current password
             </label>
             <input
@@ -164,7 +164,7 @@ export default function AdminSettings() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-secondary-dark)', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-secondary)', marginBottom: '6px' }}>
               New password
             </label>
             <input
@@ -176,7 +176,7 @@ export default function AdminSettings() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-secondary-dark)', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-secondary)', marginBottom: '6px' }}>
               Confirm new password
             </label>
             <input
@@ -185,7 +185,7 @@ export default function AdminSettings() {
               onChange={(e) => setConfirmNewPassword(e.target.value)}
               className="admin-input"
             />
-            <div style={{ fontSize: '12px', color: 'var(--admin-text-muted-dark)', marginTop: '4px' }}>
+            <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '4px' }}>
               At least 6 characters
             </div>
           </div>

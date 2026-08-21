@@ -111,11 +111,11 @@ export default function AdminRates() {
                   </div>
                 </div>
                 
-                {/* Larger API / Custom Toggle Switch */}
+                {/* API / Custom Toggle Switch */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
                   <span style={{
                     fontWeight: !goldCustom ? '700' : '500',
-                    color: !goldCustom ? 'var(--admin-text-value-dark)' : 'var(--admin-text-muted-dark)'
+                    color: !goldCustom ? 'var(--admin-text-value)' : 'var(--admin-text-muted)'
                   }}>
                     API
                   </span>
@@ -128,7 +128,7 @@ export default function AdminRates() {
                     style={{
                       width: '46px',
                       height: '26px',
-                      backgroundColor: goldCustom ? '#10b981' : '#64748b',
+                      backgroundColor: goldCustom ? '#10b981' : '#94a3b8',
                       borderRadius: '14px',
                       padding: '3px',
                       cursor: 'pointer',
@@ -151,7 +151,7 @@ export default function AdminRates() {
 
                   <span style={{
                     fontWeight: goldCustom ? '700' : '500',
-                    color: goldCustom ? 'var(--admin-text-value-dark)' : 'var(--admin-text-muted-dark)'
+                    color: goldCustom ? 'var(--admin-text-value)' : 'var(--admin-text-muted)'
                   }}>
                     Custom
                   </span>
@@ -174,8 +174,8 @@ export default function AdminRates() {
                   fontWeight: '600',
                   cursor: !goldCustom ? 'not-allowed' : 'text',
                   opacity: !goldCustom ? 0.75 : 1,
-                  backgroundColor: !goldCustom ? 'rgba(15, 23, 42, 0.4)' : undefined,
-                  borderColor: !goldCustom ? 'var(--admin-border-dark)' : undefined
+                  backgroundColor: !goldCustom ? 'var(--admin-bg-card-subtle)' : undefined,
+                  borderColor: !goldCustom ? 'var(--admin-border)' : undefined
                 }}
               />
             </div>
@@ -212,11 +212,11 @@ export default function AdminRates() {
                   </div>
                 </div>
                 
-                {/* Larger API / Custom Toggle Switch */}
+                {/* API / Custom Toggle Switch */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
                   <span style={{
                     fontWeight: !silverCustom ? '700' : '500',
-                    color: !silverCustom ? 'var(--admin-text-value-dark)' : 'var(--admin-text-muted-dark)'
+                    color: !silverCustom ? 'var(--admin-text-value)' : 'var(--admin-text-muted)'
                   }}>
                     API
                   </span>
@@ -229,7 +229,7 @@ export default function AdminRates() {
                     style={{
                       width: '46px',
                       height: '26px',
-                      backgroundColor: silverCustom ? '#10b981' : '#64748b',
+                      backgroundColor: silverCustom ? '#10b981' : '#94a3b8',
                       borderRadius: '14px',
                       padding: '3px',
                       cursor: 'pointer',
@@ -252,7 +252,7 @@ export default function AdminRates() {
 
                   <span style={{
                     fontWeight: silverCustom ? '700' : '500',
-                    color: silverCustom ? 'var(--admin-text-value-dark)' : 'var(--admin-text-muted-dark)'
+                    color: silverCustom ? 'var(--admin-text-value)' : 'var(--admin-text-muted)'
                   }}>
                     Custom
                   </span>
@@ -275,15 +275,15 @@ export default function AdminRates() {
                   fontWeight: '600',
                   cursor: !silverCustom ? 'not-allowed' : 'text',
                   opacity: !silverCustom ? 0.75 : 1,
-                  backgroundColor: !silverCustom ? 'rgba(15, 23, 42, 0.4)' : undefined,
-                  borderColor: !silverCustom ? 'var(--admin-border-dark)' : undefined
+                  backgroundColor: !silverCustom ? 'var(--admin-bg-card-subtle)' : undefined,
+                  borderColor: !silverCustom ? 'var(--admin-border)' : undefined
                 }}
               />
             </div>
           </div>
 
           {/* Save Button & Note */}
-          <div style={{ borderTop: '1px solid var(--admin-border-dark)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ borderTop: '1px solid var(--admin-border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
               <button type="submit" className="admin-btn-orange" style={{ padding: '10px 24px', fontSize: '14.5px' }}>
                 Save Rates
@@ -295,7 +295,7 @@ export default function AdminRates() {
               )}
             </div>
 
-            <div style={{ fontSize: '12px', color: 'var(--admin-text-muted-dark)' }}>
+            <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)' }}>
               Custom rates remain active until today 11:59 PM, after which they will automatically revert to live API rates.
             </div>
           </div>

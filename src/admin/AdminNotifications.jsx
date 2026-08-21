@@ -85,10 +85,10 @@ export default function AdminNotifications() {
                   <div style={{ fontSize: '14.5px', fontWeight: '700', color: '#059669' }}>
                     {w.customer} · {w.metal}
                   </div>
-                  <div style={{ fontSize: '13.5px', fontWeight: '700', marginTop: '2px', color: 'var(--admin-text-main-light)' }}>
+                  <div style={{ fontSize: '13.5px', fontWeight: '700', marginTop: '2px', color: 'var(--admin-text-main)' }}>
                     {w.grams} · ₹{parseFloat(w.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </div>
-                  <div style={{ fontSize: '12px', color: 'var(--admin-text-muted-light)', marginTop: '2px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '2px' }}>
                     Mobile: {w.mobile} · {w.date}
                   </div>
                 </div>
@@ -185,10 +185,10 @@ export default function AdminNotifications() {
       {selectedWithdrawal && (
         <div className="admin-modal-overlay" onClick={() => setSelectedWithdrawal(null)}>
           <div className="admin-modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: '17px', fontWeight: '700', margin: '0 0 8px 0', color: 'var(--admin-text-main-light)' }}>
+            <h3 style={{ fontSize: '17px', fontWeight: '700', margin: '0 0 8px 0', color: 'var(--admin-text-heading)' }}>
               Confirm payment
             </h3>
-            <p style={{ fontSize: '13.5px', color: 'var(--admin-text-secondary-light)', marginBottom: '18px' }}>
+            <p style={{ fontSize: '13.5px', color: 'var(--admin-text-secondary)', marginBottom: '18px' }}>
               Confirm that ₹{parseFloat(selectedWithdrawal.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })} has been transferred to {selectedWithdrawal.customer}.
             </p>
 
@@ -216,12 +216,13 @@ export default function AdminNotifications() {
       {selectedVerification && (
         <div className="admin-modal-overlay" onClick={() => setSelectedVerification(null)}>
           <div className="admin-modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: '17px', fontWeight: '700', margin: '0 0 12px 0', color: 'var(--admin-text-main-light)' }}>
+            <h3 style={{ fontSize: '17px', fontWeight: '700', margin: '0 0 12px 0', color: 'var(--admin-text-heading)' }}>
               Verify customer account
             </h3>
 
             <div style={{
-              backgroundColor: 'rgba(241, 245, 249, 0.6)',
+              backgroundColor: 'var(--admin-bg-card-subtle)',
+              border: '1px solid var(--admin-border)',
               borderRadius: '8px',
               padding: '12px 14px',
               fontSize: '13px',
@@ -229,7 +230,7 @@ export default function AdminNotifications() {
               flexDirection: 'column',
               gap: '6px',
               marginBottom: '18px',
-              color: 'var(--admin-text-secondary-light)'
+              color: 'var(--admin-text-secondary)'
             }}>
               <div><strong>Name:</strong> {selectedVerification.name}</div>
               <div><strong>Mobile:</strong> {selectedVerification.mobile}</div>
