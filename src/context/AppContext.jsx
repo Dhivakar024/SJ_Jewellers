@@ -274,9 +274,7 @@ export function AppProvider({ children }) {
 
   const [adminAuth, setAdminAuth] = useState(() => {
     try {
-      if (localStorage.getItem('sj_admin_logged_out') === 'true') {
-        return { isAuthenticated: false, email: '' };
-      }
+      localStorage.removeItem('sj_admin_logged_out');
       const saved = localStorage.getItem('sj_admin_session') || sessionStorage.getItem('sj_admin_session');
       if (saved) {
         const parsed = JSON.parse(saved);

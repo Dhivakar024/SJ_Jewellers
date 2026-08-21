@@ -34,19 +34,19 @@ function isAdminRoute() {
   const path = (window.location.pathname || '').toLowerCase();
   const hash = (window.location.hash || '').toLowerCase();
   const search = (window.location.search || '').toLowerCase();
-  return path.startsWith('/admin') || 
+  const href = (window.location.href || '').toLowerCase();
+  return href.includes('admin') || 
          path.includes('admin') || 
-         hash.startsWith('#admin') || 
-         hash.startsWith('#/admin') || 
-         hash.includes('admin') ||
+         hash.includes('admin') || 
          search.includes('admin');
 }
 
 // Helper to extract the active admin tab from URL
 function getAdminTabFromUrl() {
+  const href = (window.location.href || '').toLowerCase();
   const hash = (window.location.hash || '').toLowerCase();
   const path = (window.location.pathname || '').toLowerCase();
-  const full = `${path} ${hash}`;
+  const full = `${href} ${path} ${hash}`;
   if (full.includes('notifications')) return 'notifications';
   if (full.includes('rates')) return 'rates';
   if (full.includes('members')) return 'members';
