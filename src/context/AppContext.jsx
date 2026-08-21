@@ -587,9 +587,14 @@ export function AppProvider({ children }) {
     if (silverInputVal !== undefined) setCustomSilverInput(silverInputVal);
   };
 
-  // Theme Toggle Action
-  const toggleAdminTheme = () => {
-    setAdminTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  // Member Actions
+  const deleteMember = (id) => {
+    setMembers((prev) => prev.map((m) => {
+      if (m.id === id || m.id === id?.toString()) {
+        return { ...m, active: 'No' };
+      }
+      return m;
+    }));
   };
 
   return (
@@ -636,6 +641,7 @@ export function AppProvider({ children }) {
         requestWithdrawal,
         approveWithdrawal,
         verifyCustomer,
+        deleteMember,
         saveRates
       }}
     >
