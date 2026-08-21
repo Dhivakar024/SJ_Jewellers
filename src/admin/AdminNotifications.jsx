@@ -35,17 +35,35 @@ export default function AdminNotifications() {
         </p>
       </div>
 
-      {/* 2. Pending Withdrawal Payments Section */}
-      <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      {/* 2. Pending Withdrawal Payments Section - Subtle Mint Green Tint */}
+      <div className="admin-card" style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '14px',
+        backgroundColor: '#ECFDF5',
+        border: '1px solid #A7F3D0'
+      }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
           <div>
-            <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0 }}>Pending withdrawal payments</h3>
-            <p style={{ fontSize: '12px', color: '#6b7280', margin: '2px 0 0 0' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', margin: 0, color: '#065f46' }}>
+              Pending withdrawal payments
+            </h3>
+            <p style={{ fontSize: '12.5px', color: '#047857', margin: '2px 0 0 0' }}>
               Confirm when the amount has been paid to the customer.
             </p>
           </div>
 
-          <span className="admin-badge-green">
+          <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            padding: '4px 10px',
+            borderRadius: '6px',
+            fontSize: '12.5px',
+            fontWeight: '700',
+            backgroundColor: '#dcfce7',
+            color: '#15803d',
+            border: '1px solid #86efac'
+          }}>
             {pendingWithdrawals.length} pending
           </span>
         </div>
@@ -53,7 +71,7 @@ export default function AdminNotifications() {
         {/* Withdrawal List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {pendingWithdrawals.length === 0 ? (
-            <div style={{ fontSize: '12.5px', color: '#9ca3af', padding: '8px 0' }}>
+            <div style={{ fontSize: '13px', color: '#059669', padding: '8px 0' }}>
               No pending withdrawal payments.
             </div>
           ) : (
@@ -65,19 +83,19 @@ export default function AdminNotifications() {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '12px 14px',
-                  borderRadius: '6px',
-                  border: '1px solid var(--admin-border-light)',
-                  backgroundColor: 'rgba(248, 250, 252, 0.6)'
+                  borderRadius: '8px',
+                  border: '1px solid #a7f3d0',
+                  backgroundColor: '#ffffff'
                 }}
               >
                 <div>
-                  <div style={{ fontSize: '13.5px', fontWeight: '700', color: '#059669' }}>
+                  <div style={{ fontSize: '14px', fontWeight: '700', color: '#059669' }}>
                     {w.customer} · {w.metal}
                   </div>
-                  <div style={{ fontSize: '13px', fontWeight: '700', marginTop: '2px' }}>
+                  <div style={{ fontSize: '13.5px', fontWeight: '700', marginTop: '2px', color: '#111827' }}>
                     {w.grams} · ₹{parseFloat(w.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>
+                  <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
                     Mobile: {w.mobile} · {w.date}
                   </div>
                 </div>
@@ -94,17 +112,35 @@ export default function AdminNotifications() {
         </div>
       </div>
 
-      {/* 3. Pending User Verifications Section */}
-      <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      {/* 3. Pending User Verifications Section - Subtle Warm Gold Tint */}
+      <div className="admin-card" style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '14px',
+        backgroundColor: '#FFF9E6',
+        border: '1px solid #F5D76E'
+      }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
           <div>
-            <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0 }}>Pending user verifications</h3>
-            <p style={{ fontSize: '12px', color: '#6b7280', margin: '2px 0 0 0' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', margin: 0, color: '#92400e' }}>
+              Pending user verifications
+            </h3>
+            <p style={{ fontSize: '12.5px', color: '#b45309', margin: '2px 0 0 0' }}>
               Click a user to view full details and verify their account.
             </p>
           </div>
 
-          <span className="admin-badge-green">
+          <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            padding: '4px 10px',
+            borderRadius: '6px',
+            fontSize: '12.5px',
+            fontWeight: '700',
+            backgroundColor: '#fef3c7',
+            color: '#b45309',
+            border: '1px solid #fde68a'
+          }}>
             {pendingVerifications.length} pending
           </span>
         </div>
@@ -112,7 +148,7 @@ export default function AdminNotifications() {
         {/* Verification List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {pendingVerifications.length === 0 ? (
-            <div style={{ fontSize: '12.5px', color: '#9ca3af', padding: '8px 0' }}>
+            <div style={{ fontSize: '13px', color: '#b45309', padding: '8px 0' }}>
               No pending user verifications.
             </div>
           ) : (
@@ -124,26 +160,42 @@ export default function AdminNotifications() {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '12px 14px',
-                  borderRadius: '6px',
-                  border: '1px solid var(--admin-border-light)',
-                  backgroundColor: 'rgba(248, 250, 252, 0.6)'
+                  borderRadius: '8px',
+                  border: '1px solid #fde68a',
+                  backgroundColor: '#ffffff'
                 }}
               >
                 <div>
-                  <div style={{ fontSize: '13.5px', fontWeight: '700', color: '#059669' }}>
+                  <div style={{ fontSize: '14px', fontWeight: '700', color: '#b45309' }}>
                     {v.name}
                   </div>
-                  <div style={{ fontSize: '11.5px', color: '#6b7280', marginTop: '2px' }}>
+                  <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
                     Mobile: {v.mobile} · Role: {v.role}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
+                  <div style={{ fontSize: '11.5px', color: '#9ca3af', marginTop: '2px' }}>
                     Created: {v.created}
                   </div>
                 </div>
 
                 <button
-                  className="admin-btn-outline-green"
                   onClick={() => setSelectedVerification(v)}
+                  style={{
+                    backgroundColor: '#fef3c7',
+                    color: '#92400e',
+                    border: '1px solid #fde68a',
+                    borderRadius: '8px',
+                    padding: '7px 16px',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#fde68a';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#fef3c7';
+                  }}
                 >
                   Tap to review
                 </button>

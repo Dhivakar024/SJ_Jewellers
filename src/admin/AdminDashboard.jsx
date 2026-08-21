@@ -924,15 +924,21 @@ export default function AdminDashboard({ onSelectTab }) {
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: '20px'
       }}>
-        {/* Gold (24K) Card */}
-        <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        {/* Gold (24K) Card - Subtle Champagne Gold Tint */}
+        <div className="admin-card" style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
+          backgroundColor: '#FFF8E1',
+          border: '1px solid #fde68a'
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{
               width: '32px',
               height: '32px',
               borderRadius: '50%',
               backgroundColor: '#fef3c7',
-              color: '#d97706',
+              color: '#D4A017',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -951,20 +957,26 @@ export default function AdminDashboard({ onSelectTab }) {
             <div style={{ fontSize: '24px', fontWeight: '800', margin: '2px 0 1px 0', letterSpacing: '-0.2px', color: 'var(--admin-text-main-light)' }}>
               ₹{goldRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div style={{ fontSize: '11.5px', color: '#9ca3af' }}>
+            <div style={{ fontSize: '11.5px', color: '#6b7280' }}>
               per gram · INR
             </div>
           </div>
         </div>
 
-        {/* Silver Card */}
-        <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        {/* Silver Card - Subtle Silver Gray Tint */}
+        <div className="admin-card" style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
+          backgroundColor: '#F3F5F7',
+          border: '1px solid #d9dee3'
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{
               width: '32px',
               height: '32px',
               borderRadius: '50%',
-              backgroundColor: '#f3f4f6',
+              backgroundColor: '#e5e7eb',
               color: '#6b7280',
               display: 'flex',
               alignItems: 'center',
@@ -984,7 +996,7 @@ export default function AdminDashboard({ onSelectTab }) {
             <div style={{ fontSize: '24px', fontWeight: '800', margin: '2px 0 1px 0', letterSpacing: '-0.2px', color: 'var(--admin-text-main-light)' }}>
               ₹{silverRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div style={{ fontSize: '11.5px', color: '#9ca3af' }}>
+            <div style={{ fontSize: '11.5px', color: '#6b7280' }}>
               per gram · INR
             </div>
           </div>

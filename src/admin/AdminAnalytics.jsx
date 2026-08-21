@@ -150,25 +150,37 @@ export default function AdminAnalytics() {
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: '16px'
       }}>
-        {/* Gold (all customers) */}
-        <div className="admin-card" style={{ borderLeft: '4px solid #f59e0b' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: '700', margin: '0 0 10px 0' }}>Gold (all customers)</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px' }}>
-            <div style={{ color: '#6b7280' }}>Current API rate: ₹{goldRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm</div>
-            <div style={{ color: '#6b7280' }}>Total gold bought: {totalGoldBought.toFixed(3)} g</div>
-            <div style={{ fontWeight: '800', color: 'var(--admin-orange)', marginTop: '2px' }}>
+        {/* Gold (all customers) - Subtle Champagne Gold Tint */}
+        <div className="admin-card" style={{
+          backgroundColor: '#FFF8E1',
+          border: '1px solid #fde68a',
+          borderLeft: '4px solid #D4A017'
+        }}>
+          <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 10px 0', color: '#92400e' }}>
+            Gold (all customers)
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '13px' }}>
+            <div style={{ color: '#78350f' }}>Current API rate: ₹{goldRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm</div>
+            <div style={{ color: '#78350f' }}>Total gold bought: {totalGoldBought.toFixed(3)} g</div>
+            <div style={{ fontWeight: '800', color: 'var(--admin-orange)', marginTop: '2px', fontSize: '14px' }}>
               Current value of all gold: ₹{totalGoldCurrentValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           </div>
         </div>
 
-        {/* Silver (all customers) */}
-        <div className="admin-card" style={{ borderLeft: '4px solid #9ca3af' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: '700', margin: '0 0 10px 0' }}>Silver (all customers)</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px' }}>
-            <div style={{ color: '#6b7280' }}>Current API rate: ₹{silverRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm</div>
-            <div style={{ color: '#6b7280' }}>Total silver bought: {totalSilverBought.toFixed(3)} g</div>
-            <div style={{ fontWeight: '700', marginTop: '2px' }}>
+        {/* Silver (all customers) - Subtle Silver Gray Tint */}
+        <div className="admin-card" style={{
+          backgroundColor: '#F3F5F7',
+          border: '1px solid #d9dee3',
+          borderLeft: '4px solid #94a3b8'
+        }}>
+          <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 10px 0', color: '#334155' }}>
+            Silver (all customers)
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '13px' }}>
+            <div style={{ color: '#475569' }}>Current API rate: ₹{silverRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm</div>
+            <div style={{ color: '#475569' }}>Total silver bought: {totalSilverBought.toFixed(3)} g</div>
+            <div style={{ fontWeight: '700', marginTop: '2px', color: '#0f172a', fontSize: '14px' }}>
               Current value of all silver: ₹{totalSilverCurrentValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           </div>
