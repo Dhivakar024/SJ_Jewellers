@@ -81,10 +81,10 @@ export default function AdminRates() {
                     $
                   </div>
                   <div>
-                    <label style={{ fontSize: '15px', fontWeight: '700', color: 'var(--admin-text-main-light)', margin: 0, display: 'block', lineHeight: 1.2 }}>
+                    <label className="admin-rate-gold-label" style={{ margin: 0, display: 'block' }}>
                       Gold
                     </label>
-                    <span style={{ fontSize: '12px', color: 'var(--admin-text-muted-light)' }}>
+                    <span className="admin-rate-subtext">
                       Current API: ₹{(goldRate || 13818.88).toLocaleString('en-IN')}/g
                     </span>
                   </div>
@@ -94,7 +94,7 @@ export default function AdminRates() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
                   <span style={{
                     fontWeight: !goldCustom ? '700' : '500',
-                    color: !goldCustom ? 'var(--admin-text-main-light)' : 'var(--admin-text-muted-light)'
+                    color: !goldCustom ? 'var(--admin-text-main-dark)' : 'var(--admin-text-muted-dark)'
                   }}>
                     API
                   </span>
@@ -130,7 +130,7 @@ export default function AdminRates() {
 
                   <span style={{
                     fontWeight: goldCustom ? '700' : '500',
-                    color: goldCustom ? 'var(--admin-text-main-light)' : 'var(--admin-text-muted-light)'
+                    color: goldCustom ? 'var(--admin-text-main-dark)' : 'var(--admin-text-muted-dark)'
                   }}>
                     Custom
                   </span>
@@ -171,10 +171,10 @@ export default function AdminRates() {
                     $
                   </div>
                   <div>
-                    <label style={{ fontSize: '15px', fontWeight: '700', color: 'var(--admin-text-main-light)', margin: 0, display: 'block', lineHeight: 1.2 }}>
+                    <label className="admin-rate-silver-label" style={{ margin: 0, display: 'block' }}>
                       Silver
                     </label>
-                    <span style={{ fontSize: '12px', color: 'var(--admin-text-muted-light)' }}>
+                    <span className="admin-rate-subtext">
                       Current API: ₹{(silverRate || 206.17).toLocaleString('en-IN')}/g
                     </span>
                   </div>
@@ -184,7 +184,7 @@ export default function AdminRates() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
                   <span style={{
                     fontWeight: !silverCustom ? '700' : '500',
-                    color: !silverCustom ? 'var(--admin-text-main-light)' : 'var(--admin-text-muted-light)'
+                    color: !silverCustom ? 'var(--admin-text-main-dark)' : 'var(--admin-text-muted-dark)'
                   }}>
                     API
                   </span>
@@ -220,7 +220,7 @@ export default function AdminRates() {
 
                   <span style={{
                     fontWeight: silverCustom ? '700' : '500',
-                    color: silverCustom ? 'var(--admin-text-main-light)' : 'var(--admin-text-muted-light)'
+                    color: silverCustom ? 'var(--admin-text-main-dark)' : 'var(--admin-text-muted-dark)'
                   }}>
                     Custom
                   </span>

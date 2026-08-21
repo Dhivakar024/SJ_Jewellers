@@ -155,38 +155,22 @@ export default function AdminNotifications() {
                 onClick={() => setSelectedVerification(v)}
               >
                 <div>
-                  <div style={{ fontSize: '14.5px', fontWeight: '700', color: '#b45309' }}>
+                  <div className="admin-verification-name">
                     {v.name}
                   </div>
-                  <div style={{ fontSize: '12.5px', color: 'var(--admin-text-secondary-light)', marginTop: '2px' }}>
+                  <div className="admin-verification-detail">
                     Mobile: {v.mobile} · Role: {v.role}
                   </div>
-                  <div style={{ fontSize: '12px', color: 'var(--admin-text-muted-light)', marginTop: '2px' }}>
+                  <div className="admin-verification-meta">
                     Created: {v.created}
                   </div>
                 </div>
 
                 <button
+                  className="admin-verification-btn"
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedVerification(v);
-                  }}
-                  style={{
-                    backgroundColor: '#fef3c7',
-                    color: '#92400e',
-                    border: '1px solid #fde68a',
-                    borderRadius: '8px',
-                    padding: '7px 16px',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#fde68a';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#fef3c7';
                   }}
                 >
                   Tap to review

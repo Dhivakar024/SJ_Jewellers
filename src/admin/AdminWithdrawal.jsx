@@ -32,29 +32,51 @@ export default function AdminWithdrawal() {
         </p>
       </div>
 
-      {/* 2. Filter Pills */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ fontSize: '12.5px', fontWeight: '600', color: '#6b7280' }}>Show:</span>
-        {['All', 'Gold', 'Silver'].map((opt) => (
-          <button
-            key={opt}
-            onClick={() => setFilterMetal(opt)}
-            style={{
-              padding: '5px 14px',
-              borderRadius: '20px',
-              border: 'none',
-              backgroundColor: filterMetal === opt ? 'var(--admin-orange)' : '#f3f4f6',
-              color: filterMetal === opt ? '#ffffff' : '#4b5563',
-              fontSize: '12px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.15s ease',
-              lineHeight: 1.2
-            }}
-          >
-            {opt}
-          </button>
-        ))}
+      {/* 2. Filter Pills - Enlarged & Comfortable */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--admin-text-secondary-light)' }}>Show:</span>
+        {['All', 'Gold', 'Silver'].map((opt) => {
+          const isActive = filterMetal === opt;
+          return (
+            <button
+              key={opt}
+              onClick={() => setFilterMetal(opt)}
+              style={{
+                height: '40px',
+                padding: '0 20px',
+                borderRadius: '20px',
+                border: isActive ? 'none' : '1px solid var(--admin-border-light)',
+                backgroundColor: isActive 
+                  ? (opt === 'All' ? 'var(--admin-orange)' : opt === 'Gold' ? '#d97706' : '#475569') 
+                  : 'var(--admin-card-bg-light)',
+                color: isActive ? '#ffffff' : 'var(--admin-text-secondary-light)',
+                fontSize: '14.5px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: isActive ? '0 2px 8px rgba(0, 0, 0, 0.15)' : 'none',
+                boxSizing: 'border-box'
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.backgroundColor = 'var(--admin-border-subtle)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.backgroundColor = 'var(--admin-card-bg-light)';
+                  e.currentTarget.style.transform = 'none';
+                }
+              }}
+            >
+              {opt}
+            </button>
+          );
+        })}
       </div>
 
       {/* 3. Summary Box Card */}
