@@ -11,6 +11,7 @@ from app.routes import (
     purchases_router,
     holdings_router,
     withdrawals_router,
+    transactions_router,
     notifications_router,
     admin_router,
 )
@@ -50,6 +51,7 @@ app.include_router(rates_router)
 app.include_router(purchases_router)
 app.include_router(holdings_router)
 app.include_router(withdrawals_router)
+app.include_router(transactions_router)
 app.include_router(notifications_router)
 app.include_router(admin_router)
 

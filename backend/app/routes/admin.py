@@ -35,6 +35,10 @@ from app.schemas.withdrawals import (
     AdminWithdrawalRejectRequest,
     WithdrawalActionResponse,
 )
+from app.schemas.transactions import (
+    AdminTransactionListResponse,
+    AdminTransactionDetailResponse,
+)
 from app.services.kyc_service import (
     get_pending_kyc_list,
     get_kyc_details,
@@ -67,6 +71,10 @@ from app.services.withdrawal_service import (
     get_admin_withdrawal_by_id,
     approve_withdrawal,
     reject_withdrawal,
+)
+from app.services.transaction_service import (
+    get_admin_transactions,
+    get_admin_transaction_by_id,
 )
 from app.utils.security import require_admin
 
@@ -463,3 +471,56 @@ async def reject_customer_withdrawal(
 ):
     """Admin endpoint to reject a pending withdrawal."""
     return reject_withdrawal(db, withdrawal_id, admin_user, data.reason)
+
+
+# -------------------------------------------------------------
+# Admin Unified Transactions Management Endpoints
+# -------------------------------------------------------------
+
+@router.get(
+    "/transactions",
+    response_model=AdminTransactionListResponse,
+    summary="List all unified transactions for Admin",
+    description="Retrieves a paginated list of unified transactions across all customers with customer search (name, mobile, email, transaction ID), type, metal, direction, and date filtering.",
+)
+async def list_admin_transactions(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page (max 100)"),
+    search: Optional[str] = Query(None, description="Search transaction ID, customer name, mobile, email"),
+    type: Optional[str] = Query(None, description="Filter by type ('purchase', 'withdrawal')"),
+    metal: Optional[str] = Query(None, description="Filter by metal ('gold', 'silver')"),
+    direction: Optional[str] = Query(None, description="Filter by direction ('credit', 'debit')"),
+    status: Optional[str] = Query(None, description="Filter by status"),
+    from_date: Optional[str] = Query(None, description="Filter start date (YYYY-MM-DD)"),
+    to_date: Optional[str] = Query(None, description="Filter end date (YYYY-MM-DD)"),
+    admin_user: Dict[str, Any] = Depends(require_admin),
+    db: Database = Depends(get_database),
+):
+    """Admin endpoint to view global transactions timeline."""
+    return get_admin_transactions(
+        db=db,
+        page=page,
+        limit=limit,
+        search=search,
+        txn_type=type,
+        metal=metal,
+        status_filter=status,
+        direction=direction,
+        from_date=from_date,
+        to_date=to_date,
+    )
+
+
+@router.get(
+    "/transactions/{transaction_id}",
+    response_model=AdminTransactionDetailResponse,
+    summary="Get unified transaction detail for Admin",
+    description="Retrieves comprehensive details for a specific transaction ID across purchases and withdrawals along with customer profile details.",
+)
+async def get_admin_transaction(
+    transaction_id: str = Path(..., description="Transaction ID to inspect"),
+    admin_user: Dict[str, Any] = Depends(require_admin),
+    db: Database = Depends(get_database),
+):
+    """Admin endpoint to view single transaction detail."""
+    return get_admin_transaction_by_id(db, transaction_id)

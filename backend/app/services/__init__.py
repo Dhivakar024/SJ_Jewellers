@@ -62,6 +62,12 @@ from app.services.withdrawal_service import (
     get_admin_withdrawal_by_id,
     ensure_withdrawal_indexes,
 )
+from app.services.transaction_service import (
+    get_customer_transactions,
+    get_customer_transaction_by_id,
+    get_admin_transactions,
+    get_admin_transaction_by_id,
+)
 
 __all__ = [
     "register_user",
@@ -112,4 +118,8 @@ __all__ = [
     "get_admin_withdrawals",
     "get_admin_withdrawal_by_id",
     "ensure_withdrawal_indexes",
+    "get_customer_transactions",
+    "get_customer_transaction_by_id",
+    "get_admin_transactions",
+    "get_admin_transaction_by_id",
 ]
