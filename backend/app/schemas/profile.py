@@ -28,6 +28,14 @@ class UserProfileData(BaseModel):
     relationship_other: Optional[str] = None
     address: Optional[AddressProfileSchema] = None
     profile_image_url: Optional[str] = None
+    pan: Optional[str] = None
+    aadhar: Optional[str] = None
+    account_number: Optional[str] = None
+    ifsc: Optional[str] = None
+    nominee_name: Optional[str] = None
+    nominee_mobile: Optional[str] = None
+    nominee_dob: Optional[str] = None
+    nominee_address: Optional[str] = None
 
 
 class UserProfileResponse(BaseModel):
@@ -49,12 +57,20 @@ class UpdateProfileRequest(BaseModel):
     full_name: Optional[str] = Field(None, min_length=1, max_length=100)
     date_of_birth: Optional[str] = Field(None, description="Date of birth in YYYY-MM-DD format")
     gender: Optional[str] = Field(None, description="Gender: male, female, or other")
-    relationship: Optional[str] = Field(None, description="Relationship: son, daughter, or other")
+    relationship: Optional[str] = Field(None, description="Relationship type")
     relationship_other: Optional[str] = Field(None, description="Custom relationship name if relationship is 'other'")
     address: Optional[AddressProfileSchema] = None
     profile_image_url: Optional[str] = None
+    pan: Optional[str] = None
+    aadhar: Optional[str] = None
+    account_number: Optional[str] = None
+    ifsc: Optional[str] = None
+    nominee_name: Optional[str] = None
+    nominee_mobile: Optional[str] = None
+    nominee_dob: Optional[str] = None
+    nominee_address: Optional[str] = None
 
-    @field_validator("full_name", "profile_image_url", mode="before")
+    @field_validator("full_name", "profile_image_url", "pan", "aadhar", "account_number", "ifsc", "nominee_name", "nominee_mobile", "nominee_dob", "nominee_address", mode="before")
     @classmethod
     def strip_text(cls, v: Optional[str]) -> Optional[str]:
         if isinstance(v, str):
@@ -80,8 +96,9 @@ class UpdateProfileRequest(BaseModel):
             v = v.strip().lower()
             if not v:
                 return None
-            if v not in ["son", "daughter", "other"]:
-                raise ValueError("Relationship must be one of: son, daughter, other")
+            valid_relations = ["spouse", "parent", "child", "sibling", "son", "daughter", "father", "mother", "brother", "sister", "other"]
+            if v not in valid_relations:
+                raise ValueError(f"Relationship must be one of: {', '.join(valid_relations)}")
         return v
 
     @field_validator("date_of_birth", mode="before")
@@ -107,6 +124,6 @@ class UpdateProfileRequest(BaseModel):
             if not self.relationship_other or not self.relationship_other.strip():
                 raise ValueError("relationship_other is required when relationship is 'other'")
             self.relationship_other = self.relationship_other.strip()
-        elif self.relationship in ["son", "daughter"]:
+        elif self.relationship and self.relationship != "other":
             self.relationship_other = None
         return self

@@ -109,10 +109,18 @@ function MainContent() {
         'home', 'buy', 'buy-gold', 'buy-silver', 'holdings',
         'profile', 'transactions', 'contact', 'withdraw', 'create-profile'
       ];
+
+      const skipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
+      if (!currentUser.profileCompleted && !skipped && hash !== 'create-profile' && hash !== 'profile' && hash !== 'contact') {
+        setUserScreen('create-profile');
+        window.location.hash = 'create-profile';
+        return;
+      }
+
       if (validScreens.includes(hash)) {
         setUserScreen(hash);
       } else {
-        setUserScreen('home');
+        setUserScreen(currentUser.profileCompleted || skipped ? 'home' : 'create-profile');
       }
     };
 
@@ -124,13 +132,19 @@ function MainContent() {
     };
   }, [currentUser, isAuthLoading]);
 
-  // Auth Guard: Enforce Sign In on customer app unauthenticated state
+  // Auth & Profile Guard: Enforce Sign In on unauthenticated state or Create Profile on incomplete profile
   useEffect(() => {
     if (isAdminRoute() || isAuthLoading) return;
     if (!currentUser || !currentUser.isAuthenticated) {
       if (userScreen !== 'signin' && userScreen !== 'signup' && userScreen !== 'forgot-username') {
         setUserScreen('signin');
         window.location.hash = 'signin';
+      }
+    } else {
+      const skipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
+      if (!currentUser.profileCompleted && !skipped && userScreen !== 'create-profile' && userScreen !== 'profile' && userScreen !== 'contact') {
+        setUserScreen('create-profile');
+        window.location.hash = 'create-profile';
       }
     }
   }, [currentUser, userScreen, isAuthLoading]);

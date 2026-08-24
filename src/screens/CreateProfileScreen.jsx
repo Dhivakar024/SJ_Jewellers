@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Calendar, ChevronDown, ArrowLeft } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { profileService } from '../services';
 
 export default function CreateProfileScreen({ onNavigate }) {
   const { currentUser, completeUserProfile } = useApp();
@@ -21,10 +22,52 @@ export default function CreateProfileScreen({ onNavigate }) {
     nomineeDob: currentUser.nomineeDob || '',
     nomineeAddress: currentUser.nomineeAddress || '',
     relationship: currentUser.relationship || '',
-    relationshipDetails: currentUser.relationshipDetails || ''
+    relationshipDetails: currentUser.relationshipDetails || '',
   });
 
   const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch real profile from MongoDB on mount to populate fields
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLatestProfile = async () => {
+      try {
+        const res = await profileService.getProfile();
+        if (res?.data && isMounted) {
+          const u = res.data;
+          const p = u.profile || {};
+          const relCapitalized = p.relationship
+            ? p.relationship.charAt(0).toUpperCase() + p.relationship.slice(1).toLowerCase()
+            : '';
+
+          setFormData({
+            name: p.full_name || u.name || '',
+            email: u.email || '',
+            mobile: u.mobile || '',
+            address: p.address?.address_line || '',
+            pan: p.pan || '',
+            aadhar: p.aadhar || '',
+            accountNumber: p.account_number || '',
+            ifsc: p.ifsc || '',
+            nomineeName: p.nominee_name || '',
+            nomineeMobile: p.nominee_mobile || '',
+            nomineeDob: p.nominee_dob || '',
+            nomineeAddress: p.nominee_address || '',
+            relationship: relCapitalized,
+            relationshipDetails: p.relationship_other || '',
+          });
+        }
+      } catch {
+        // Fallback to context state
+      }
+    };
+
+    fetchLatestProfile();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleChange = (field, value) => {
     setFormData((prev) => {
@@ -77,12 +120,12 @@ export default function CreateProfileScreen({ onNavigate }) {
     onNavigate('profile');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage('');
 
     const requiredFields = [
       { key: 'name', label: 'Name' },
-      { key: 'email', label: 'Email ID' },
       { key: 'mobile', label: 'Mobile No.' },
       { key: 'address', label: 'Address' },
       { key: 'pan', label: 'PAN Card' },
@@ -93,13 +136,18 @@ export default function CreateProfileScreen({ onNavigate }) {
       { key: 'nomineeMobile', label: 'Nominee Mobile No.' },
       { key: 'nomineeDob', label: 'Nominee DOB' },
       { key: 'nomineeAddress', label: 'Nominee Address' },
-      { key: 'relationship', label: 'Relationship' }
+      { key: 'relationship', label: 'Relationship' },
     ];
 
     const missingFields = requiredFields.filter((f) => !formData[f.key] || !formData[f.key].trim());
 
     if (missingFields.length > 0) {
-      setErrorMessage(`Please fill all required fields (${missingFields.map((f) => f.label).slice(0, 3).join(', ')}${missingFields.length > 3 ? '...' : ''}).`);
+      setErrorMessage(
+        `Please fill all required fields (${missingFields
+          .map((f) => f.label)
+          .slice(0, 3)
+          .join(', ')}${missingFields.length > 3 ? '...' : ''}).`
+      );
       return;
     }
 
@@ -108,16 +156,63 @@ export default function CreateProfileScreen({ onNavigate }) {
       return;
     }
 
-    completeUserProfile(formData);
-    sessionStorage.removeItem('sj_session_skipped_profile');
-    setErrorMessage('');
+    // Build backend update payload
+    const payload = {
+      full_name: formData.name.trim(),
+      address: {
+        address_line: formData.address.trim(),
+        city: 'Salem',
+        state: 'Tamil Nadu',
+        pincode: '636001',
+      },
+      pan: formData.pan.trim(),
+      aadhar: formData.aadhar.trim(),
+      account_number: formData.accountNumber.trim(),
+      ifsc: formData.ifsc.trim(),
+      nominee_name: formData.nomineeName.trim(),
+      nominee_mobile: formData.nomineeMobile.trim(),
+      nominee_dob: formData.nomineeDob.trim(),
+      nominee_address: formData.nomineeAddress.trim(),
+      relationship: formData.relationship.trim().toLowerCase(),
+      relationship_other: formData.relationship === 'Other' ? formData.relationshipDetails.trim() : null,
+    };
 
-    if (isExistingCompletedUser) {
-      alert('Profile details updated successfully!');
-      onNavigate('profile');
-    } else {
-      alert('Profile completed successfully! Welcome to SJ Jewelers.');
-      onNavigate('home');
+    setIsSubmitting(true);
+    try {
+      // Save directly to MongoDB via Profile PATCH API
+      const res = await profileService.updateProfile(payload);
+      
+      const updatedUserObj = {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        mobile: formData.mobile.trim(),
+        address: formData.address.trim(),
+        pan: formData.pan.trim(),
+        aadhar: formData.aadhar.trim(),
+        accountNumber: formData.accountNumber.trim(),
+        ifsc: formData.ifsc.trim(),
+        nomineeName: formData.nomineeName.trim(),
+        nomineeMobile: formData.nomineeMobile.trim(),
+        nomineeDob: formData.nomineeDob.trim(),
+        nomineeAddress: formData.nomineeAddress.trim(),
+        relationship: formData.relationship,
+        relationshipDetails: formData.relationshipDetails,
+        profileCompleted: true,
+        isAuthenticated: true,
+      };
+
+      completeUserProfile(updatedUserObj);
+      sessionStorage.removeItem('sj_session_skipped_profile');
+
+      if (isExistingCompletedUser) {
+        onNavigate('profile');
+      } else {
+        onNavigate('home');
+      }
+    } catch (err) {
+      setErrorMessage(err.message || 'Failed to save profile. Please check your details and try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -141,16 +236,18 @@ export default function CreateProfileScreen({ onNavigate }) {
       {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
       <main className="app-scroll-content" style={{ padding: '20px 18px 60px 18px' }}>
         {errorMessage && (
-          <div style={{
-            backgroundColor: '#fee2e2',
-            border: '1px solid #ef4444',
-            borderRadius: '14px',
-            padding: '12px 16px',
-            marginBottom: '18px',
-            color: '#dc2626',
-            fontSize: '13.5px',
-            fontWeight: '700'
-          }}>
+          <div
+            style={{
+              backgroundColor: '#fee2e2',
+              border: '1px solid #ef4444',
+              borderRadius: '14px',
+              padding: '12px 16px',
+              marginBottom: '18px',
+              color: '#dc2626',
+              fontSize: '13.5px',
+              fontWeight: '700',
+            }}
+          >
             {errorMessage}
           </div>
         )}
@@ -161,16 +258,18 @@ export default function CreateProfileScreen({ onNavigate }) {
             Account Details
           </h3>
 
-          <div style={{
-            backgroundColor: '#dcd0ff',
-            borderRadius: '20px',
-            padding: '18px 14px',
-            border: '1px solid #c9b8fc',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '13px',
-            marginBottom: '24px'
-          }}>
+          <div
+            style={{
+              backgroundColor: '#dcd0ff',
+              borderRadius: '20px',
+              padding: '18px 14px',
+              border: '1px solid #c9b8fc',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '13px',
+              marginBottom: '24px',
+            }}
+          >
             {/* Name */}
             <div className="profile-form-row">
               <div className="profile-label-col">Name</div>
@@ -182,6 +281,7 @@ export default function CreateProfileScreen({ onNavigate }) {
                   value={formData.name}
                   onChange={(e) => handleChange('name', e.target.value)}
                   className="profile-custom-input"
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -197,6 +297,7 @@ export default function CreateProfileScreen({ onNavigate }) {
                   value={formData.email}
                   onChange={(e) => handleChange('email', e.target.value)}
                   className="profile-custom-input"
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -212,6 +313,7 @@ export default function CreateProfileScreen({ onNavigate }) {
                   value={formData.mobile}
                   onChange={(e) => handleChange('mobile', e.target.value)}
                   className="profile-custom-input"
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -232,8 +334,9 @@ export default function CreateProfileScreen({ onNavigate }) {
                     minHeight: '64px',
                     padding: '10px 12px',
                     lineHeight: '1.4',
-                    resize: 'none'
+                    resize: 'none',
                   }}
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -249,6 +352,7 @@ export default function CreateProfileScreen({ onNavigate }) {
                   value={formData.pan}
                   onChange={(e) => handleChange('pan', e.target.value)}
                   className="profile-custom-input"
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -264,6 +368,7 @@ export default function CreateProfileScreen({ onNavigate }) {
                   value={formData.aadhar}
                   onChange={(e) => handleChange('aadhar', e.target.value)}
                   className="profile-custom-input"
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -279,6 +384,7 @@ export default function CreateProfileScreen({ onNavigate }) {
                   value={formData.accountNumber}
                   onChange={(e) => handleChange('accountNumber', e.target.value)}
                   className="profile-custom-input"
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -294,6 +400,7 @@ export default function CreateProfileScreen({ onNavigate }) {
                   value={formData.ifsc}
                   onChange={(e) => handleChange('ifsc', e.target.value)}
                   className="profile-custom-input"
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -304,16 +411,18 @@ export default function CreateProfileScreen({ onNavigate }) {
             Nominee Details
           </h3>
 
-          <div style={{
-            backgroundColor: '#dcd0ff',
-            borderRadius: '20px',
-            padding: '18px 14px',
-            border: '1px solid #c9b8fc',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '13px',
-            marginBottom: '24px'
-          }}>
+          <div
+            style={{
+              backgroundColor: '#dcd0ff',
+              borderRadius: '20px',
+              padding: '18px 14px',
+              border: '1px solid #c9b8fc',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '13px',
+              marginBottom: '24px',
+            }}
+          >
             {/* Nominee Name */}
             <div className="profile-form-row">
               <div className="profile-label-col">Name</div>
@@ -325,6 +434,7 @@ export default function CreateProfileScreen({ onNavigate }) {
                   value={formData.nomineeName}
                   onChange={(e) => handleChange('nomineeName', e.target.value)}
                   className="profile-custom-input"
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -340,18 +450,19 @@ export default function CreateProfileScreen({ onNavigate }) {
                   value={formData.nomineeMobile}
                   onChange={(e) => handleChange('nomineeMobile', e.target.value)}
                   className="profile-custom-input"
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
 
-            {/* DOB (Entire field & calendar icon opens native date picker with formatted DD/MM/YYYY) */}
+            {/* DOB (Opens native date picker with formatted DD/MM/YYYY) */}
             <div className="profile-form-row">
               <div className="profile-label-col">DOB</div>
               <div className="profile-colon-col">:</div>
               <div
                 className="profile-input-col"
-                style={{ position: 'relative', cursor: 'pointer' }}
-                onClick={openDatePicker}
+                style={{ position: 'relative', cursor: isSubmitting ? 'default' : 'pointer' }}
+                onClick={!isSubmitting ? openDatePicker : undefined}
               >
                 <input
                   type="text"
@@ -360,6 +471,7 @@ export default function CreateProfileScreen({ onNavigate }) {
                   readOnly
                   className="profile-custom-input"
                   style={{ paddingRight: '38px', cursor: 'pointer' }}
+                  disabled={isSubmitting}
                 />
                 <div
                   style={{
@@ -371,7 +483,7 @@ export default function CreateProfileScreen({ onNavigate }) {
                     alignItems: 'center',
                     justifyContent: 'center',
                     pointerEvents: 'none',
-                    zIndex: 3
+                    zIndex: 3,
                   }}
                 >
                   <Calendar size={18} color="var(--primary-purple)" />
@@ -389,9 +501,10 @@ export default function CreateProfileScreen({ onNavigate }) {
                     height: '100%',
                     opacity: 0,
                     cursor: 'pointer',
-                    zIndex: 4
+                    zIndex: 4,
                   }}
                   aria-label="Select Date of Birth"
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -412,13 +525,14 @@ export default function CreateProfileScreen({ onNavigate }) {
                     minHeight: '64px',
                     padding: '10px 12px',
                     lineHeight: '1.4',
-                    resize: 'none'
+                    resize: 'none',
                   }}
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
 
-            {/* Relationship Dropdown with full options (Select, Spouse, Parent, Child, Sibling, Son, Daughter, Other) */}
+            {/* Relationship Dropdown */}
             <div className="profile-form-row">
               <div className="profile-label-col">Relationship</div>
               <div className="profile-colon-col">:</div>
@@ -428,6 +542,7 @@ export default function CreateProfileScreen({ onNavigate }) {
                   onChange={(e) => handleChange('relationship', e.target.value)}
                   className="profile-custom-input"
                   style={{ paddingRight: '36px', appearance: 'none' }}
+                  disabled={isSubmitting}
                 >
                   <option value="">Select</option>
                   <option value="Spouse">Spouse</option>
@@ -454,6 +569,7 @@ export default function CreateProfileScreen({ onNavigate }) {
                     value={formData.relationshipDetails}
                     onChange={(e) => handleChange('relationshipDetails', e.target.value)}
                     className="profile-custom-input"
+                    disabled={isSubmitting}
                   />
                 </div>
               </div>
@@ -465,21 +581,37 @@ export default function CreateProfileScreen({ onNavigate }) {
             <button
               type="button"
               onClick={handleSkip}
+              disabled={isSubmitting}
               style={{
-                flex: 1, height: '52px', borderRadius: '16px', border: '1.5px solid var(--primary-purple)',
-                backgroundColor: 'transparent', color: 'var(--text-dark)', fontSize: '17px', fontWeight: '800', cursor: 'pointer'
+                flex: 1,
+                height: '52px',
+                borderRadius: '16px',
+                border: '1.5px solid var(--primary-purple)',
+                backgroundColor: 'transparent',
+                color: 'var(--text-dark)',
+                fontSize: '17px',
+                fontWeight: '800',
+                cursor: isSubmitting ? 'default' : 'pointer',
               }}
             >
               Skip
             </button>
             <button
               type="submit"
+              disabled={isSubmitting}
               style={{
-                flex: 1, height: '52px', borderRadius: '16px', border: '1.5px solid var(--primary-purple)',
-                backgroundColor: '#ede7fc', color: 'var(--text-dark)', fontSize: '17px', fontWeight: '800', cursor: 'pointer'
+                flex: 1,
+                height: '52px',
+                borderRadius: '16px',
+                border: '1.5px solid var(--primary-purple)',
+                backgroundColor: '#ede7fc',
+                color: 'var(--text-dark)',
+                fontSize: '17px',
+                fontWeight: '800',
+                cursor: isSubmitting ? 'default' : 'pointer',
               }}
             >
-              Submit
+              {isSubmitting ? 'Saving...' : 'Submit'}
             </button>
           </div>
         </form>

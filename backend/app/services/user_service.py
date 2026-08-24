@@ -53,6 +53,14 @@ def _format_profile_data(profile_dict: Optional[Dict[str, Any]]) -> UserProfileD
         relationship_other=profile_dict.get("relationship_other"),
         address=address,
         profile_image_url=profile_dict.get("profile_image_url"),
+        pan=profile_dict.get("pan"),
+        aadhar=profile_dict.get("aadhar"),
+        account_number=profile_dict.get("account_number"),
+        ifsc=profile_dict.get("ifsc"),
+        nominee_name=profile_dict.get("nominee_name"),
+        nominee_mobile=profile_dict.get("nominee_mobile"),
+        nominee_dob=profile_dict.get("nominee_dob"),
+        nominee_address=profile_dict.get("nominee_address"),
     )
 
 
@@ -168,6 +176,30 @@ def update_my_profile(
 
     if data.profile_image_url is not None:
         update_dict["profile.profile_image_url"] = data.profile_image_url
+
+    if data.pan is not None:
+        update_dict["profile.pan"] = data.pan
+
+    if data.aadhar is not None:
+        update_dict["profile.aadhar"] = data.aadhar
+
+    if data.account_number is not None:
+        update_dict["profile.account_number"] = data.account_number
+
+    if data.ifsc is not None:
+        update_dict["profile.ifsc"] = data.ifsc
+
+    if data.nominee_name is not None:
+        update_dict["profile.nominee_name"] = data.nominee_name
+
+    if data.nominee_mobile is not None:
+        update_dict["profile.nominee_mobile"] = data.nominee_mobile
+
+    if data.nominee_dob is not None:
+        update_dict["profile.nominee_dob"] = data.nominee_dob
+
+    if data.nominee_address is not None:
+        update_dict["profile.nominee_address"] = data.nominee_address
 
     # Save to MongoDB
     match_query = {"_id": user_obj_id} if user_obj_id else {"_id": current_user["id"]}
