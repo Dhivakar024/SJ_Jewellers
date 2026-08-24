@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authService, profileService, ratesService, holdingsService } from '../services';
+import { authService, profileService, ratesService, holdingsService, transactionService } from '../services';
 import { getAuthToken, getStoredUser, clearAllAuth } from '../utils/authStorage';
 
 const AppContext = createContext();
@@ -299,10 +299,69 @@ export function AppProvider({ children }) {
     }
   }, [currentUser?.isAuthenticated, fetchHoldings]);
 
-  const [transactions, setTransactions] = useState(() => {
-    const saved = localStorage.getItem('sj_transactions');
-    return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
-  });
+  // Transactions State from FastAPI backend
+  const [transactions, setTransactions] = useState([]);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const [transactionsError, setTransactionsError] = useState(null);
+
+  const fetchTransactions = useCallback(async () => {
+    const token = getAuthToken();
+    if (!token) return;
+    try {
+      setTransactionsLoading(true);
+      const res = await transactionService.getTransactions({ limit: 100 });
+      if (res?.data?.items) {
+        const formatted = res.data.items.map((item) => {
+          const dateObj = new Date(item.created_at || Date.now());
+          const dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+          const timeStr = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+          let displayStatus = 'Success';
+          const s = (item.status || '').toLowerCase();
+          if (s === 'completed' || s === 'success' || s === 'approved') {
+            displayStatus = 'Success';
+          } else if (s === 'pending') {
+            displayStatus = 'Pending';
+          } else if (s === 'processing') {
+            displayStatus = 'Processing';
+          } else if (s === 'cancelled') {
+            displayStatus = 'Cancelled';
+          } else if (s === 'rejected' || s === 'failed') {
+            displayStatus = 'Failed';
+          }
+
+          return {
+            id: item.transaction_id,
+            type: item.type,
+            asset: item.metal === 'gold' ? 'Gold' : 'Silver',
+            assetType: item.metal,
+            direction: item.direction,
+            quantity: `${Number(item.quantity_grams || 0).toFixed(4)} gm`,
+            amount: Number(item.total_amount || 0).toFixed(2),
+            ratePerGram: item.rate_per_gram,
+            paymentMethod: item.type === 'withdrawal' ? 'Bank' : 'UPI',
+            status: displayStatus,
+            rawStatus: item.status,
+            date: dateStr,
+            time: timeStr,
+            createdAt: item.created_at,
+          };
+        });
+        setTransactions(formatted);
+        setTransactionsError(null);
+      }
+    } catch (err) {
+      setTransactionsError(err.message || 'Unable to fetch transactions');
+    } finally {
+      setTransactionsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (currentUser?.isAuthenticated) {
+      fetchTransactions();
+    }
+  }, [currentUser?.isAuthenticated, fetchTransactions]);
 
   // Members / Registered Users
   const [members, setMembers] = useState(() => {
@@ -850,6 +909,9 @@ export function AppProvider({ children }) {
         fetchHoldings,
         transactions,
         setTransactions,
+        transactionsLoading,
+        transactionsError,
+        fetchTransactions,
         members,
         setMembers,
         usersList: members,

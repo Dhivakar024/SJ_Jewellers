@@ -1,10 +1,16 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ArrowLeft, SlidersHorizontal, Smartphone, CreditCard, Building2, X, RotateCcw, AlertCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import BottomNav from '../components/BottomNav';
 
 export default function TransactionHistoryScreen({ onNavigate, onTogglePlus }) {
-  const { transactions } = useApp();
+  const { transactions, fetchTransactions, transactionsLoading } = useApp();
+
+  useEffect(() => {
+    if (typeof fetchTransactions === 'function') {
+      fetchTransactions();
+    }
+  }, [fetchTransactions]);
 
   // Active committed filters
   const [activeAsset, setActiveAsset] = useState('All');
@@ -52,13 +58,14 @@ export default function TransactionHistoryScreen({ onNavigate, onTogglePlus }) {
 
   // Dynamic Multi-Condition Filtering
   const filteredTransactions = useMemo(() => {
-    return transactions.filter((item) => {
+    const list = Array.isArray(transactions) ? transactions : [];
+    return list.filter((item) => {
       // 1. Asset Filter
-      if (activeAsset !== 'All' && item.asset.toLowerCase() !== activeAsset.toLowerCase()) {
+      if (activeAsset !== 'All' && (item.asset || '').toLowerCase() !== activeAsset.toLowerCase()) {
         return false;
       }
       // 2. Status Filter (Success, Pending, Processing, Cancelled, Failed)
-      if (activeStatus !== 'All' && item.status.toLowerCase() !== activeStatus.toLowerCase()) {
+      if (activeStatus !== 'All' && (item.status || '').toLowerCase() !== activeStatus.toLowerCase()) {
         return false;
       }
       // 3. Payment Method Filter
@@ -80,20 +87,20 @@ export default function TransactionHistoryScreen({ onNavigate, onTogglePlus }) {
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayFormatted = yesterday.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
-      if (normalized === 'August 17, 2026' || normalized === todayFormatted) {
+      if (normalized === todayFormatted) {
         return {
           label: 'TODAY',
           sub: normalized
         };
       }
-      if (normalized === 'August 16, 2026' || normalized === yesterdayFormatted) {
+      if (normalized === yesterdayFormatted) {
         return {
           label: 'YESTERDAY',
           sub: normalized
         };
       }
       return {
-        label: normalized.toUpperCase(),
+        label: normalized ? normalized.toUpperCase() : 'OTHER',
         sub: null
       };
     };
@@ -293,7 +300,7 @@ export default function TransactionHistoryScreen({ onNavigate, onTogglePlus }) {
               No transactions found
             </h3>
             <p style={{ fontSize: '13px', color: '#736d85', fontWeight: '500', maxWidth: '240px', margin: '0 auto 20px auto', lineHeight: '1.4' }}>
-              Try adjusting or resetting your filter criteria to view your transactions.
+              {hasActiveFilters ? 'Try adjusting or resetting your filter criteria to view your transactions.' : 'You have not made any gold or silver transactions yet.'}
             </p>
             {hasActiveFilters && (
               <button
@@ -376,7 +383,7 @@ export default function TransactionHistoryScreen({ onNavigate, onTogglePlus }) {
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '15.5px', fontWeight: '800', color: '#1e1b2e' }}>
-                              {item.paymentMethod || 'UPI'}
+                              {item.type === 'withdrawal' ? 'Withdrawal' : (item.paymentMethod || 'UPI')}
                             </span>
                             {renderStatusBadge(item.status)}
                           </div>
@@ -386,8 +393,8 @@ export default function TransactionHistoryScreen({ onNavigate, onTogglePlus }) {
                         </div>
                       </div>
 
-                      <div style={{ fontSize: '17px', fontWeight: '900', color: '#1e1b2e', textAlign: 'right', flexShrink: 0 }}>
-                        ₹ {item.amount}
+                      <div style={{ fontSize: '17px', fontWeight: '900', color: item.direction === 'debit' ? '#dc2626' : '#1e1b2e', textAlign: 'right', flexShrink: 0 }}>
+                        {item.direction === 'debit' ? '- ' : ''}₹ {item.amount}
                       </div>
                     </div>
                   ))}
@@ -496,7 +503,7 @@ export default function TransactionHistoryScreen({ onNavigate, onTogglePlus }) {
                 PAYMENT METHOD
               </label>
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                {['All', 'UPI'].map((opt) => (
+                {['All', 'UPI', 'Bank'].map((opt) => (
                   <button
                     key={opt}
                     type="button"

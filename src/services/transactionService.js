@@ -37,6 +37,13 @@ export const transactionService = {
   },
 
   /**
+   * Fetch paginated unified transaction history (alias)
+   */
+  getMyTransactions: async (params = {}) => {
+    return apiClient.get(ENDPOINTS.TRANSACTIONS.LIST, { params });
+  },
+
+  /**
    * Fetch single normalized transaction detail by transaction ID
    */
   getTransactionById: async (transactionId) => {
