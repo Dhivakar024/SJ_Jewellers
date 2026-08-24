@@ -7,6 +7,17 @@ from app.schemas.auth import (
     RegisterResponse,
     TokenResponse,
 )
+from app.schemas.kyc import (
+    AddressSchema,
+    KYCSubmitRequest,
+    KYCRejectRequest,
+    KYCResponse,
+    AdminKYCPendingItem,
+    AdminKYCPendingListResponse,
+    AdminKYCUserProfile,
+    AdminKYCDetailResponse,
+    KYCActionResponse,
+)
 
 __all__ = [
     "UserRegisterRequest",
@@ -14,4 +25,13 @@ __all__ = [
     "UserResponse",
     "RegisterResponse",
     "TokenResponse",
+    "AddressSchema",
+    "KYCSubmitRequest",
+    "KYCRejectRequest",
+    "KYCResponse",
+    "AdminKYCPendingItem",
+    "AdminKYCPendingListResponse",
+    "AdminKYCUserProfile",
+    "AdminKYCDetailResponse",
+    "KYCActionResponse",
 ]
