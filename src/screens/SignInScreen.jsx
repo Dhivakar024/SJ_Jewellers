@@ -5,17 +5,33 @@ export default function SignInScreen({ onNavigate }) {
   const { loginUser } = useApp();
   const [username, setUsername] = useState('');
   const [mobile, setMobile] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignIn = (e) => {
+  const handleSignIn = async (e) => {
     e.preventDefault();
-    const uName = username.trim() || 'Demo User';
-    const uMobile = mobile.trim() || '9999999999';
-    const user = loginUser({ username: uName, mobile: uMobile });
-    
-    if (!user.profileCompleted) {
-      onNavigate('create-profile');
-    } else {
-      onNavigate('home');
+    setErrorMessage('');
+
+    const uName = username.trim();
+    const uMobile = mobile.trim();
+
+    if (!uName && !uMobile) {
+      setErrorMessage('Please enter your User Name or Mobile Number.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const user = await loginUser({ username: uName, mobile: uMobile });
+      if (!user.profileCompleted) {
+        onNavigate('create-profile');
+      } else {
+        onNavigate('home');
+      }
+    } catch (err) {
+      setErrorMessage(err.message || 'Invalid username or mobile number.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -31,13 +47,23 @@ export default function SignInScreen({ onNavigate }) {
 
       {/* Form */}
       <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column' }}>
+        {errorMessage && (
+          <div style={{ color: '#ef4444', fontSize: '13px', marginBottom: '12px', textAlign: 'center', fontWeight: 500 }}>
+            {errorMessage}
+          </div>
+        )}
+
         <div className="input-group">
           <input
             type="text"
             className="custom-input"
             placeholder="User Name"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => {
+              setUsername(e.target.value);
+              setErrorMessage('');
+            }}
+            disabled={isLoading}
           />
         </div>
 
@@ -47,7 +73,11 @@ export default function SignInScreen({ onNavigate }) {
             className="custom-input"
             placeholder="Enter Mobile Number"
             value={mobile}
-            onChange={(e) => setMobile(e.target.value)}
+            onChange={(e) => {
+              setMobile(e.target.value);
+              setErrorMessage('');
+            }}
+            disabled={isLoading}
           />
         </div>
 
@@ -55,8 +85,8 @@ export default function SignInScreen({ onNavigate }) {
           Forgot username?
         </div>
 
-        <button type="submit" className="btn-primary">
-          Sign in
+        <button type="submit" className="btn-primary" disabled={isLoading}>
+          {isLoading ? 'Signing in...' : 'Sign in'}
         </button>
       </form>
 

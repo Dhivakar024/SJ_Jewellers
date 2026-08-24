@@ -6,19 +6,33 @@ export default function SignUpScreen({ onNavigate }) {
   const { registerNewUser } = useApp();
   const [username, setUsername] = useState('');
   const [mobile, setMobile] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleGetOtp = (e) => {
+  const handleGetOtp = async (e) => {
     e.preventDefault();
-    if (!username.trim() || !mobile.trim()) {
-      alert('Please enter your User Name and Mobile Number.');
+    setErrorMessage('');
+
+    const uName = username.trim();
+    const uMobile = mobile.trim();
+
+    if (!uName || !uMobile) {
+      setErrorMessage('Please enter your User Name and Mobile Number.');
       return;
     }
 
-    // Register new user with profileCompleted: false
-    registerNewUser({ username: username.trim(), mobile: mobile.trim() });
-    
-    // Immediately redirect to Profile Fill page
-    onNavigate('create-profile');
+    setIsLoading(true);
+    try {
+      // Register new user & authenticate session
+      await registerNewUser({ username: uName, mobile: uMobile });
+      
+      // Immediately redirect to Profile Fill page
+      onNavigate('create-profile');
+    } catch (err) {
+      setErrorMessage(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -38,13 +52,23 @@ export default function SignUpScreen({ onNavigate }) {
 
       {/* Form */}
       <form onSubmit={handleGetOtp} style={{ display: 'flex', flexDirection: 'column' }}>
+        {errorMessage && (
+          <div style={{ color: '#ef4444', fontSize: '13px', marginBottom: '12px', textAlign: 'center', fontWeight: 500 }}>
+            {errorMessage}
+          </div>
+        )}
+
         <div className="input-group">
           <input
             type="text"
             className="custom-input"
             placeholder="User Name"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => {
+              setUsername(e.target.value);
+              setErrorMessage('');
+            }}
+            disabled={isLoading}
           />
         </div>
 
@@ -54,12 +78,16 @@ export default function SignUpScreen({ onNavigate }) {
             className="custom-input"
             placeholder="Enter Mobile Number"
             value={mobile}
-            onChange={(e) => setMobile(e.target.value)}
+            onChange={(e) => {
+              setMobile(e.target.value);
+              setErrorMessage('');
+            }}
+            disabled={isLoading}
           />
         </div>
 
-        <button type="submit" className="btn-primary" style={{ marginTop: '10px' }}>
-          Get OTP
+        <button type="submit" className="btn-primary" style={{ marginTop: '10px' }} disabled={isLoading}>
+          {isLoading ? 'Creating Account...' : 'Get OTP'}
         </button>
       </form>
 

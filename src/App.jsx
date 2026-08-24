@@ -58,7 +58,7 @@ function getAdminTabFromUrl() {
 }
 
 function MainContent() {
-  const { currentUser, adminAuth } = useApp() || {};
+  const { currentUser, adminAuth, isAuthLoading } = useApp() || {};
   
   // Route separation: 'admin' vs 'user'
   const [isAdminMode, setIsAdminMode] = useState(() => isAdminRoute());
@@ -85,6 +85,8 @@ function MainContent() {
         setAdminTab(getAdminTabFromUrl());
         return;
       }
+
+      if (isAuthLoading) return;
 
       // Customer App Routing
       const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
@@ -120,18 +122,18 @@ function MainContent() {
       window.removeEventListener('hashchange', handleUrlChange);
       window.removeEventListener('popstate', handleUrlChange);
     };
-  }, [currentUser]);
+  }, [currentUser, isAuthLoading]);
 
   // Auth Guard: Enforce Sign In on customer app unauthenticated state
   useEffect(() => {
-    if (isAdminRoute()) return;
+    if (isAdminRoute() || isAuthLoading) return;
     if (!currentUser || !currentUser.isAuthenticated) {
       if (userScreen !== 'signin' && userScreen !== 'signup' && userScreen !== 'forgot-username') {
         setUserScreen('signin');
         window.location.hash = 'signin';
       }
     }
-  }, [currentUser, userScreen]);
+  }, [currentUser, userScreen, isAuthLoading]);
 
   const handleUserNavigate = (screen) => {
     // If not authenticated, only allow auth screens

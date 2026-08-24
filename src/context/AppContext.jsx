@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { authService, profileService } from '../services';
+import { getAuthToken, getStoredUser, clearAllAuth } from '../utils/authStorage';
 
 const AppContext = createContext();
 
@@ -327,27 +329,116 @@ export function AppProvider({ children }) {
     }
   }, [adminAuth]);
 
-  // Auth Handlers
-  const registerNewUser = ({ username, mobile }) => {
-    const newMember = {
-      id: (members.length + 1).toString(),
-      username: username || 'New User',
-      mobile: mobile ? (mobile.startsWith('+91') ? mobile : `+91${mobile}`) : '+919876543210',
-      role: 'customer',
-      verified: 'No',
-      mobileVerified: 'Yes',
-      active: 'Yes',
-      created: new Date().toLocaleDateString('en-US')
+  // Restore Customer Authentication on App Startup
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const restoreSession = async () => {
+      const token = getAuthToken();
+      if (!token) {
+        if (isMounted) {
+          setCurrentUser(LOGGED_OUT_USER);
+          setIsAuthLoading(false);
+        }
+        return;
+      }
+
+      // Optimistically restore stored user data if available
+      const stored = getStoredUser();
+      if (stored && isMounted) {
+        setCurrentUser({
+          ...LOGGED_OUT_USER,
+          ...stored,
+          isAuthenticated: true,
+        });
+      }
+
+      try {
+        const meRes = await authService.getCurrentUser();
+        if (meRes?.data && isMounted) {
+          const uData = meRes.data;
+          let profileCompleted = false;
+          let profileObj = null;
+
+          try {
+            const profRes = await profileService.getProfile();
+            profileObj = profRes?.data?.profile;
+            profileCompleted = !!(profileObj?.address?.address_line || profileObj?.full_name);
+          } catch {
+            profileCompleted = false;
+          }
+
+          const restoredUser = {
+            id: uData.id,
+            name: uData.name || 'Customer',
+            mobile: uData.mobile || '',
+            email: uData.email || '',
+            role: uData.role || 'customer',
+            kycStatus: uData.kyc_status || 'Pending',
+            accountStatus: uData.account_status || 'active',
+            profileCompleted,
+            isAuthenticated: true,
+            address: profileObj?.address?.address_line || '',
+            pan: profileObj?.pan || '',
+            aadhar: profileObj?.aadhar || '',
+            accountNumber: profileObj?.account_number || '',
+            ifsc: profileObj?.ifsc || '',
+            nomineeName: profileObj?.nominee_name || '',
+            nomineeMobile: profileObj?.nominee_mobile || '',
+            nomineeDob: profileObj?.nominee_dob || '',
+            nomineeAddress: profileObj?.nominee_address || '',
+            relationship: profileObj?.relationship || '',
+            goldGrams: holdings.goldGrams || 0,
+            silverGrams: holdings.silverGrams || 0,
+            status: uData.account_status === 'active' ? 'Active' : uData.account_status,
+            createdAt: uData.created_at ? uData.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+          };
+
+          setCurrentUser(restoredUser);
+        }
+      } catch {
+        if (isMounted) {
+          clearAllAuth();
+          setCurrentUser(LOGGED_OUT_USER);
+        }
+      } finally {
+        if (isMounted) {
+          setIsAuthLoading(false);
+        }
+      }
     };
 
-    setMembers((prev) => [newMember, ...prev]);
+    restoreSession();
+    return () => { isMounted = false; };
+  }, []);
+
+  // Auth Handlers
+  const registerNewUser = async ({ username, mobile, email, password }) => {
+    const cleanName = (username || 'New User').trim();
+    const cleanMobile = (mobile || '').trim();
+    const pass = password || `SJ@${cleanMobile.replace(/\s+/g, '')}`;
+
+    // 1. Call real backend register
+    const regRes = await authService.register({
+      name: cleanName,
+      mobile: cleanMobile,
+      email: email ? email.trim() : null,
+      password: pass,
+    });
+
+    // 2. Log in automatically to obtain JWT token
+    const loginRes = await authService.login({ identifier: cleanMobile, password: pass });
+    const uData = loginRes?.data?.user || regRes?.data?.user || {};
 
     const newUser = {
-      id: `USR-${Math.floor(1000 + Math.random() * 9000)}`,
-      name: username || 'New User',
-      mobile: mobile || '9876543210',
-      email: '',
-      kycStatus: 'Pending',
+      id: uData.id || `USR-${Date.now()}`,
+      name: uData.name || cleanName,
+      mobile: uData.mobile || cleanMobile,
+      email: uData.email || '',
+      role: 'customer',
+      kycStatus: 'pending',
+      accountStatus: 'active',
       profileCompleted: false,
       isAuthenticated: true,
       address: '',
@@ -360,43 +451,64 @@ export function AppProvider({ children }) {
       nomineeDob: '',
       nomineeAddress: '',
       relationship: '',
-      goldGrams: 0.0000,
-      silverGrams: 0.0000,
+      goldGrams: 0,
+      silverGrams: 0,
       status: 'Active',
-      createdAt: new Date().toISOString().split('T')[0]
+      createdAt: new Date().toISOString().split('T')[0],
     };
 
     setCurrentUser(newUser);
     return newUser;
   };
 
-  const loginUser = ({ username, mobile }) => {
-    const loggedInUser = {
-      id: 'USR-8821',
-      name: username || 'Demo User',
-      mobile: mobile || '9999999999',
-      email: 'demo@example.com',
-      kycStatus: 'Pending',
-      profileCompleted: true,
-      isAuthenticated: true,
-      address: '123 Cross Cut Road, Salem',
-      pan: 'ABCDE1234F',
-      aadhar: '1234-5678-9012',
-      accountNumber: '918237192837',
-      ifsc: 'SBIN0001234',
-      nomineeName: 'Priya',
-      nomineeMobile: '9876543210',
-      nomineeDob: '15/06/1995',
-      nomineeAddress: '123 Cross Cut Road, Salem',
-      relationship: 'Spouse',
-      goldGrams: holdings.goldGrams,
-      silverGrams: holdings.silverGrams,
-      status: 'Active',
-      createdAt: new Date().toISOString().split('T')[0]
-    };
+  const loginUser = async ({ username, mobile, password, identifier }) => {
+    const ident = (identifier || mobile || username || '').trim();
+    const pass = password || `SJ@${ident.replace(/\s+/g, '')}`;
 
-    setCurrentUser(loggedInUser);
-    return loggedInUser;
+    const res = await authService.login({ identifier: ident, password: pass });
+    if (res?.data?.user) {
+      const uData = res.data.user;
+      let profileCompleted = false;
+      let profileObj = null;
+
+      try {
+        const profRes = await profileService.getProfile();
+        profileObj = profRes?.data?.profile;
+        profileCompleted = !!(profileObj?.address?.address_line || profileObj?.full_name);
+      } catch {
+        profileCompleted = false;
+      }
+
+      const loggedInUser = {
+        id: uData.id,
+        name: uData.name || username || 'Customer',
+        mobile: uData.mobile || mobile || '',
+        email: uData.email || '',
+        role: uData.role || 'customer',
+        kycStatus: uData.kyc_status || 'Pending',
+        accountStatus: uData.account_status || 'active',
+        profileCompleted,
+        isAuthenticated: true,
+        address: profileObj?.address?.address_line || '',
+        pan: profileObj?.pan || '',
+        aadhar: profileObj?.aadhar || '',
+        accountNumber: profileObj?.account_number || '',
+        ifsc: profileObj?.ifsc || '',
+        nomineeName: profileObj?.nominee_name || '',
+        nomineeMobile: profileObj?.nominee_mobile || '',
+        nomineeDob: profileObj?.nominee_dob || '',
+        nomineeAddress: profileObj?.nominee_address || '',
+        relationship: profileObj?.relationship || '',
+        goldGrams: holdings.goldGrams || 0,
+        silverGrams: holdings.silverGrams || 0,
+        status: uData.account_status === 'active' ? 'Active' : uData.account_status,
+        createdAt: uData.created_at ? uData.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+      };
+
+      setCurrentUser(loggedInUser);
+      return loggedInUser;
+    }
+    throw new Error(res?.message || 'Login failed');
   };
 
   const completeUserProfile = (profileData) => {
@@ -404,13 +516,18 @@ export function AppProvider({ children }) {
       ...currentUser,
       ...profileData,
       profileCompleted: true,
-      isAuthenticated: true
+      isAuthenticated: true,
     };
     setCurrentUser(updated);
     return updated;
   };
 
-  const logoutUser = () => {
+  const logoutUser = async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // ignore
+    }
     setCurrentUser(LOGGED_OUT_USER);
   };
 
@@ -634,6 +751,7 @@ export function AppProvider({ children }) {
       value={{
         currentUser,
         setCurrentUser,
+        isAuthLoading,
         goldRate,
         setGoldRate,
         silverRate,

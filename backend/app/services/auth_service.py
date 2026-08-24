@@ -104,8 +104,22 @@ def login_user(db: Database, data: UserLoginRequest) -> Tuple[UserResponse, str]
 
     ensure_user_indexes(db)
 
-    # Lookup user by mobile
-    user_doc = db.users.find_one({"mobile": data.mobile})
+    # Lookup user by mobile, mobile with +91, email, or username
+    raw_ident = (data.mobile or "").strip()
+    ident_variants = [raw_ident]
+    if raw_ident.startswith("+91"):
+        ident_variants.append(raw_ident[3:].strip())
+    else:
+        ident_variants.append(f"+91{raw_ident}")
+
+    query = {
+        "$or": [
+            {"mobile": {"$in": ident_variants}},
+            {"email": raw_ident.lower()},
+            {"name": raw_ident},
+        ]
+    }
+    user_doc = db.users.find_one(query)
     
     # Generic error to prevent user enumeration
     if not user_doc or not verify_password(data.password, user_doc.get("password_hash", "")):
