@@ -85,6 +85,20 @@ from app.services.notification_service import (
     notify_kyc_approved,
     notify_kyc_rejected,
 )
+from app.services.admin_dashboard_service import (
+    get_dashboard_overview,
+    get_sales_by_metal,
+    get_sales_by_metal_transactions,
+    get_sales_chart,
+    get_pending_kyc_count,
+    get_withdrawals_summary,
+    get_dashboard_recent_transactions,
+    get_dashboard_recent_members,
+    get_customer_growth,
+    get_transaction_stats,
+    get_dashboard_current_rates,
+    get_dashboard_notification_summary,
+)
 
 __all__ = [
     "register_user",
@@ -154,4 +168,16 @@ __all__ = [
     "notify_kyc_submitted",
     "notify_kyc_approved",
     "notify_kyc_rejected",
+    "get_dashboard_overview",
+    "get_sales_by_metal",
+    "get_sales_by_metal_transactions",
+    "get_sales_chart",
+    "get_pending_kyc_count",
+    "get_withdrawals_summary",
+    "get_dashboard_recent_transactions",
+    "get_dashboard_recent_members",
+    "get_customer_growth",
+    "get_transaction_stats",
+    "get_dashboard_current_rates",
+    "get_dashboard_notification_summary",
 ]

@@ -14,6 +14,7 @@ from app.routes import (
     transactions_router,
     notifications_router,
     admin_router,
+    admin_dashboard_router,
 )
 
 # Initialize FastAPI application
@@ -54,6 +55,7 @@ app.include_router(withdrawals_router)
 app.include_router(transactions_router)
 app.include_router(notifications_router)
 app.include_router(admin_router)
+app.include_router(admin_dashboard_router)
 
 
 # Lifecycle event for database cleanup on shutdown

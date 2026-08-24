@@ -11,6 +11,7 @@ from app.routes.withdrawals import router as withdrawals_router
 from app.routes.transactions import router as transactions_router
 from app.routes.notifications import router as notifications_router
 from app.routes.admin import router as admin_router
+from app.routes.admin_dashboard import router as admin_dashboard_router
 
 __all__ = [
     "auth_router",
@@ -24,4 +25,5 @@ __all__ = [
     "transactions_router",
     "notifications_router",
     "admin_router",
+    "admin_dashboard_router",
 ]
