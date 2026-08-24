@@ -15,6 +15,13 @@ export const profileService = {
   },
 
   /**
+   * Create or initialize customer's profile
+   */
+  createProfile: async (profileData) => {
+    return apiClient.patch(ENDPOINTS.PROFILE.ME, profileData);
+  },
+
+  /**
    * Update customer's personal profile, nominee, or address details
    */
   updateProfile: async (profileData) => {
