@@ -29,6 +29,13 @@ export const withdrawalService = {
   },
 
   /**
+   * Fetch paginated withdrawal history for the authenticated customer (alias)
+   */
+  getMyWithdrawals: async (params = {}) => {
+    return apiClient.get(ENDPOINTS.WITHDRAWALS.LIST, { params });
+  },
+
+  /**
    * Fetch single withdrawal details by ID or transaction ID
    */
   getWithdrawalById: async (withdrawalId) => {

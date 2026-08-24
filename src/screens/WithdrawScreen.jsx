@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { ArrowLeft, AlertTriangle, ShieldCheck, CheckCircle2, ArrowUp } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { withdrawalService, kycService } from '../services';
 import BottomNav from '../components/BottomNav';
 
 export default function WithdrawScreen({ onNavigate, onTogglePlus }) {
-  const { currentUser, holdings, goldRate, silverRate, submitKycRequest, requestWithdrawal } = useApp();
+  const { currentUser, setCurrentUser, holdings, goldRate, silverRate, fetchHoldings } = useApp();
   
   // Persistent KYC verification state check
-  const isKycVerified = currentUser?.kycStatus === 'Verified';
+  const isKycVerified =
+    (currentUser?.kycStatus || '').toLowerCase() === 'verified' ||
+    (currentUser?.kycStatus || '').toLowerCase() === 'approved';
 
   const [showKycModal, setShowKycModal] = useState(false);
   const [showKycForm, setShowKycForm] = useState(false);
@@ -21,6 +24,9 @@ export default function WithdrawScreen({ onNavigate, onTogglePlus }) {
   const [withdrawGrams, setWithdrawGrams] = useState('');
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
   const [withdrawSuccess, setWithdrawSuccess] = useState(false);
+  const [withdrawError, setWithdrawError] = useState('');
+  const [isSubmittingWithdrawal, setIsSubmittingWithdrawal] = useState(false);
+  const [createdWithdrawal, setCreatedWithdrawal] = useState(null);
 
   const handleSubmitKyc = async (e) => {
     e.preventDefault();
@@ -50,9 +56,13 @@ export default function WithdrawScreen({ onNavigate, onTogglePlus }) {
 
     setIsSubmittingKyc(true);
     try {
-      if (typeof submitKycRequest === 'function') {
-        submitKycRequest({ pan: cleanPan, aadhar: cleanAadhar });
-      }
+      await kycService.submitKyc({ pan: cleanPan, aadhar: cleanAadhar });
+      setCurrentUser((prev) => ({
+        ...prev,
+        pan: cleanPan,
+        aadhar: cleanAadhar,
+        kycStatus: 'Verified',
+      }));
       setKycSuccess(true);
       setTimeout(() => {
         setKycSuccess(false);
@@ -61,8 +71,7 @@ export default function WithdrawScreen({ onNavigate, onTogglePlus }) {
         setIsSubmittingKyc(false);
       }, 1400);
     } catch (err) {
-      console.error('KYC submission error:', err);
-      setKycError('Failed to submit KYC. Please try again.');
+      setKycError(err.message || 'Failed to submit KYC. Please try again.');
       setIsSubmittingKyc(false);
     }
   };
@@ -74,34 +83,69 @@ export default function WithdrawScreen({ onNavigate, onTogglePlus }) {
     }
     setWithdrawAsset(asset);
     setWithdrawGrams('');
+    setWithdrawError('');
+    setCreatedWithdrawal(null);
     setShowWithdrawForm(true);
   };
 
-  const handleConfirmWithdrawal = (e) => {
+  const handleConfirmWithdrawal = async (e) => {
     e.preventDefault();
-    const g = parseFloat(withdrawGrams) || 0;
-    const maxGrams = withdrawAsset === 'Gold' ? holdings.goldGrams : holdings.silverGrams;
+    if (isSubmittingWithdrawal) return;
+    setWithdrawError('');
 
-    if (g <= 0 || g > maxGrams) {
-      alert(`Please enter a valid gram quantity (Max available: ${maxGrams.toFixed(4)} gm).`);
+    const g = parseFloat(withdrawGrams) || 0;
+    const maxGrams = withdrawAsset === 'Gold' ? (holdings?.goldGrams || 0) : (holdings?.silverGrams || 0);
+
+    if (g <= 0) {
+      setWithdrawError('Please enter a valid gram quantity greater than 0.');
       return;
     }
 
-    const currentRate = withdrawAsset === 'Gold' ? (goldRate || 13263.65) : (silverRate || 265.00);
+    if (g > maxGrams) {
+      setWithdrawError(`Insufficient ${withdrawAsset.toLowerCase()} balance (Max available: ${maxGrams.toFixed(4)} gm).`);
+      return;
+    }
 
-    requestWithdrawal({
-      asset: withdrawAsset,
-      quantity: `${g.toFixed(4)} gm`,
-      amount: `₹ ${(g * currentRate).toFixed(2)}`
-    });
+    if (withdrawAsset === 'Gold' && g < 0.5) {
+      setWithdrawError('Minimum gold withdrawal quantity is 0.5 grams.');
+      return;
+    }
 
-    setWithdrawSuccess(true);
-    setTimeout(() => {
-      setWithdrawSuccess(false);
-      setShowWithdrawForm(false);
-      onNavigate('transactions');
-    }, 1600);
+    if (withdrawAsset === 'Silver' && g < 10.0) {
+      setWithdrawError('Minimum silver withdrawal quantity is 10.0 grams.');
+      return;
+    }
+
+    setIsSubmittingWithdrawal(true);
+    try {
+      const res = await withdrawalService.createWithdrawal({
+        metal: withdrawAsset.toLowerCase(),
+        quantityGrams: g,
+        withdrawalMode: 'physical',
+      });
+
+      const wData = res?.data;
+      setCreatedWithdrawal(wData);
+      setWithdrawSuccess(true);
+
+      if (typeof fetchHoldings === 'function') {
+        fetchHoldings();
+      }
+
+      setTimeout(() => {
+        setWithdrawSuccess(false);
+        setShowWithdrawForm(false);
+        onNavigate('transactions');
+      }, 1600);
+    } catch (err) {
+      setWithdrawError(err.message || 'Withdrawal request failed. Please check your balance and try again.');
+    } finally {
+      setIsSubmittingWithdrawal(false);
+    }
   };
+
+  const goldGrams = Number(holdings?.goldGrams) || 0;
+  const silverGrams = Number(holdings?.silverGrams) || 0;
 
   return (
     <div className="app-screen-layout">
@@ -134,7 +178,7 @@ export default function WithdrawScreen({ onNavigate, onTogglePlus }) {
 
           {/* 2. Balance Value (Large & Readable) */}
           <div style={{ fontSize: '32px', fontWeight: '900', color: '#1e1b2e', marginBottom: '4px', letterSpacing: '-0.5px', lineHeight: '1.1' }}>
-            {holdings.goldGrams.toFixed(4)}
+            {goldGrams.toFixed(4)}
           </div>
 
           {/* 3. "Gram" Pill (Directly below balance) */}
@@ -200,7 +244,7 @@ export default function WithdrawScreen({ onNavigate, onTogglePlus }) {
 
           {/* 2. Balance Value (Large & Readable) */}
           <div style={{ fontSize: '32px', fontWeight: '900', color: '#1e1b2e', marginBottom: '4px', letterSpacing: '-0.5px', lineHeight: '1.1' }}>
-            {holdings.silverGrams.toFixed(4)}
+            {silverGrams.toFixed(4)}
           </div>
 
           {/* 3. "Gram" Pill (Directly below balance) */}
@@ -380,10 +424,10 @@ export default function WithdrawScreen({ onNavigate, onTogglePlus }) {
               <div style={{ textAlign: 'center', padding: '24px 0' }}>
                 <CheckCircle2 size={56} color="#10b981" style={{ margin: '0 auto 14px auto' }} />
                 <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#1e1b2e', marginBottom: '6px' }}>
-                  KYC Verified Successfully!
+                  KYC Submitted Successfully!
                 </h3>
                 <p style={{ fontSize: '14px', color: '#6b7280', fontWeight: '500' }}>
-                  Your documents are verified. You can now withdraw your gold and silver.
+                  Your documents are submitted for review.
                 </p>
               </div>
             )}
@@ -393,7 +437,7 @@ export default function WithdrawScreen({ onNavigate, onTogglePlus }) {
 
       {/* Withdrawal Request Modal Form */}
       {showWithdrawForm && (
-        <div className="modal-overlay" onClick={() => setShowWithdrawForm(false)}>
+        <div className="modal-overlay" onClick={() => !isSubmittingWithdrawal && setShowWithdrawForm(false)}>
           <div className="bottom-sheet" onClick={(e) => e.stopPropagation()} style={{ padding: '28px 24px' }}>
             {!withdrawSuccess ? (
               <>
@@ -401,17 +445,37 @@ export default function WithdrawScreen({ onNavigate, onTogglePlus }) {
                   Withdraw {withdrawAsset}
                 </h3>
 
+                {withdrawError && (
+                  <div style={{
+                    backgroundColor: '#fee2e2',
+                    border: '1px solid #ef4444',
+                    borderRadius: '12px',
+                    padding: '10px 14px',
+                    marginBottom: '14px',
+                    color: '#dc2626',
+                    fontSize: '13px',
+                    fontWeight: '700'
+                  }}>
+                    {withdrawError}
+                  </div>
+                )}
+
                 <form onSubmit={handleConfirmWithdrawal} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div className="input-group">
                     <label style={{ fontSize: '13px', fontWeight: '700', color: '#5b5375', marginBottom: '4px' }}>
                       Quantity to Withdraw (Gram)
                     </label>
                     <input
-                      type="text"
+                      type="number"
+                      step="0.0001"
                       className="custom-input"
-                      placeholder={`Max available: ${(withdrawAsset === 'Gold' ? holdings.goldGrams : holdings.silverGrams).toFixed(4)} gm`}
+                      placeholder={`Max available: ${(withdrawAsset === 'Gold' ? goldGrams : silverGrams).toFixed(4)} gm`}
                       value={withdrawGrams}
-                      onChange={(e) => setWithdrawGrams(e.target.value)}
+                      onChange={(e) => {
+                        setWithdrawGrams(e.target.value);
+                        setWithdrawError('');
+                      }}
+                      disabled={isSubmittingWithdrawal}
                     />
                   </div>
 
@@ -419,6 +483,7 @@ export default function WithdrawScreen({ onNavigate, onTogglePlus }) {
                     <button
                       type="button"
                       onClick={() => setShowWithdrawForm(false)}
+                      disabled={isSubmittingWithdrawal}
                       style={{
                         flex: 1, height: '50px', borderRadius: '14px', border: '1.5px solid var(--primary-purple)',
                         backgroundColor: 'transparent', color: '#1e1b2e', fontSize: '16px', fontWeight: '800', cursor: 'pointer'
@@ -429,9 +494,10 @@ export default function WithdrawScreen({ onNavigate, onTogglePlus }) {
                     <button
                       type="submit"
                       className="btn-primary"
+                      disabled={isSubmittingWithdrawal}
                       style={{ flex: 1.5, height: '50px', fontSize: '16px' }}
                     >
-                      Request Withdrawal
+                      {isSubmittingWithdrawal ? 'Submitting...' : 'Request Withdrawal'}
                     </button>
                   </div>
                 </form>
@@ -443,8 +509,13 @@ export default function WithdrawScreen({ onNavigate, onTogglePlus }) {
                   Withdrawal Requested !
                 </h3>
                 <p style={{ fontSize: '14px', color: '#6c727f', fontWeight: '600' }}>
-                  Your request for {withdrawGrams} gm of {withdrawAsset} is pending admin approval.
+                  Your request for {createdWithdrawal?.quantity_grams || withdrawGrams} gm of {withdrawAsset} is pending admin approval.
                 </p>
+                {createdWithdrawal?.transaction_id && (
+                  <p style={{ fontSize: '12.5px', color: '#908ba6', fontWeight: '700', marginTop: '6px' }}>
+                    Txn ID: {createdWithdrawal.transaction_id}
+                  </p>
+                )}
               </div>
             )}
           </div>
