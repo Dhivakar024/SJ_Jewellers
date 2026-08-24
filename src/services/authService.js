@@ -1,13 +1,93 @@
-// Authentication Service for Admin Portal
+/**
+ * Authentication Service
+ * Handles Customer and Admin authentication, registration, session management, and JWT tokens.
+ */
+
+import apiClient from './api/client';
+import { ENDPOINTS } from './api/endpoints';
+import { setAuthToken, setStoredUser, clearAllAuth, getAuthToken, getStoredUser } from '../utils/authStorage';
 
 export const ADMIN_DEMO_CREDENTIALS = {
   username: 'admin',
   email: 'admin@sjjewelers.com',
-  password: 'admin123'
+  password: 'admin123',
 };
 
 export const authService = {
-  // Admin Login
+  /**
+   * Register a new customer account
+   */
+  register: async ({ name, mobile, email, password }) => {
+    const payload = {
+      name: name?.trim(),
+      mobile: mobile?.trim(),
+      email: email ? email.trim() : null,
+      password: password?.trim(),
+    };
+
+    const response = await apiClient.post(ENDPOINTS.AUTH.REGISTER, payload, { requiresAuth: false });
+    if (response?.data?.access_token) {
+      setAuthToken(response.data.access_token);
+      if (response.data.user) {
+        setStoredUser(response.data.user);
+      }
+    }
+    return response;
+  },
+
+  /**
+   * Login customer with mobile/email and password
+   */
+  login: async ({ identifier, password, rememberMe = true }) => {
+    const payload = {
+      identifier: identifier?.trim(),
+      password: password?.trim(),
+    };
+
+    const response = await apiClient.post(ENDPOINTS.AUTH.LOGIN, payload, { requiresAuth: false });
+    if (response?.data?.access_token) {
+      setAuthToken(response.data.access_token, rememberMe);
+      if (response.data.user) {
+        setStoredUser(response.data.user, rememberMe);
+      }
+    }
+    return response;
+  },
+
+  /**
+   * Fetch current authenticated user profile and roles
+   */
+  getCurrentUser: async () => {
+    const response = await apiClient.get(ENDPOINTS.AUTH.ME);
+    if (response?.data) {
+      setStoredUser(response.data);
+    }
+    return response;
+  },
+
+  /**
+   * Customer logout - clear local authentication credentials
+   */
+  logout: async () => {
+    clearAllAuth();
+    return { success: true };
+  },
+
+  /**
+   * Check if a valid customer auth token is stored
+   */
+  isAuthenticated: () => {
+    return !!getAuthToken();
+  },
+
+  getStoredCustomer: () => {
+    return getStoredUser();
+  },
+
+  // -------------------------------------------------------------
+  // Legacy Admin Session Helpers (Preserved for existing Admin portal)
+  // -------------------------------------------------------------
+
   loginAdmin: async ({ usernameOrEmail, password }) => {
     await new Promise((resolve) => setTimeout(resolve, 80));
 
@@ -29,23 +109,24 @@ export const authService = {
       'sj jewellers',
       'sjjewellers',
       (customSettings?.username || '').trim().toLowerCase(),
-      (customSettings?.email || '').trim().toLowerCase()
+      (customSettings?.email || '').trim().toLowerCase(),
     ].filter(Boolean);
 
     const isValidUser = validUsernames.includes(input);
-    const isValidPass = pass === 'admin123' || 
-                        pass === 'admin' || 
-                        pass === '123456' || 
-                        (customSettings?.password && pass === customSettings.password);
+    const isValidPass =
+      pass === 'admin123' ||
+      pass === 'admin' ||
+      pass === '123456' ||
+      (customSettings?.password && pass === customSettings.password);
 
     if (isValidUser && isValidPass) {
       localStorage.removeItem('sj_admin_logged_out');
       const adminSession = {
         isAuthenticated: true,
-        username: input === 'admin' ? 'admin' : (customSettings?.username || 'admin'),
+        username: input === 'admin' ? 'admin' : customSettings?.username || 'admin',
         email: input.includes('@') ? input : 'admin@sjjewelers.com',
         role: 'SUPER_ADMIN',
-        loginTime: new Date().toISOString()
+        loginTime: new Date().toISOString(),
       };
 
       try {
@@ -58,13 +139,12 @@ export const authService = {
       return { success: true, user: adminSession };
     }
 
-    return { 
-      success: false, 
-      error: 'Invalid admin username/email or password. (Demo: admin / admin123)' 
+    return {
+      success: false,
+      error: 'Invalid admin username/email or password. (Demo: admin / admin123)',
     };
   },
 
-  // Check persisted admin session
   getStoredAdminSession: () => {
     try {
       if (localStorage.getItem('sj_admin_logged_out') === 'true') {
@@ -78,17 +158,15 @@ export const authService = {
     } catch {
       // ignore
     }
-    // Default to active admin session so direct navigation to /admin or /#/admin/dashboard renders immediately
     return {
       isAuthenticated: true,
       username: 'admin',
       email: 'admin@sjjewelers.com',
       role: 'SUPER_ADMIN',
-      loginTime: new Date().toISOString()
+      loginTime: new Date().toISOString(),
     };
   },
 
-  // Admin Logout
   logoutAdmin: async () => {
     try {
       localStorage.setItem('sj_admin_logged_out', 'true');
@@ -98,5 +176,7 @@ export const authService = {
       console.error(e);
     }
     return { success: true };
-  }
+  },
 };
+
+export default authService;
