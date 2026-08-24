@@ -15,6 +15,12 @@ from app.schemas.rates import (
     RefreshRatesResponse,
     RateHistoryResponse,
 )
+from app.schemas.admin_users import (
+    AdminUserListResponse,
+    AdminUserDetailResponse,
+    AdminUpdateUserStatusRequest,
+    AdminUserStatusResponse,
+)
 from app.services.kyc_service import (
     get_pending_kyc_list,
     get_kyc_details,
@@ -27,6 +33,13 @@ from app.services.metal_rates_service import (
     refresh_api_rates,
     get_rate_history,
 )
+from app.services.user_service import (
+    get_admin_users,
+    get_admin_user_detail,
+    update_user_status_by_admin,
+    ban_user_by_admin,
+    unban_user_by_admin,
+)
 from app.utils.security import require_admin
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
@@ -36,6 +49,97 @@ router = APIRouter(prefix="/api/admin", tags=["Admin"])
 async def admin_status():
     """Placeholder endpoint confirming the admin module is registered."""
     return {"message": "Admin router is available", "module": "admin"}
+
+
+# -------------------------------------------------------------
+# Admin User Management Endpoints
+# -------------------------------------------------------------
+
+@router.get(
+    "/users",
+    response_model=AdminUserListResponse,
+    summary="List all users with pagination and search",
+    description="Retrieves a paginated list of users supporting search by name/mobile/email and filtering by account status and KYC status.",
+)
+async def list_users(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page (max 100)"),
+    search: Optional[str] = Query(None, description="Search term for name, mobile, email"),
+    status: Optional[str] = Query(None, description="Filter by account status (active, suspended, banned)"),
+    kyc_status: Optional[str] = Query(None, description="Filter by KYC status (pending, verified, rejected)"),
+    admin_user: Dict[str, Any] = Depends(require_admin),
+    db: Database = Depends(get_database),
+):
+    """Admin endpoint to fetch members list."""
+    return get_admin_users(
+        db=db,
+        page=page,
+        limit=limit,
+        search=search,
+        status_filter=status,
+        kyc_status_filter=kyc_status,
+    )
+
+
+@router.get(
+    "/users/{user_id}",
+    response_model=AdminUserDetailResponse,
+    summary="Get user details by ID",
+    description="Retrieves comprehensive account profile, personal details, address, and status for a specific user.",
+)
+async def get_user_by_id(
+    user_id: str = Path(..., description="Unique ID of the user"),
+    admin_user: Dict[str, Any] = Depends(require_admin),
+    db: Database = Depends(get_database),
+):
+    """Admin endpoint to view single user detail."""
+    return get_admin_user_detail(db, user_id)
+
+
+@router.patch(
+    "/users/{user_id}/status",
+    response_model=AdminUserStatusResponse,
+    summary="Update user account status",
+    description="Updates a customer's account status to active, suspended, or banned. Prevents modification of other administrator accounts.",
+)
+async def update_user_status(
+    data: AdminUpdateUserStatusRequest,
+    user_id: str = Path(..., description="Unique ID of the user"),
+    admin_user: Dict[str, Any] = Depends(require_admin),
+    db: Database = Depends(get_database),
+):
+    """Admin endpoint to update account status."""
+    return update_user_status_by_admin(db, user_id, data.status, admin_user)
+
+
+@router.patch(
+    "/users/{user_id}/ban",
+    response_model=AdminUserStatusResponse,
+    summary="Ban a user account",
+    description="Sets user status to 'banned' without deleting data, immediately blocking protected customer actions.",
+)
+async def ban_user(
+    user_id: str = Path(..., description="Unique ID of the user to ban"),
+    admin_user: Dict[str, Any] = Depends(require_admin),
+    db: Database = Depends(get_database),
+):
+    """Admin endpoint to ban a customer account."""
+    return ban_user_by_admin(db, user_id, admin_user)
+
+
+@router.patch(
+    "/users/{user_id}/unban",
+    response_model=AdminUserStatusResponse,
+    summary="Unban a user account",
+    description="Restores a banned user's account status to 'active'.",
+)
+async def unban_user(
+    user_id: str = Path(..., description="Unique ID of the user to unban"),
+    admin_user: Dict[str, Any] = Depends(require_admin),
+    db: Database = Depends(get_database),
+):
+    """Admin endpoint to unban a customer account."""
+    return unban_user_by_admin(db, user_id, admin_user)
 
 
 # -------------------------------------------------------------

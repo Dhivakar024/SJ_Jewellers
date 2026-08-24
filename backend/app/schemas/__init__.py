@@ -30,6 +30,19 @@ from app.schemas.rates import (
     RateHistoryItem,
     RateHistoryResponse,
 )
+from app.schemas.profile import (
+    AddressProfileSchema,
+    UserProfileData,
+    UserProfileResponse,
+    UpdateProfileRequest,
+)
+from app.schemas.admin_users import (
+    AdminUserListItem,
+    AdminUserListResponse,
+    AdminUserDetailResponse,
+    AdminUpdateUserStatusRequest,
+    AdminUserStatusResponse,
+)
 
 __all__ = [
     "UserRegisterRequest",
@@ -56,4 +69,13 @@ __all__ = [
     "RefreshRatesResponse",
     "RateHistoryItem",
     "RateHistoryResponse",
+    "AddressProfileSchema",
+    "UserProfileData",
+    "UserProfileResponse",
+    "UpdateProfileRequest",
+    "AdminUserListItem",
+    "AdminUserListResponse",
+    "AdminUserDetailResponse",
+    "AdminUpdateUserStatusRequest",
+    "AdminUserStatusResponse",
 ]

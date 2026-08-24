@@ -1,6 +1,7 @@
 """API Routes Package."""
 
 from app.routes.auth import router as auth_router
+from app.routes.profile import router as profile_router
 from app.routes.users import router as users_router
 from app.routes.kyc import router as kyc_router
 from app.routes.rates import router as rates_router
@@ -12,6 +13,7 @@ from app.routes.admin import router as admin_router
 
 __all__ = [
     "auth_router",
+    "profile_router",
     "users_router",
     "kyc_router",
     "rates_router",

@@ -4,6 +4,7 @@ from app.config import settings
 from app.database.connection import ping_database, close_database_connection
 from app.routes import (
     auth_router,
+    profile_router,
     users_router,
     kyc_router,
     rates_router,
@@ -42,6 +43,7 @@ app.add_middleware(
 
 # Include API Routers
 app.include_router(auth_router)
+app.include_router(profile_router)
 app.include_router(users_router)
 app.include_router(kyc_router)
 app.include_router(rates_router)

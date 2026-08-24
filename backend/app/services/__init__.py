@@ -25,6 +25,15 @@ from app.services.metal_rates_service import (
     ensure_rates_initialized,
     get_end_of_day_expiry,
 )
+from app.services.user_service import (
+    get_my_profile,
+    update_my_profile,
+    get_admin_users,
+    get_admin_user_detail,
+    update_user_status_by_admin,
+    ban_user_by_admin,
+    unban_user_by_admin,
+)
 
 __all__ = [
     "register_user",
@@ -46,4 +55,11 @@ __all__ = [
     "get_rate_history",
     "ensure_rates_initialized",
     "get_end_of_day_expiry",
+    "get_my_profile",
+    "update_my_profile",
+    "get_admin_users",
+    "get_admin_user_detail",
+    "update_user_status_by_admin",
+    "ban_user_by_admin",
+    "unban_user_by_admin",
 ]

@@ -117,7 +117,17 @@ async def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] =
 
     # Check account active status
     account_status = user_doc.get("account_status", "active")
-    if account_status != "active":
+    if account_status == "banned":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account has been banned",
+        )
+    elif account_status == "suspended":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account is currently suspended",
+        )
+    elif account_status != "active":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Account is {account_status}. Please contact support.",
