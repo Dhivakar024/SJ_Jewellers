@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
+import { Phone, Eye, EyeOff } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { CUSTOMER_SUPPORT_PHONE, getTelephoneLink } from '../config/support';
 
 export default function SignInScreen({ onNavigate }) {
   const { loginUser } = useApp();
-  const [username, setUsername] = useState('');
-  const [mobile, setMobile] = useState('');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -12,24 +15,29 @@ export default function SignInScreen({ onNavigate }) {
     e.preventDefault();
     setErrorMessage('');
 
-    const uName = username.trim();
-    const uMobile = mobile.trim();
+    const ident = identifier.trim();
+    const pass = password.trim();
 
-    if (!uName && !uMobile) {
-      setErrorMessage('Please enter your User Name or Mobile Number.');
+    if (!ident) {
+      setErrorMessage('Please enter your Mobile Number or Email.');
+      return;
+    }
+
+    if (!pass) {
+      setErrorMessage('Please enter your password.');
       return;
     }
 
     setIsLoading(true);
     try {
-      const user = await loginUser({ username: uName, mobile: uMobile });
+      const user = await loginUser({ identifier: ident, password: pass });
       if (!user.profileCompleted) {
         onNavigate('create-profile');
       } else {
         onNavigate('home');
       }
     } catch (err) {
-      setErrorMessage(err.message || 'Invalid username or mobile number.');
+      setErrorMessage(err.message || 'Invalid mobile number/email or password.');
     } finally {
       setIsLoading(false);
     }
@@ -57,82 +65,104 @@ export default function SignInScreen({ onNavigate }) {
           <input
             type="text"
             className="custom-input"
-            placeholder="User Name"
-            value={username}
+            placeholder="Mobile Number / Email"
+            value={identifier}
             onChange={(e) => {
-              setUsername(e.target.value);
+              setIdentifier(e.target.value);
               setErrorMessage('');
             }}
             disabled={isLoading}
+            autoComplete="username"
           />
         </div>
 
-        <div className="input-group">
+        <div className="input-group" style={{ position: 'relative' }}>
           <input
-            type="tel"
+            type={showPassword ? 'text' : 'password'}
             className="custom-input"
-            placeholder="Enter Mobile Number"
-            value={mobile}
+            placeholder="Enter Password"
+            value={password}
             onChange={(e) => {
-              setMobile(e.target.value);
+              setPassword(e.target.value);
               setErrorMessage('');
             }}
             disabled={isLoading}
+            autoComplete="current-password"
+            style={{ paddingRight: '48px' }}
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            style={{
+              position: 'absolute',
+              right: '14px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: 'none',
+              border: 'none',
+              color: '#8b849c',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '4px'
+            }}
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
         </div>
 
-        <div className="forgot-link" onClick={() => onNavigate('forgot-username')}>
-          Forgot username?
-        </div>
-
-        <button type="submit" className="btn-primary" disabled={isLoading}>
+        <button type="submit" className="btn-primary" disabled={isLoading} style={{ marginTop: '10px' }}>
           {isLoading ? 'Signing in...' : 'Sign in'}
         </button>
       </form>
 
-      {/* Sign Up Link */}
-      <div className="auth-footer-text">
-        Don't have an account?{' '}
-        <span onClick={() => onNavigate('signup')}>Sign Up</span>
+      {/* Customer Support Help Section */}
+      <div
+        style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '18px',
+          padding: '16px 18px',
+          marginTop: '24px',
+          border: '1px solid #e8e2fa',
+          boxShadow: '0 4px 14px rgba(88, 60, 245, 0.04)',
+          textAlign: 'center'
+        }}
+      >
+        <div style={{ fontSize: '14px', fontWeight: '800', color: '#1e1b2e', marginBottom: '6px' }}>
+          Need help signing in?
+        </div>
+        <p style={{ fontSize: '12px', color: '#6b7280', margin: '0 0 12px 0', lineHeight: '1.45' }}>
+          If you forgot your password or are unable to access your account, please contact Customer Support for account verification and assistance.
+        </p>
+        <a
+          href={getTelephoneLink(CUSTOMER_SUPPORT_PHONE)}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            backgroundColor: '#f1ecfe',
+            color: 'var(--primary-purple)',
+            fontWeight: '800',
+            fontSize: '14px',
+            padding: '9px 18px',
+            borderRadius: '12px',
+            textDecoration: 'none',
+            border: '1px solid #ded5fb',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <Phone size={15} />
+          <span>{CUSTOMER_SUPPORT_PHONE}</span>
+        </a>
       </div>
 
-      {/* Social Login */}
-      <div className="social-login-section">
-        <div className="social-title">Or Login with</div>
-        <div className="social-icons-row">
-          {/* Facebook */}
-          <div className="social-icon-btn">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 17.9895 4.38823 22.954 10.125 23.8542V15.4688H7.07812V12H10.125V9.35625C10.125 6.34875 11.9166 4.6875 14.6576 4.6875C15.9705 4.6875 17.3438 4.92188 17.3438 4.92188V7.875H15.8306C14.3399 7.875 13.875 8.80001 13.875 9.74906V12H17.2031L16.6711 15.4688H13.875V23.8542C19.6118 22.954 24 17.9895 24 12Z" fill="#1877F2"/>
-            </svg>
-          </div>
-
-          {/* Google */}
-          <div className="social-icon-btn">
-            <svg width="24" height="24" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-            </svg>
-          </div>
-
-          {/* Instagram */}
-          <div className="social-icon-btn">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-              <rect width="24" height="24" rx="6" fill="url(#ig-grad)"/>
-              <path d="M12 7.15A4.85 4.85 0 1016.85 12 4.86 4.86 0 0012 7.15zm0 8A3.15 3.15 0 1115.15 12 3.16 3.16 0 0112 15.15zm5.05-8.32a1.13 1.13 0 11-1.13-1.13 1.13 1.13 0 011.13 1.13z" fill="white"/>
-              <defs>
-                <radialGradient id="ig-grad" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(3.4 20.6) scale(26.2 26.2)">
-                  <stop stopColor="#FED576"/>
-                  <stop offset=".26" stopColor="#F47133"/>
-                  <stop offset=".6" stopColor="#BC3081"/>
-                  <stop offset="1" stopColor="#4C64D3"/>
-                </radialGradient>
-              </defs>
-            </svg>
-          </div>
-        </div>
+      {/* Sign Up Link */}
+      <div className="auth-footer-text" style={{ marginTop: '24px' }}>
+        Don't have an account?{' '}
+        <span onClick={() => onNavigate('signup')}>Sign Up</span>
       </div>
     </div>
   );

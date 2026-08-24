@@ -735,10 +735,10 @@ export function AppProvider({ children }) {
     throw new Error(res?.message || 'OTP verification failed');
   };
 
-  const registerNewUser = async ({ username, mobile, email, password }) => {
-    const cleanName = (username || 'New User').trim();
+  const registerNewUser = async ({ name, username, mobile, email, password }) => {
+    const cleanName = (name || username || 'New User').trim();
     const cleanMobile = (mobile || '').trim();
-    const pass = password || `SJ@${cleanMobile.replace(/\s+/g, '')}`;
+    const pass = (password || `SJ@${cleanMobile.replace(/\s+/g, '')}`).trim();
 
     // 1. Call real backend register
     const regRes = await authService.register({
@@ -748,9 +748,11 @@ export function AppProvider({ children }) {
       password: pass,
     });
 
-    // 2. Log in automatically to obtain JWT token
-    const loginRes = await authService.login({ identifier: cleanMobile, password: pass });
-    const uData = loginRes?.data?.user || regRes?.data?.user || {};
+    let uData = regRes?.data?.user;
+    if (!regRes?.data?.access_token) {
+      const loginRes = await authService.login({ identifier: cleanMobile, password: pass });
+      uData = loginRes?.data?.user || uData || {};
+    }
 
     const newUser = {
       id: uData.id || `USR-${Date.now()}`,
@@ -1164,6 +1166,7 @@ export function AppProvider({ children }) {
         sendSignupOtp,
         verifySignupOtp,
         registerNewUser,
+        registerUser: registerNewUser,
         loginUser,
         completeUserProfile,
         logoutUser,

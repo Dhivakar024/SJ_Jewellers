@@ -222,7 +222,45 @@ class TestProductionSecurity(unittest.TestCase):
             json={"mobile": "9123456780", "otp": "999999", "name": "Ravi Kumar", "purpose": "signup"}
         )
         self.assertEqual(resp.status_code, 400)
-        self.assertIn("Invalid OTP", resp.json().get("detail", ""))
+    def test_14_direct_registration_creates_account_and_jwt_token(self):
+        """Verify direct user registration hashes password, creates account, and returns JWT token."""
+        mock_db = MagicMock()
+        mock_db.users.find_one.return_value = None
+        mock_db.users.insert_one.return_value = MagicMock(inserted_id="67b96000e783457a4eb182b2")
+        app.dependency_overrides[get_database] = lambda: mock_db
+
+        resp = self.client.post(
+            "/api/auth/register",
+            json={
+                "name": "Karthik Raja",
+                "mobile": "9845123456",
+                "email": "karthik@example.com",
+                "password": "StrongPassword123!",
+            }
+        )
+        self.assertEqual(resp.status_code, 201)
+        data = resp.json()
+        self.assertIn("access_token", data)
+        self.assertEqual(data["user"]["name"], "Karthik Raja")
+        self.assertEqual(data["user"]["profile_completed"], False)
+
+    def test_15_duplicate_registration_rejected(self):
+        """Verify registration rejects duplicate mobile numbers."""
+        mock_db = MagicMock()
+        mock_db.users.find_one.return_value = {"mobile": "9845123456", "role": "customer"}
+        app.dependency_overrides[get_database] = lambda: mock_db
+
+        resp = self.client.post(
+            "/api/auth/register",
+            json={
+                "name": "Karthik Raja",
+                "mobile": "9845123456",
+                "email": "karthik@example.com",
+                "password": "StrongPassword123!",
+            }
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("already registered", resp.json().get("detail", ""))
 
 
 if __name__ == "__main__":

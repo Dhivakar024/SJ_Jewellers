@@ -112,6 +112,8 @@ class UserResponse(BaseModel):
 class RegisterResponse(BaseModel):
     """Response returned upon successful registration."""
     message: str = "Registration successful"
+    access_token: Optional[str] = None
+    token_type: str = "bearer"
     user: UserResponse
 
 

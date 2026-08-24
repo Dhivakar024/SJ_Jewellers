@@ -95,8 +95,6 @@ function MainContent() {
       if (!currentUser || !currentUser.isAuthenticated) {
         if (hash === 'signup') {
           setUserScreen('signup');
-        } else if (hash === 'forgot-username') {
-          setUserScreen('forgot-username');
         } else {
           setUserScreen('signin');
           window.location.hash = 'signin';
@@ -135,7 +133,7 @@ function MainContent() {
   useEffect(() => {
     if (isAdminRoute() || isAuthLoading) return;
     if (!currentUser || !currentUser.isAuthenticated) {
-      if (userScreen !== 'signin' && userScreen !== 'signup' && userScreen !== 'forgot-username') {
+      if (userScreen !== 'signin' && userScreen !== 'signup') {
         setUserScreen('signin');
         window.location.hash = 'signin';
       }
@@ -150,7 +148,7 @@ function MainContent() {
   const handleUserNavigate = (screen) => {
     // If not authenticated, only allow auth screens
     if (!currentUser || !currentUser.isAuthenticated) {
-      if (screen === 'signup' || screen === 'forgot-username' || screen === 'signin') {
+      if (screen === 'signup' || screen === 'signin') {
         setUserScreen(screen);
         window.location.hash = screen;
       } else {

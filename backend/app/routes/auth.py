@@ -20,7 +20,7 @@ from app.services.auth_service import (
     verify_otp,
     format_user_response,
 )
-from app.utils.security import get_current_user
+from app.utils.security import get_current_user, create_access_token
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
@@ -65,8 +65,16 @@ async def verify_otp_endpoint(data: VerifyOtpRequest, db: Database = Depends(get
 async def register(data: UserRegisterRequest, db: Database = Depends(get_database)):
     """Register a new customer account."""
     user = register_user(db, data)
+    token_payload = {
+        "sub": user.id,
+        "role": user.role,
+        "mobile": user.mobile,
+    }
+    access_token = create_access_token(token_payload)
     return RegisterResponse(
         message="Registration successful",
+        access_token=access_token,
+        token_type="bearer",
         user=user,
     )
 
