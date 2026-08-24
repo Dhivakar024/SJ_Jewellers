@@ -204,11 +204,8 @@ export default function CreateProfileScreen({ onNavigate }) {
       completeUserProfile(updatedUserObj);
       sessionStorage.removeItem('sj_session_skipped_profile');
 
-      if (isExistingCompletedUser) {
-        onNavigate('profile');
-      } else {
-        onNavigate('home');
-      }
+      // Navigate DIRECTLY to Home after successful submission
+      onNavigate('home');
     } catch (err) {
       setErrorMessage(err.message || 'Failed to save profile. Please check your details and try again.');
     } finally {
