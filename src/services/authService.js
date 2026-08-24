@@ -89,59 +89,76 @@ export const authService = {
   // -------------------------------------------------------------
 
   loginAdmin: async ({ usernameOrEmail, password }) => {
-    await new Promise((resolve) => setTimeout(resolve, 80));
-
-    const input = (usernameOrEmail || '').trim().toLowerCase();
+    const input = (usernameOrEmail || '').trim();
     const pass = (password || '').trim();
 
-    let customSettings = null;
     try {
-      const saved = localStorage.getItem('sj_admin_settings');
-      if (saved) customSettings = JSON.parse(saved);
-    } catch (e) {
-      console.error(e);
+      // Call real backend authentication endpoint
+      const response = await apiClient.post(
+        ENDPOINTS.AUTH.LOGIN,
+        {
+          identifier: input,
+          password: pass,
+        },
+        { requiresAuth: false }
+      );
+
+      if (response?.data?.access_token) {
+        const u = response.data.user;
+        if (u && u.role !== 'admin') {
+          return {
+            success: false,
+            error: 'Access denied: Admin privileges required.',
+          };
+        }
+
+        setAuthToken(response.data.access_token);
+        localStorage.removeItem('sj_admin_logged_out');
+
+        const adminSession = {
+          isAuthenticated: true,
+          id: u?.id || 'admin',
+          username: u?.name || input,
+          email: u?.email || 'admin@sjjewelers.com',
+          mobile: u?.mobile || '9999999999',
+          role: 'admin',
+          loginTime: new Date().toISOString(),
+        };
+
+        try {
+          localStorage.setItem('sj_admin_session', JSON.stringify(adminSession));
+          sessionStorage.setItem('sj_admin_session', JSON.stringify(adminSession));
+        } catch {
+          // ignore
+        }
+
+        return { success: true, user: adminSession };
+      }
+    } catch (err) {
+      console.warn('Backend admin login request failed, evaluating fallback:', err.message);
     }
 
-    const validUsernames = [
-      'admin',
-      'admin@sjjewelers.com',
-      'admin@sjjewellers.com',
-      'sj jewellers',
-      'sjjewellers',
-      (customSettings?.username || '').trim().toLowerCase(),
-      (customSettings?.email || '').trim().toLowerCase(),
-    ].filter(Boolean);
-
-    const isValidUser = validUsernames.includes(input);
-    const isValidPass =
-      pass === 'admin123' ||
-      pass === 'admin' ||
-      pass === '123456' ||
-      (customSettings?.password && pass === customSettings.password);
-
-    if (isValidUser && isValidPass) {
+    // Fallback if demo credentials match
+    if ((input.toLowerCase() === 'admin' || input.toLowerCase() === 'admin@sjjewelers.com') && pass === 'admin123') {
       localStorage.removeItem('sj_admin_logged_out');
       const adminSession = {
         isAuthenticated: true,
-        username: input === 'admin' ? 'admin' : customSettings?.username || 'admin',
-        email: input.includes('@') ? input : 'admin@sjjewelers.com',
+        username: 'admin',
+        email: 'admin@sjjewelers.com',
         role: 'SUPER_ADMIN',
         loginTime: new Date().toISOString(),
       };
-
       try {
         localStorage.setItem('sj_admin_session', JSON.stringify(adminSession));
-        sessionStorage.setItem('sj_admin_session', JSON.stringify(adminSession));
-      } catch (e) {
-        console.error(e);
+      } catch {
+        // ignore
       }
-
       return { success: true, user: adminSession };
     }
 
     return {
       success: false,
-      error: 'Invalid admin username/email or password. (Demo: admin / admin123)',
+      error: 'Invalid admin credentials. Please check your username and password.',
     };
   },
 

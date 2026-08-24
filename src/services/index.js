@@ -15,3 +15,4 @@ export { withdrawalService } from './withdrawalService';
 export { transactionService } from './transactionService';
 export { notificationService } from './notificationService';
 export { userService } from './userService';
+export { adminService } from './adminService';

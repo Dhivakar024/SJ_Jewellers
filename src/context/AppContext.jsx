@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authService, profileService, ratesService, holdingsService, transactionService, notificationService } from '../services';
+import { authService, profileService, ratesService, holdingsService, transactionService, notificationService, adminService } from '../services';
 import { getAuthToken, getStoredUser, clearAllAuth } from '../utils/authStorage';
 
 const AppContext = createContext();
@@ -495,6 +495,108 @@ export function AppProvider({ children }) {
     }
   }, [adminAuth]);
 
+  // Fetch real admin data from FastAPI backend
+  const fetchAdminData = useCallback(async () => {
+    try {
+      const [usersRes, kycRes, withRes, txnRes] = await Promise.allSettled([
+        adminService.getUsers({ limit: 100 }),
+        adminService.getPendingKycList({ limit: 100 }),
+        adminService.getWithdrawals({ limit: 100 }),
+        adminService.getTransactions({ limit: 100 }),
+      ]);
+
+      if (usersRes.status === 'fulfilled' && usersRes.value?.data?.items) {
+        const mappedUsers = usersRes.value.data.items.map((u) => ({
+          id: u.user_id,
+          name: u.name,
+          username: u.name,
+          mobile: u.mobile,
+          role: u.role === 'admin' ? 'Admin' : 'Customer',
+          verified: u.kyc_status === 'verified' ? 'Yes' : 'No',
+          active: u.account_status === 'active' ? 'Yes' : 'No',
+          created: u.created_at ? u.created_at.split('T')[0] : '2026-08-14',
+          goldGrams: u.gold_holdings || 0,
+          silverGrams: u.silver_holdings || 0,
+          pan: u.pan || '',
+          aadhar: u.aadhar || '',
+        }));
+        if (mappedUsers.length > 0) {
+          setMembers(mappedUsers);
+        }
+      }
+
+      if (kycRes.status === 'fulfilled' && kycRes.value?.data?.items) {
+        const mappedKyc = kycRes.value.data.items.map((k) => ({
+          id: k.kyc_id,
+          userId: k.user_id,
+          name: k.name,
+          mobile: k.mobile,
+          role: 'Customer',
+          created: k.submitted_at ? k.submitted_at.split('T')[0] : '2026-08-14',
+          pan: k.pan,
+          aadhar: k.aadhar,
+          status: k.status,
+        }));
+        setPendingVerifications(mappedKyc);
+      }
+
+      if (withRes.status === 'fulfilled' && withRes.value?.data?.items) {
+        const mappedWith = withRes.value.data.items.map((w) => ({
+          id: w.withdrawal_id,
+          transactionId: w.transaction_id,
+          customer: w.customer?.name || 'Customer',
+          mobile: w.customer?.mobile || '',
+          metal: (w.metal || 'gold').toLowerCase() === 'gold' ? 'Gold' : 'Silver',
+          grams: w.quantity_grams,
+          amount: w.metal_value,
+          rate: w.rate_per_gram,
+          status: w.status === 'pending' ? 'Pending' : w.status === 'approved' ? 'Approved' : w.status === 'rejected' ? 'Rejected' : w.status,
+          date: w.created_at ? w.created_at.split('T')[0] : 'Recent',
+        }));
+        if (mappedWith.length > 0) {
+          setWithdrawals(mappedWith);
+        }
+      }
+
+      if (txnRes.status === 'fulfilled' && txnRes.value?.data?.items) {
+        const mappedTxns = txnRes.value.data.items.map((t) => {
+          const dObj = new Date(t.created_at || Date.now());
+          return {
+            id: t.transaction_id,
+            userId: t.customer?.user_id,
+            customer: t.customer?.name || 'Customer',
+            mobile: t.customer?.mobile || '',
+            type: t.type === 'purchase' ? 'Purchase' : 'Withdrawal',
+            metal: (t.metal || 'gold').toLowerCase() === 'gold' ? 'Gold' : 'Silver',
+            asset: (t.metal || 'gold').toLowerCase() === 'gold' ? 'Gold' : 'Silver',
+            assetType: t.metal,
+            direction: t.direction,
+            quantity: `${t.quantity_grams} gm`,
+            grams: t.quantity_grams,
+            amount: t.total_amount,
+            rate: t.rate_per_gram,
+            ratePerGram: t.rate_per_gram,
+            status: t.status === 'completed' || t.status === 'approved' ? 'Success' : t.status === 'pending' ? 'Pending' : t.status,
+            date: dObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+            time: dObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+            paymentMethod: t.type === 'withdrawal' ? 'Bank' : 'UPI',
+          };
+        });
+        if (mappedTxns.length > 0) {
+          setTransactions(mappedTxns);
+        }
+      }
+    } catch (err) {
+      console.warn('Error fetching admin data:', err.message);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (adminAuth?.isAuthenticated) {
+      fetchAdminData();
+    }
+  }, [adminAuth?.isAuthenticated, fetchAdminData]);
+
   // Restore Customer Authentication on App Startup
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
@@ -840,7 +942,7 @@ export function AppProvider({ children }) {
   };
 
   // Withdrawal Actions
-  const approveWithdrawal = (id) => {
+  const approveWithdrawal = async (id) => {
     const now = new Date();
     const paidStr = `${now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}, ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`;
 
@@ -854,10 +956,16 @@ export function AppProvider({ children }) {
       }
       return w;
     }));
+
+    try {
+      await adminService.approveWithdrawal(id);
+    } catch (err) {
+      console.warn('Backend withdrawal approval sync failed:', err.message);
+    }
   };
 
   // User Verification Actions
-  const verifyCustomer = (verificationId, memberName) => {
+  const verifyCustomer = async (verificationId, memberName) => {
     setPendingVerifications((prev) => prev.filter((v) => v.id !== verificationId && v.name !== memberName));
     if (memberName) {
       setMembers((prev) => prev.map((m) => {
@@ -866,6 +974,14 @@ export function AppProvider({ children }) {
         }
         return m;
       }));
+    }
+
+    try {
+      if (verificationId) {
+        await adminService.approveKyc(verificationId);
+      }
+    } catch (err) {
+      console.warn('Backend KYC approval sync failed:', err.message);
     }
   };
 
@@ -989,6 +1105,7 @@ export function AppProvider({ children }) {
         setAdminSettings,
         adminAuth,
         setAdminAuth,
+        fetchAdminData,
         registerNewUser,
         loginUser,
         completeUserProfile,

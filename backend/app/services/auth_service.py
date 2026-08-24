@@ -27,6 +27,23 @@ def ensure_user_indexes(db: Database):
             partialFilterExpression={"email": {"$type": "string", "$gt": ""}},
             name="uniq_email_partial"
         )
+
+        # Ensure default system admin user exists
+        admin_doc = db.users.find_one({"role": "admin"})
+        if not admin_doc:
+            now_utc = datetime.now(timezone.utc)
+            db.users.insert_one({
+                "name": "SJ Jewellers Admin",
+                "mobile": "9999999999",
+                "email": "admin@sjjewelers.com",
+                "password_hash": hash_password("admin123"),
+                "role": "admin",
+                "account_status": "active",
+                "kyc_status": "verified",
+                "created_at": now_utc,
+                "updated_at": now_utc,
+            })
+
         _indexes_initialized = True
     except Exception:
         # Non-fatal during startup; will retry on next operation
@@ -112,13 +129,15 @@ def login_user(db: Database, data: UserLoginRequest) -> Tuple[UserResponse, str]
     else:
         ident_variants.append(f"+91{raw_ident}")
 
-    query = {
-        "$or": [
-            {"mobile": {"$in": ident_variants}},
-            {"email": raw_ident.lower()},
-            {"name": raw_ident},
-        ]
-    }
+    query_conditions = [
+        {"mobile": {"$in": ident_variants}},
+        {"email": raw_ident.lower()},
+        {"name": raw_ident},
+    ]
+    if raw_ident.lower() in ["admin", "administrator"]:
+        query_conditions.append({"role": "admin"})
+
+    query = {"$or": query_conditions}
     user_doc = db.users.find_one(query)
     
     # Generic error to prevent user enumeration
