@@ -25,6 +25,10 @@ from app.schemas.purchases import (
     AdminPurchaseListResponse,
     AdminPurchaseDetailResponse,
 )
+from app.schemas.holdings import (
+    AdminCustomerHoldingsResponse,
+    AdminHoldingsListResponse,
+)
 from app.services.kyc_service import (
     get_pending_kyc_list,
     get_kyc_details,
@@ -47,6 +51,10 @@ from app.services.user_service import (
 from app.services.purchase_service import (
     get_admin_purchases,
     get_admin_purchase_by_id,
+)
+from app.services.holdings_service import (
+    get_admin_customer_holdings,
+    get_admin_all_holdings,
 )
 from app.utils.security import require_admin
 
@@ -148,6 +156,49 @@ async def unban_user(
 ):
     """Admin endpoint to unban a customer account."""
     return unban_user_by_admin(db, user_id, admin_user)
+
+
+# -------------------------------------------------------------
+# Admin Customer Holdings Endpoints
+# -------------------------------------------------------------
+
+@router.get(
+    "/users/{user_id}/holdings",
+    response_model=AdminCustomerHoldingsResponse,
+    summary="Get specific customer holdings and valuation",
+    description="Retrieves the full Gold and Silver portfolio balance, average buy rate, and live market valuation for a selected customer.",
+)
+async def get_customer_holdings_for_admin(
+    user_id: str = Path(..., description="Unique ID of the user"),
+    admin_user: Dict[str, Any] = Depends(require_admin),
+    db: Database = Depends(get_database),
+):
+    """Admin endpoint to view customer metal holdings."""
+    return get_admin_customer_holdings(db, user_id)
+
+
+@router.get(
+    "/holdings",
+    response_model=AdminHoldingsListResponse,
+    summary="List all customer holdings with search and live valuation",
+    description="Retrieves a paginated list of all customer holdings across Gold and Silver with customer search and filtering.",
+)
+async def list_all_customer_holdings(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page (max 100)"),
+    search: Optional[str] = Query(None, description="Search customer name, mobile, email"),
+    metal: Optional[str] = Query(None, description="Filter by active holdings in metal ('gold' or 'silver')"),
+    admin_user: Dict[str, Any] = Depends(require_admin),
+    db: Database = Depends(get_database),
+):
+    """Admin endpoint to list all customer holdings."""
+    return get_admin_all_holdings(
+        db=db,
+        page=page,
+        limit=limit,
+        search=search,
+        metal=metal,
+    )
 
 
 # -------------------------------------------------------------

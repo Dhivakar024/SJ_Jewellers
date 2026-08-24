@@ -19,6 +19,7 @@ from app.schemas.purchases import (
     AdminPurchaseDetailResponse,
 )
 from app.services.metal_rates_service import ensure_rates_initialized, _check_and_expire_rates
+from app.services.holdings_service import process_purchase_for_holdings
 
 _purchase_indexes_initialized = False
 
@@ -169,6 +170,12 @@ def create_purchase(
 
     res = db.purchases.insert_one(purchase_doc)
     purchase_doc["_id"] = res.inserted_id
+
+    # Automatically update customer holdings upon completed purchase
+    try:
+        process_purchase_for_holdings(db, purchase_doc)
+    except Exception:
+        pass
 
     return _format_purchase_response(purchase_doc)
 

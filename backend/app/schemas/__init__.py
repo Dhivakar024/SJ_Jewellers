@@ -52,6 +52,14 @@ from app.schemas.purchases import (
     AdminPurchaseListResponse,
     AdminPurchaseDetailResponse,
 )
+from app.schemas.holdings import (
+    MetalHoldingValuation,
+    CustomerHoldingsResponse,
+    SingleMetalHoldingResponse,
+    AdminCustomerHoldingsResponse,
+    AdminHoldingsListItem,
+    AdminHoldingsListResponse,
+)
 
 __all__ = [
     "UserRegisterRequest",
@@ -94,4 +102,10 @@ __all__ = [
     "AdminPurchaseListItem",
     "AdminPurchaseListResponse",
     "AdminPurchaseDetailResponse",
+    "MetalHoldingValuation",
+    "CustomerHoldingsResponse",
+    "SingleMetalHoldingResponse",
+    "AdminCustomerHoldingsResponse",
+    "AdminHoldingsListItem",
+    "AdminHoldingsListResponse",
 ]

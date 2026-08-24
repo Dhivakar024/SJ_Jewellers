@@ -42,6 +42,14 @@ from app.services.purchase_service import (
     get_admin_purchase_by_id,
     ensure_purchase_indexes,
 )
+from app.services.holdings_service import (
+    get_customer_holdings,
+    get_customer_metal_holding,
+    get_admin_customer_holdings,
+    get_admin_all_holdings,
+    process_purchase_for_holdings,
+    ensure_holdings_indexes,
+)
 
 __all__ = [
     "register_user",
@@ -76,4 +84,10 @@ __all__ = [
     "get_admin_purchases",
     "get_admin_purchase_by_id",
     "ensure_purchase_indexes",
+    "get_customer_holdings",
+    "get_customer_metal_holding",
+    "get_admin_customer_holdings",
+    "get_admin_all_holdings",
+    "process_purchase_for_holdings",
+    "ensure_holdings_indexes",
 ]
