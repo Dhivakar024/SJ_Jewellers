@@ -10,14 +10,14 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
     
-    # Database Settings (configured for future MongoDB Atlas connection)
+    # Database Settings
     MONGODB_URI: Optional[str] = None
     DATABASE_NAME: str = "gold_silver"
     
     # Security Settings
-    JWT_SECRET: Optional[str] = None
+    JWT_SECRET: str = "default_jwt_secret_please_set_in_env_file"
     JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
     model_config = SettingsConfigDict(
         env_file=".env",

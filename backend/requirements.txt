@@ -3,4 +3,7 @@ uvicorn
 python-dotenv
 pydantic
 pydantic-settings
+email-validator
 pymongo[srv]
+pwdlib[argon2]
+pyjwt
