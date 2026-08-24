@@ -3,9 +3,9 @@ import { Calendar, ChevronDown, ArrowLeft } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { profileService } from '../services';
 
-export default function CreateProfileScreen({ onNavigate }) {
+export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
   const { currentUser, completeUserProfile } = useApp();
-  const isExistingCompletedUser = currentUser.profileCompleted === true;
+  const isEditMode = mode === 'edit';
   const dateInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
@@ -116,8 +116,11 @@ export default function CreateProfileScreen({ onNavigate }) {
   };
 
   const handleHeaderBack = () => {
-    // Back navigation returns to Profile page without clearing authentication/session
-    onNavigate('profile');
+    if (isEditMode) {
+      onNavigate('profile');
+    } else {
+      onNavigate('signin');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -204,8 +207,12 @@ export default function CreateProfileScreen({ onNavigate }) {
       completeUserProfile(updatedUserObj);
       sessionStorage.removeItem('sj_session_skipped_profile');
 
-      // Navigate DIRECTLY to Home after successful submission
-      onNavigate('home');
+      if (isEditMode) {
+        onNavigate('profile');
+      } else {
+        // Brand-new onboarding user: Navigate DIRECTLY to Home
+        onNavigate('home', true);
+      }
     } catch (err) {
       setErrorMessage(err.message || 'Failed to save profile. Please check your details and try again.');
     } finally {
@@ -226,7 +233,7 @@ export default function CreateProfileScreen({ onNavigate }) {
           <ArrowLeft size={22} />
         </button>
         <h2 style={{ fontSize: '20px', fontWeight: '800' }}>
-          {isExistingCompletedUser ? 'Edit Profile' : 'Create Profile'}
+          {isEditMode ? 'Edit Profile' : 'Create Profile'}
         </h2>
       </header>
 
@@ -608,7 +615,7 @@ export default function CreateProfileScreen({ onNavigate }) {
                 cursor: isSubmitting ? 'default' : 'pointer',
               }}
             >
-              {isSubmitting ? 'Saving...' : 'Submit'}
+              {isSubmitting ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Submit')}
             </button>
           </div>
         </form>

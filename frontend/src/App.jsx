@@ -105,10 +105,10 @@ function MainContent() {
       // Authenticated customer users
       const validScreens = [
         'home', 'buy', 'buy-gold', 'buy-silver', 'holdings',
-        'profile', 'transactions', 'contact', 'withdraw', 'create-profile'
+        'profile', 'transactions', 'contact', 'withdraw', 'create-profile', 'edit-profile'
       ];
 
-      if (!currentUser.profileCompleted && hash !== 'create-profile' && hash !== 'profile' && hash !== 'contact') {
+      if (!currentUser.profileCompleted && hash !== 'create-profile' && hash !== 'contact') {
         setUserScreen('create-profile');
         window.location.hash = 'create-profile';
         return;
@@ -138,14 +138,14 @@ function MainContent() {
         window.location.hash = 'signin';
       }
     } else {
-      if (!currentUser.profileCompleted && userScreen !== 'create-profile' && userScreen !== 'profile' && userScreen !== 'contact') {
+      if (!currentUser.profileCompleted && userScreen !== 'create-profile' && userScreen !== 'contact') {
         setUserScreen('create-profile');
         window.location.hash = 'create-profile';
       }
     }
   }, [currentUser, userScreen, isAuthLoading]);
 
-  const handleUserNavigate = (screen) => {
+  const handleUserNavigate = (screen, force = false) => {
     // If not authenticated, only allow auth screens
     if (!currentUser || !currentUser.isAuthenticated) {
       if (screen === 'signup' || screen === 'signin') {
@@ -159,8 +159,8 @@ function MainContent() {
       return;
     }
 
-    // If authenticated but profile is not completed
-    if (!currentUser.profileCompleted && screen !== 'create-profile' && screen !== 'profile' && screen !== 'contact') {
+    // If authenticated but profile is not completed (and not forced by immediate profile completion submit)
+    if (!currentUser.profileCompleted && !force && screen !== 'create-profile' && screen !== 'contact') {
       setUserScreen('create-profile');
       window.location.hash = 'create-profile';
       setIsActionSheetOpen(false);
@@ -230,7 +230,8 @@ function MainContent() {
         {userScreen === 'contact' && <ContactUsScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
         {userScreen === 'holdings' && <HoldingsScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
         {userScreen === 'profile' && <ProfileScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
-        {userScreen === 'create-profile' && <CreateProfileScreen onNavigate={handleUserNavigate} />}
+        {userScreen === 'create-profile' && <CreateProfileScreen mode="create" onNavigate={handleUserNavigate} />}
+        {userScreen === 'edit-profile' && <CreateProfileScreen mode="edit" onNavigate={handleUserNavigate} />}
 
         {/* Floating Action Menu */}
         <ActionSheet

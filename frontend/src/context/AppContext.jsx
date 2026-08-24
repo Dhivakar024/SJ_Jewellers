@@ -837,14 +837,18 @@ export function AppProvider({ children }) {
   };
 
   const completeUserProfile = (profileData) => {
-    const updated = {
-      ...currentUser,
-      ...profileData,
-      profileCompleted: true,
-      isAuthenticated: true,
-    };
-    setCurrentUser(updated);
-    return updated;
+    let updatedUser;
+    setCurrentUser((prev) => {
+      updatedUser = {
+        ...prev,
+        ...profileData,
+        profileCompleted: true,
+        isAuthenticated: true,
+      };
+      setStoredUser(updatedUser);
+      return updatedUser;
+    });
+    return updatedUser;
   };
 
   const logoutUser = async () => {

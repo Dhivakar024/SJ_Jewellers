@@ -80,7 +80,7 @@ export default function ProfileScreen({ onNavigate, onTogglePlus }) {
       <header className="top-header-bar" style={{ justifyContent: 'space-between' }}>
         <h2 style={{ fontSize: '24px', fontWeight: '800' }}>Profile</h2>
         <button
-          onClick={() => onNavigate('create-profile')}
+          onClick={() => onNavigate(isProfileCompleted ? 'edit-profile' : 'create-profile')}
           style={{
             backgroundColor: '#ede7fc',
             border: '1.5px solid var(--primary-purple)',
