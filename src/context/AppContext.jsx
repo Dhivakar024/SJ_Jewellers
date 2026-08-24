@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authService, profileService, ratesService } from '../services';
+import { authService, profileService, ratesService, holdingsService } from '../services';
 import { getAuthToken, getStoredUser, clearAllAuth } from '../utils/authStorage';
 
 const AppContext = createContext();
@@ -252,11 +252,52 @@ export function AppProvider({ children }) {
     fetchLiveRates();
   }, [fetchLiveRates]);
 
-  // Holdings & Transactions
-  const [holdings, setHoldings] = useState(() => {
-    const saved = localStorage.getItem('sj_holdings');
-    return saved ? JSON.parse(saved) : INITIAL_HOLDINGS;
-  });
+  // Holdings State from FastAPI backend
+  const [holdings, setHoldings] = useState(INITIAL_HOLDINGS);
+  const [holdingsLoading, setHoldingsLoading] = useState(false);
+  const [holdingsError, setHoldingsError] = useState(null);
+
+  const fetchHoldings = useCallback(async () => {
+    const token = getAuthToken();
+    if (!token) return;
+    try {
+      setHoldingsLoading(true);
+      const res = await holdingsService.getHoldings();
+      if (res?.data) {
+        const { gold, silver } = res.data;
+        const gQty = typeof gold?.quantity_grams === 'number' ? gold.quantity_grams : 0;
+        const sQty = typeof silver?.quantity_grams === 'number' ? silver.quantity_grams : 0;
+        const updatedHoldings = {
+          goldGrams: gQty,
+          silverGrams: sQty,
+          goldInvested: gold?.total_invested || 0,
+          silverInvested: silver?.total_invested || 0,
+          goldCurrentValue: gold?.current_value || 0,
+          silverCurrentValue: silver?.current_value || 0,
+          totalInvested: res.data.total_invested || 0,
+          totalCurrentValue: res.data.total_current_value || 0,
+          totalProfitLoss: res.data.total_profit_loss || 0,
+        };
+        setHoldings(updatedHoldings);
+        setCurrentUser((prev) => ({
+          ...prev,
+          goldGrams: gQty,
+          silverGrams: sQty,
+        }));
+        setHoldingsError(null);
+      }
+    } catch (err) {
+      setHoldingsError(err.message || 'Unable to fetch holdings');
+    } finally {
+      setHoldingsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (currentUser?.isAuthenticated) {
+      fetchHoldings();
+    }
+  }, [currentUser?.isAuthenticated, fetchHoldings]);
 
   const [transactions, setTransactions] = useState(() => {
     const saved = localStorage.getItem('sj_transactions');
@@ -804,6 +845,9 @@ export function AppProvider({ children }) {
         refreshRates: fetchLiveRates,
         holdings,
         setHoldings,
+        holdingsLoading,
+        holdingsError,
+        fetchHoldings,
         transactions,
         setTransactions,
         members,

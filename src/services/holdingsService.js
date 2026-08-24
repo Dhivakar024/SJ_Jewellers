@@ -15,6 +15,13 @@ export const holdingsService = {
   },
 
   /**
+   * Fetch complete portfolio holdings (alias)
+   */
+  getMyHoldings: async () => {
+    return apiClient.get(ENDPOINTS.HOLDINGS.ME);
+  },
+
+  /**
    * Fetch specific metal holding and valuation ('gold' or 'silver')
    */
   getMetalHolding: async (metal) => {
