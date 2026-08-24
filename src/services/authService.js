@@ -70,9 +70,11 @@ export const authService = {
   /**
    * Login customer with mobile/email and password
    */
-  login: async ({ identifier, password, rememberMe = true }) => {
+  login: async ({ identifier, mobile, password, rememberMe = true }) => {
+    const ident = (mobile || identifier)?.trim();
     const payload = {
-      identifier: identifier?.trim(),
+      mobile: ident,
+      identifier: ident,
       password: password?.trim(),
     };
 

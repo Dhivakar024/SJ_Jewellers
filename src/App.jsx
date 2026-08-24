@@ -110,8 +110,7 @@ function MainContent() {
         'profile', 'transactions', 'contact', 'withdraw', 'create-profile'
       ];
 
-      const skipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
-      if (!currentUser.profileCompleted && !skipped && hash !== 'create-profile' && hash !== 'profile' && hash !== 'contact') {
+      if (!currentUser.profileCompleted && hash !== 'create-profile' && hash !== 'profile' && hash !== 'contact') {
         setUserScreen('create-profile');
         window.location.hash = 'create-profile';
         return;
@@ -120,7 +119,7 @@ function MainContent() {
       if (validScreens.includes(hash)) {
         setUserScreen(hash);
       } else {
-        setUserScreen(currentUser.profileCompleted || skipped ? 'home' : 'create-profile');
+        setUserScreen(currentUser.profileCompleted ? 'home' : 'create-profile');
       }
     };
 
@@ -141,8 +140,7 @@ function MainContent() {
         window.location.hash = 'signin';
       }
     } else {
-      const skipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
-      if (!currentUser.profileCompleted && !skipped && userScreen !== 'create-profile' && userScreen !== 'profile' && userScreen !== 'contact') {
+      if (!currentUser.profileCompleted && userScreen !== 'create-profile' && userScreen !== 'profile' && userScreen !== 'contact') {
         setUserScreen('create-profile');
         window.location.hash = 'create-profile';
       }
@@ -164,8 +162,7 @@ function MainContent() {
     }
 
     // If authenticated but profile is not completed
-    const skipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
-    if (!currentUser.profileCompleted && !skipped && screen !== 'create-profile' && screen !== 'profile' && screen !== 'contact') {
+    if (!currentUser.profileCompleted && screen !== 'create-profile' && screen !== 'profile' && screen !== 'contact') {
       setUserScreen('create-profile');
       window.location.hash = 'create-profile';
       setIsActionSheetOpen(false);

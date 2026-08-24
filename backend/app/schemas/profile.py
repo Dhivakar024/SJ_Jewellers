@@ -47,6 +47,7 @@ class UserProfileResponse(BaseModel):
     role: str
     account_status: str
     kyc_status: str
+    profile_completed: bool = False
     profile: UserProfileData
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None

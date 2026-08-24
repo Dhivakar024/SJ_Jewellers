@@ -1,6 +1,6 @@
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from typing import Optional, Any
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 
 class UserRegisterRequest(BaseModel):
@@ -39,16 +39,22 @@ class UserRegisterRequest(BaseModel):
 
 
 class UserLoginRequest(BaseModel):
-    """Schema for user login using mobile and password."""
-    mobile: str = Field(..., min_length=1, description="Registered mobile number")
+    """Schema for user login using mobile/identifier and password."""
+    mobile: Optional[str] = Field(None, description="Registered mobile number or username")
+    identifier: Optional[str] = Field(None, description="Registered mobile number or username")
     password: str = Field(..., min_length=1, description="Account password")
 
-    @field_validator("mobile", mode="before")
+    @model_validator(mode="before")
     @classmethod
-    def clean_mobile(cls, v: str) -> str:
-        if isinstance(v, str):
-            return v.strip()
-        return v
+    def validate_identifier(cls, values: Any) -> Any:
+        if isinstance(values, dict):
+            ident = values.get("mobile") or values.get("identifier") or values.get("username")
+            if not ident or not str(ident).strip():
+                raise ValueError("Mobile number or username is required")
+            clean_ident = str(ident).strip()
+            values["mobile"] = clean_ident
+            values["identifier"] = clean_ident
+        return values
 
 
 class SendOtpRequest(BaseModel):

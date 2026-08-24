@@ -626,15 +626,17 @@ export function AppProvider({ children }) {
         const meRes = await authService.getCurrentUser();
         if (meRes?.data && isMounted) {
           const uData = meRes.data;
-          let profileCompleted = false;
+          let profileCompleted = uData.profile_completed === true;
           let profileObj = null;
 
           try {
             const profRes = await profileService.getProfile();
             profileObj = profRes?.data?.profile;
-            profileCompleted = !!(profileObj?.address?.address_line || profileObj?.full_name);
+            if (!profileCompleted && profileObj?.address?.address_line && (profileObj?.pan || profileObj?.nominee_name || profileObj?.account_number)) {
+              profileCompleted = true;
+            }
           } catch {
-            profileCompleted = false;
+            // Keep profileCompleted from uData
           }
 
           const restoredUser = {
@@ -787,15 +789,17 @@ export function AppProvider({ children }) {
     const res = await authService.login({ identifier: ident, password: pass });
     if (res?.data?.user) {
       const uData = res.data.user;
-      let profileCompleted = false;
+      let profileCompleted = uData.profile_completed === true;
       let profileObj = null;
 
       try {
         const profRes = await profileService.getProfile();
         profileObj = profRes?.data?.profile;
-        profileCompleted = !!(profileObj?.address?.address_line || profileObj?.full_name);
+        if (!profileCompleted && profileObj?.address?.address_line && (profileObj?.pan || profileObj?.nominee_name || profileObj?.account_number)) {
+          profileCompleted = true;
+        }
       } catch {
-        profileCompleted = false;
+        // Keep profileCompleted from uData
       }
 
       const loggedInUser = {

@@ -66,6 +66,14 @@ def _format_profile_data(profile_dict: Optional[Dict[str, Any]]) -> UserProfileD
 
 def _format_user_profile_response(user_doc: Dict[str, Any]) -> UserProfileResponse:
     """Format MongoDB user document into safe UserProfileResponse schema."""
+    profile_data = user_doc.get("profile")
+    is_completed = user_doc.get("profile_completed", False)
+    if not is_completed and isinstance(profile_data, dict):
+        addr = profile_data.get("address")
+        if addr and isinstance(addr, dict) and addr.get("address_line"):
+            if profile_data.get("full_name") or profile_data.get("nominee_name") or profile_data.get("pan"):
+                is_completed = True
+
     return UserProfileResponse(
         user_id=str(user_doc.get("_id", user_doc.get("id"))),
         name=user_doc.get("name", ""),
@@ -74,6 +82,7 @@ def _format_user_profile_response(user_doc: Dict[str, Any]) -> UserProfileRespon
         role=user_doc.get("role", "customer"),
         account_status=user_doc.get("account_status", "active"),
         kyc_status=user_doc.get("kyc_status", "pending"),
+        profile_completed=is_completed,
         profile=_format_profile_data(user_doc.get("profile")),
         created_at=user_doc.get("created_at"),
         updated_at=user_doc.get("updated_at"),
@@ -202,6 +211,7 @@ def update_my_profile(
         update_dict["profile.nominee_address"] = data.nominee_address
 
     # Save to MongoDB
+    update_dict["profile_completed"] = True
     match_query = {"_id": user_obj_id} if user_obj_id else {"_id": current_user["id"]}
     db.users.update_one(match_query, {"$set": update_dict})
 

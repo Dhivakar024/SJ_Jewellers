@@ -194,7 +194,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
       </header>
 
       {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS, with padding for fixed bottom nav) */}
-      <main className="app-scroll-content" style={{ padding: '16px 18px 85px 18px' }}>
+      <main className="app-scroll-content" style={{ padding: '16px 18px 100px 18px' }}>
         
         {/* Gold / Silver Segmented Selector at Top */}
         <div style={{
@@ -203,7 +203,8 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
           padding: '4px',
           display: 'flex',
           margin: '0 auto 16px auto',
-          width: '230px'
+          width: '100%',
+          maxWidth: '240px'
         }}>
           <button
             type="button"
@@ -252,7 +253,8 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
           alignItems: 'center',
           justifyContent: 'space-between',
           boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
-          marginBottom: '18px'
+          marginBottom: '18px',
+          width: '100%'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{
@@ -276,7 +278,8 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
         <div style={{
           display: 'flex',
           borderBottom: '2px solid #f0eafc',
-          marginBottom: '20px'
+          marginBottom: '20px',
+          width: '100%'
         }}>
           <button
             type="button"
@@ -323,7 +326,8 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
           padding: '24px 20px',
           boxShadow: '0 8px 24px rgba(88, 60, 245, 0.06)',
           marginBottom: '20px',
-          textAlign: 'center'
+          textAlign: 'center',
+          width: '100%'
         }}>
           <div style={{ fontSize: '13px', color: '#736d85', fontWeight: '700', marginBottom: '8px' }}>
             {mode === 'rupees' ? 'ENTER AMOUNT (₹)' : 'ENTER QUANTITY (GRAMS)'}
@@ -331,7 +335,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
 
           {mode === 'rupees' ? (
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', maxWidth: '100%' }}>
                 <span style={{ fontSize: '32px', fontWeight: '900', color: '#1e1b2e' }}>₹</span>
                 <input
                   type="number"
@@ -341,23 +345,24 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
                   placeholder="0"
                   style={{
                     border: 'none',
-                    fontSize: '36px',
+                    fontSize: '34px',
                     fontWeight: '900',
                     color: '#1e1b2e',
-                    width: '180px',
+                    width: '100%',
+                    maxWidth: '180px',
                     textAlign: 'left',
                     outline: 'none',
                     backgroundColor: 'transparent'
                   }}
                 />
               </div>
-              <div style={{ fontSize: '15px', color: 'var(--primary-purple)', fontWeight: '800', marginTop: '6px' }}>
+              <div style={{ fontSize: '14.5px', color: 'var(--primary-purple)', fontWeight: '800', marginTop: '6px' }}>
                 ≈ {gramsVal} gm {isGold ? 'Gold' : 'Silver'}
               </div>
             </div>
           ) : (
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', maxWidth: '100%' }}>
                 <input
                   type="number"
                   inputMode="decimal"
@@ -367,10 +372,11 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
                   placeholder="0.0000"
                   style={{
                     border: 'none',
-                    fontSize: '36px',
+                    fontSize: '34px',
                     fontWeight: '900',
                     color: '#1e1b2e',
-                    width: '180px',
+                    width: '100%',
+                    maxWidth: '180px',
                     textAlign: 'right',
                     outline: 'none',
                     backgroundColor: 'transparent'
@@ -378,7 +384,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
                 />
                 <span style={{ fontSize: '24px', fontWeight: '900', color: '#1e1b2e' }}>gm</span>
               </div>
-              <div style={{ fontSize: '15px', color: 'var(--primary-purple)', fontWeight: '800', marginTop: '6px' }}>
+              <div style={{ fontSize: '14.5px', color: 'var(--primary-purple)', fontWeight: '800', marginTop: '6px' }}>
                 ≈ ₹ {rupeesVal}
               </div>
             </div>
@@ -386,12 +392,12 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
         </div>
 
         {/* Quick Amount / Gram Selectors */}
-        <div style={{ marginBottom: '24px' }}>
+        <div style={{ marginBottom: '24px', width: '100%' }}>
           <div style={{ fontSize: '13.5px', color: '#736d85', fontWeight: '700', marginBottom: '10px', paddingLeft: '4px' }}>
             Quick Select
           </div>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', width: '100%' }}>
             {mode === 'rupees' ? (
               rupeesPresets.map((amt) => (
                 <button
@@ -405,9 +411,10 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
                     backgroundColor: selectedQuickOption === amt ? '#f1ecfe' : '#ffffff',
                     color: selectedQuickOption === amt ? 'var(--primary-purple)' : '#1e1b2e',
                     fontWeight: '800',
-                    fontSize: '15px',
+                    fontSize: '14.5px',
                     cursor: 'pointer',
-                    transition: 'all 0.15s ease'
+                    transition: 'all 0.15s ease',
+                    textAlign: 'center'
                   }}
                 >
                   ₹{amt}
@@ -420,15 +427,16 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
                   type="button"
                   onClick={() => handleSelectPresetGrams(gm)}
                   style={{
-                    padding: '12px 0',
+                    padding: '12px 2px',
                     borderRadius: '16px',
                     border: selectedQuickOption === gm ? '2px solid var(--primary-purple)' : '1px solid #e8e2fa',
                     backgroundColor: selectedQuickOption === gm ? '#f1ecfe' : '#ffffff',
                     color: selectedQuickOption === gm ? 'var(--primary-purple)' : '#1e1b2e',
                     fontWeight: '800',
-                    fontSize: '14px',
+                    fontSize: '13px',
                     cursor: 'pointer',
-                    transition: 'all 0.15s ease'
+                    transition: 'all 0.15s ease',
+                    textAlign: 'center'
                   }}
                 >
                   {gm}g
@@ -447,7 +455,8 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
           marginBottom: '24px',
           fontSize: '13px',
           color: '#5b5375',
-          lineHeight: '1.4'
+          lineHeight: '1.4',
+          width: '100%'
         }}>
           <strong>Note:</strong> Standard 3% GST will be calculated at checkout as per Govt. regulations.
         </div>
@@ -456,7 +465,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
         <button
           onClick={handleProceed}
           className="btn-primary"
-          style={{ width: '100%', height: '54px', fontSize: '17px' }}
+          style={{ width: '100%', height: '52px', fontSize: '16.5px', borderRadius: '18px', fontWeight: '700' }}
         >
           Proceed to Buy {isGold ? 'Gold' : 'Silver'}
         </button>
