@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     METAL_RATES_API_URL: Optional[str] = None
     METAL_RATES_API_KEY: Optional[str] = None
 
+    # Purchase & Tax Settings
+    MIN_GOLD_PURCHASE_GRAMS: float = 0.001
+    MIN_SILVER_PURCHASE_GRAMS: float = 0.001
+    GST_RATE_PERCENT: float = 3.0
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

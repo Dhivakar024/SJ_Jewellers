@@ -21,6 +21,10 @@ from app.schemas.admin_users import (
     AdminUpdateUserStatusRequest,
     AdminUserStatusResponse,
 )
+from app.schemas.purchases import (
+    AdminPurchaseListResponse,
+    AdminPurchaseDetailResponse,
+)
 from app.services.kyc_service import (
     get_pending_kyc_list,
     get_kyc_details,
@@ -39,6 +43,10 @@ from app.services.user_service import (
     update_user_status_by_admin,
     ban_user_by_admin,
     unban_user_by_admin,
+)
+from app.services.purchase_service import (
+    get_admin_purchases,
+    get_admin_purchase_by_id,
 )
 from app.utils.security import require_admin
 
@@ -267,3 +275,50 @@ async def list_rate_history(
 ):
     """Admin endpoint to view rate audit history."""
     return get_rate_history(db, metal=metal, limit=limit)
+
+
+# -------------------------------------------------------------
+# Admin Purchases Management Endpoints
+# -------------------------------------------------------------
+
+@router.get(
+    "/purchases",
+    response_model=AdminPurchaseListResponse,
+    summary="List all purchases for Admin",
+    description="Retrieves a paginated list of all customer metal purchases with search by transaction ID/user mobile/name/email and filters by metal, status, and payment status.",
+)
+async def list_admin_purchases(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page (max 100)"),
+    search: Optional[str] = Query(None, description="Search transaction ID, customer name, mobile, email"),
+    metal: Optional[str] = Query(None, description="Filter by metal ('gold' or 'silver')"),
+    status: Optional[str] = Query(None, description="Filter by purchase status"),
+    payment_status: Optional[str] = Query(None, description="Filter by payment status"),
+    admin_user: Dict[str, Any] = Depends(require_admin),
+    db: Database = Depends(get_database),
+):
+    """Admin endpoint to view all metal purchases."""
+    return get_admin_purchases(
+        db=db,
+        page=page,
+        limit=limit,
+        search=search,
+        metal=metal,
+        status_filter=status,
+        payment_status=payment_status,
+    )
+
+
+@router.get(
+    "/purchases/{purchase_id}",
+    response_model=AdminPurchaseDetailResponse,
+    summary="Get purchase details for Admin",
+    description="Retrieves comprehensive purchase details, metal quantities, rate snapshot, GST calculations, and customer profile information.",
+)
+async def get_admin_purchase(
+    purchase_id: str = Path(..., description="Purchase ID or Transaction ID"),
+    admin_user: Dict[str, Any] = Depends(require_admin),
+    db: Database = Depends(get_database),
+):
+    """Admin endpoint to inspect a specific purchase transaction."""
+    return get_admin_purchase_by_id(db, purchase_id)

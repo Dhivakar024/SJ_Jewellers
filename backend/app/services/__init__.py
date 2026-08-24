@@ -34,6 +34,14 @@ from app.services.user_service import (
     ban_user_by_admin,
     unban_user_by_admin,
 )
+from app.services.purchase_service import (
+    create_purchase,
+    get_customer_purchases,
+    get_customer_purchase_by_id,
+    get_admin_purchases,
+    get_admin_purchase_by_id,
+    ensure_purchase_indexes,
+)
 
 __all__ = [
     "register_user",
@@ -62,4 +70,10 @@ __all__ = [
     "update_user_status_by_admin",
     "ban_user_by_admin",
     "unban_user_by_admin",
+    "create_purchase",
+    "get_customer_purchases",
+    "get_customer_purchase_by_id",
+    "get_admin_purchases",
+    "get_admin_purchase_by_id",
+    "ensure_purchase_indexes",
 ]
