@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     MIN_SILVER_PURCHASE_GRAMS: float = 0.001
     GST_RATE_PERCENT: float = 3.0
 
+    # Withdrawal Settings
+    MIN_GOLD_WITHDRAWAL_GRAMS: float = 0.001
+    MIN_SILVER_WITHDRAWAL_GRAMS: float = 0.001
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

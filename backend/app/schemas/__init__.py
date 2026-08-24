@@ -60,6 +60,17 @@ from app.schemas.holdings import (
     AdminHoldingsListItem,
     AdminHoldingsListResponse,
 )
+from app.schemas.withdrawals import (
+    CreateWithdrawalRequest,
+    WithdrawalResponse,
+    CustomerWithdrawalListResponse,
+    AdminWithdrawalRejectRequest,
+    AdminWithdrawalCustomerInfo,
+    AdminWithdrawalListItem,
+    AdminWithdrawalListResponse,
+    AdminWithdrawalDetailResponse,
+    WithdrawalActionResponse,
+)
 
 __all__ = [
     "UserRegisterRequest",
@@ -108,4 +119,13 @@ __all__ = [
     "AdminCustomerHoldingsResponse",
     "AdminHoldingsListItem",
     "AdminHoldingsListResponse",
+    "CreateWithdrawalRequest",
+    "WithdrawalResponse",
+    "CustomerWithdrawalListResponse",
+    "AdminWithdrawalRejectRequest",
+    "AdminWithdrawalCustomerInfo",
+    "AdminWithdrawalListItem",
+    "AdminWithdrawalListResponse",
+    "AdminWithdrawalDetailResponse",
+    "WithdrawalActionResponse",
 ]

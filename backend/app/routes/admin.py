@@ -29,6 +29,12 @@ from app.schemas.holdings import (
     AdminCustomerHoldingsResponse,
     AdminHoldingsListResponse,
 )
+from app.schemas.withdrawals import (
+    AdminWithdrawalListResponse,
+    AdminWithdrawalDetailResponse,
+    AdminWithdrawalRejectRequest,
+    WithdrawalActionResponse,
+)
 from app.services.kyc_service import (
     get_pending_kyc_list,
     get_kyc_details,
@@ -55,6 +61,12 @@ from app.services.purchase_service import (
 from app.services.holdings_service import (
     get_admin_customer_holdings,
     get_admin_all_holdings,
+)
+from app.services.withdrawal_service import (
+    get_admin_withdrawals,
+    get_admin_withdrawal_by_id,
+    approve_withdrawal,
+    reject_withdrawal,
 )
 from app.utils.security import require_admin
 
@@ -373,3 +385,81 @@ async def get_admin_purchase(
 ):
     """Admin endpoint to inspect a specific purchase transaction."""
     return get_admin_purchase_by_id(db, purchase_id)
+
+
+# -------------------------------------------------------------
+# Admin Withdrawals Management Endpoints
+# -------------------------------------------------------------
+
+@router.get(
+    "/withdrawals",
+    response_model=AdminWithdrawalListResponse,
+    summary="List all withdrawal requests for Admin",
+    description="Retrieves a paginated list of customer withdrawal requests with customer search and filters by metal, status, and withdrawal mode.",
+)
+async def list_admin_withdrawals(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page (max 100)"),
+    search: Optional[str] = Query(None, description="Search transaction ID, customer name, mobile, email"),
+    metal: Optional[str] = Query(None, description="Filter by metal ('gold' or 'silver')"),
+    status: Optional[str] = Query(None, description="Filter by status ('pending', 'approved', 'rejected', 'cancelled')"),
+    withdrawal_mode: Optional[str] = Query(None, description="Filter by withdrawal mode (e.g. 'physical')"),
+    admin_user: Dict[str, Any] = Depends(require_admin),
+    db: Database = Depends(get_database),
+):
+    """Admin endpoint to view withdrawal requests queue."""
+    return get_admin_withdrawals(
+        db=db,
+        page=page,
+        limit=limit,
+        search=search,
+        metal=metal,
+        status_filter=status,
+        withdrawal_mode=withdrawal_mode,
+    )
+
+
+@router.get(
+    "/withdrawals/{withdrawal_id}",
+    response_model=AdminWithdrawalDetailResponse,
+    summary="Get withdrawal details for Admin",
+    description="Retrieves full withdrawal inspection details including requested weight, market rate snapshot, customer profile, and KYC status.",
+)
+async def get_admin_withdrawal(
+    withdrawal_id: str = Path(..., description="Withdrawal ID or Transaction ID"),
+    admin_user: Dict[str, Any] = Depends(require_admin),
+    db: Database = Depends(get_database),
+):
+    """Admin endpoint to inspect a specific withdrawal request."""
+    return get_admin_withdrawal_by_id(db, withdrawal_id)
+
+
+@router.patch(
+    "/withdrawals/{withdrawal_id}/approve",
+    response_model=WithdrawalActionResponse,
+    summary="Approve customer withdrawal request",
+    description="Approves a pending withdrawal request, deducts actual customer holding quantity, and releases the reserved quantity atomically.",
+)
+async def approve_customer_withdrawal(
+    withdrawal_id: str = Path(..., description="Withdrawal ID or Transaction ID to approve"),
+    admin_user: Dict[str, Any] = Depends(require_admin),
+    db: Database = Depends(get_database),
+):
+    """Admin endpoint to approve a pending withdrawal."""
+    return approve_withdrawal(db, withdrawal_id, admin_user)
+
+
+@router.patch(
+    "/withdrawals/{withdrawal_id}/reject",
+    response_model=WithdrawalActionResponse,
+    summary="Reject customer withdrawal request",
+    description="Rejects a pending withdrawal request with a mandatory reason, releasing the reserved holding balance without deducting actual weight.",
+)
+async def reject_customer_withdrawal(
+    data: AdminWithdrawalRejectRequest,
+    withdrawal_id: str = Path(..., description="Withdrawal ID or Transaction ID to reject"),
+    admin_user: Dict[str, Any] = Depends(require_admin),
+    db: Database = Depends(get_database),
+):
+    """Admin endpoint to reject a pending withdrawal."""
+    return reject_withdrawal(db, withdrawal_id, admin_user, data.reason)
