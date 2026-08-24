@@ -68,6 +68,23 @@ from app.services.transaction_service import (
     get_admin_transactions,
     get_admin_transaction_by_id,
 )
+from app.services.notification_service import (
+    create_notification,
+    get_user_notifications,
+    get_unread_notification_count,
+    get_single_notification,
+    mark_notification_as_read,
+    mark_all_notifications_as_read,
+    ensure_notification_indexes,
+    notify_purchase_completed,
+    notify_withdrawal_submitted,
+    notify_withdrawal_approved,
+    notify_withdrawal_rejected,
+    notify_withdrawal_cancelled,
+    notify_kyc_submitted,
+    notify_kyc_approved,
+    notify_kyc_rejected,
+)
 
 __all__ = [
     "register_user",
@@ -122,4 +139,19 @@ __all__ = [
     "get_customer_transaction_by_id",
     "get_admin_transactions",
     "get_admin_transaction_by_id",
+    "create_notification",
+    "get_user_notifications",
+    "get_unread_notification_count",
+    "get_single_notification",
+    "mark_notification_as_read",
+    "mark_all_notifications_as_read",
+    "ensure_notification_indexes",
+    "notify_purchase_completed",
+    "notify_withdrawal_submitted",
+    "notify_withdrawal_approved",
+    "notify_withdrawal_rejected",
+    "notify_withdrawal_cancelled",
+    "notify_kyc_submitted",
+    "notify_kyc_approved",
+    "notify_kyc_rejected",
 ]

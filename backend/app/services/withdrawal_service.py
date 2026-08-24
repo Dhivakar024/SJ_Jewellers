@@ -196,6 +196,13 @@ def create_withdrawal_request(
     res = db.withdrawals.insert_one(withdrawal_doc)
     withdrawal_doc["_id"] = res.inserted_id
 
+    # Trigger customer and admin notifications
+    try:
+        from app.services.notification_service import notify_withdrawal_submitted
+        notify_withdrawal_submitted(db, withdrawal_doc)
+    except Exception:
+        pass
+
     return _format_withdrawal_response(withdrawal_doc)
 
 
@@ -279,6 +286,14 @@ def approve_withdrawal(
         }
     )
 
+    # Trigger customer notification for approved withdrawal
+    try:
+        from app.services.notification_service import notify_withdrawal_approved
+        w_doc["status"] = "approved"
+        notify_withdrawal_approved(db, w_doc)
+    except Exception:
+        pass
+
     return WithdrawalActionResponse(
         message="Withdrawal request approved successfully",
         withdrawal_id=str(w_doc["_id"]),
@@ -344,6 +359,14 @@ def reject_withdrawal(
             }
         }
     )
+
+    # Trigger customer notification for rejected withdrawal
+    try:
+        from app.services.notification_service import notify_withdrawal_rejected
+        w_doc["status"] = "rejected"
+        notify_withdrawal_rejected(db, w_doc, reason)
+    except Exception:
+        pass
 
     return WithdrawalActionResponse(
         message="Withdrawal request rejected",
@@ -413,6 +436,14 @@ def cancel_customer_withdrawal(
             }
         }
     )
+
+    # Trigger customer notification for cancelled withdrawal
+    try:
+        from app.services.notification_service import notify_withdrawal_cancelled
+        w_doc["status"] = "cancelled"
+        notify_withdrawal_cancelled(db, w_doc)
+    except Exception:
+        pass
 
     return WithdrawalActionResponse(
         message="Withdrawal request cancelled successfully",

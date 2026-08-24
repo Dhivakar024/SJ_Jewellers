@@ -39,6 +39,12 @@ from app.schemas.transactions import (
     AdminTransactionListResponse,
     AdminTransactionDetailResponse,
 )
+from app.schemas.notifications import (
+    NotificationListResponse,
+    UnreadCountResponse,
+    MarkReadActionResponse,
+    MarkAllReadActionResponse,
+)
 from app.services.kyc_service import (
     get_pending_kyc_list,
     get_kyc_details,
@@ -75,6 +81,12 @@ from app.services.withdrawal_service import (
 from app.services.transaction_service import (
     get_admin_transactions,
     get_admin_transaction_by_id,
+)
+from app.services.notification_service import (
+    get_user_notifications,
+    get_unread_notification_count,
+    mark_notification_as_read,
+    mark_all_notifications_as_read,
 )
 from app.utils.security import require_admin
 
@@ -524,3 +536,94 @@ async def get_admin_transaction(
 ):
     """Admin endpoint to view single transaction detail."""
     return get_admin_transaction_by_id(db, transaction_id)
+
+
+# -------------------------------------------------------------
+# Admin Notifications Management Endpoints
+# -------------------------------------------------------------
+
+@router.get(
+    "/notifications",
+    response_model=NotificationListResponse,
+    summary="List admin notifications",
+    description="Retrieves a paginated list of notifications intended for administrators (new KYC submissions, withdrawal requests, etc.).",
+)
+async def list_admin_notifications(
+    type: Optional[str] = Query(None, description="Filter by notification type"),
+    is_read: Optional[bool] = Query(None, description="Filter by read status (true/false)"),
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page (max 100)"),
+    admin_user: Dict[str, Any] = Depends(require_admin),
+    db: Database = Depends(get_database),
+):
+    """Admin endpoint to view administrative notifications."""
+    return get_user_notifications(
+        db=db,
+        user_id=admin_user["id"],
+        recipient_type="admin",
+        notif_type=type,
+        is_read=is_read,
+        page=page,
+        limit=limit,
+    )
+
+
+@router.get(
+    "/notifications/unread-count",
+    response_model=UnreadCountResponse,
+    summary="Get admin unread notifications count",
+    description="Returns the total number of unread administrative notifications.",
+)
+async def get_admin_unread_notifications_count(
+    admin_user: Dict[str, Any] = Depends(require_admin),
+    db: Database = Depends(get_database),
+):
+    """Admin endpoint to get unread notification count."""
+    count = get_unread_notification_count(
+        db=db,
+        user_id=admin_user["id"],
+        recipient_type="admin",
+    )
+    return UnreadCountResponse(unread_count=count)
+
+
+@router.patch(
+    "/notifications/{notification_id}/read",
+    response_model=MarkReadActionResponse,
+    summary="Mark admin notification as read",
+    description="Marks a specific admin notification as read.",
+)
+async def mark_admin_notification_read(
+    notification_id: str = Path(..., description="Notification ID to mark as read"),
+    admin_user: Dict[str, Any] = Depends(require_admin),
+    db: Database = Depends(get_database),
+):
+    """Admin endpoint to mark notification as read."""
+    return mark_notification_as_read(
+        db=db,
+        notification_id=notification_id,
+        user_id=admin_user["id"],
+        recipient_type="admin",
+    )
+
+
+@router.patch(
+    "/notifications/read-all",
+    response_model=MarkAllReadActionResponse,
+    summary="Mark all admin notifications as read",
+    description="Marks all unread administrative notifications as read.",
+)
+async def mark_all_admin_notifications_read(
+    admin_user: Dict[str, Any] = Depends(require_admin),
+    db: Database = Depends(get_database),
+):
+    """Admin endpoint to mark all admin notifications as read."""
+    updated = mark_all_notifications_as_read(
+        db=db,
+        user_id=admin_user["id"],
+        recipient_type="admin",
+    )
+    return MarkAllReadActionResponse(
+        message="All notifications marked as read",
+        updated_count=updated,
+    )

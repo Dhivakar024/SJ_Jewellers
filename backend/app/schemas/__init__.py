@@ -79,6 +79,13 @@ from app.schemas.transactions import (
     AdminTransactionListResponse,
     AdminTransactionDetailResponse,
 )
+from app.schemas.notifications import (
+    NotificationItem,
+    NotificationListResponse,
+    UnreadCountResponse,
+    MarkReadActionResponse,
+    MarkAllReadActionResponse,
+)
 
 __all__ = [
     "UserRegisterRequest",
@@ -142,4 +149,9 @@ __all__ = [
     "AdminUnifiedTransactionItem",
     "AdminTransactionListResponse",
     "AdminTransactionDetailResponse",
+    "NotificationItem",
+    "NotificationListResponse",
+    "UnreadCountResponse",
+    "MarkReadActionResponse",
+    "MarkAllReadActionResponse",
 ]

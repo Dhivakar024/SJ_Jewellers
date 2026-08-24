@@ -141,6 +141,14 @@ def submit_kyc(db: Database, current_user: Dict[str, Any], data: KYCSubmitReques
     result = db.kyc.insert_one(new_kyc_doc)
     db.users.update_one({"_id": user_id_obj}, {"$set": {"kyc_status": "pending", "updated_at": now}})
     new_kyc_doc["_id"] = result.inserted_id
+
+    # Trigger admin notification for new KYC submission
+    try:
+        from app.services.notification_service import notify_kyc_submitted
+        notify_kyc_submitted(db, user_id_obj, result.inserted_id)
+    except Exception:
+        pass
+
     return format_kyc_response(new_kyc_doc)
 
 
@@ -293,6 +301,13 @@ def approve_kyc(db: Database, kyc_id: str, admin_user: Dict[str, Any]) -> KYCAct
             {"$set": {"kyc_status": "verified", "updated_at": now}}
         )
 
+    # Trigger customer notification for approved KYC
+    try:
+        from app.services.notification_service import notify_kyc_approved
+        notify_kyc_approved(db, user_id_obj, kyc_obj_id)
+    except Exception:
+        pass
+
     return KYCActionResponse(
         message="KYC verified successfully",
         status="verified",
@@ -352,6 +367,13 @@ def reject_kyc(db: Database, kyc_id: str, admin_user: Dict[str, Any], reason: st
             {"_id": user_id_obj},
             {"$set": {"kyc_status": "rejected", "updated_at": now}}
         )
+
+    # Trigger customer notification for rejected KYC
+    try:
+        from app.services.notification_service import notify_kyc_rejected
+        notify_kyc_rejected(db, user_id_obj, kyc_obj_id, reason)
+    except Exception:
+        pass
 
     return KYCActionResponse(
         message="KYC rejected",

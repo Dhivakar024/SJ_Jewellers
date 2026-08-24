@@ -177,6 +177,13 @@ def create_purchase(
     except Exception:
         pass
 
+    # Trigger customer notification for completed purchase
+    try:
+        from app.services.notification_service import notify_purchase_completed
+        notify_purchase_completed(db, purchase_doc)
+    except Exception:
+        pass
+
     return _format_purchase_response(purchase_doc)
 
 
