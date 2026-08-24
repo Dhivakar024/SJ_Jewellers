@@ -126,12 +126,12 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
       alert('Please enter a valid amount or gram quantity.');
       return;
     }
-    if (isGold && gNum < 0.005) {
-      alert('Minimum gold purchase quantity is 0.005 grams.');
+    if (isGold && gNum < 0.001) {
+      alert('Minimum gold purchase quantity is 0.001 grams.');
       return;
     }
-    if (!isGold && gNum < 0.1) {
-      alert('Minimum silver purchase quantity is 0.1 grams.');
+    if (!isGold && gNum < 0.01) {
+      alert('Minimum silver purchase quantity is 0.01 grams.');
       return;
     }
     setPurchaseError('');
@@ -184,159 +184,207 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
   };
 
   return (
-    <div className="app-screen-layout">
-      {/* 1. Fixed Top Header Bar */}
-      <header className="top-header-bar">
-        <button className="back-btn" onClick={() => onNavigate('home')} aria-label="Back">
-          <ArrowLeft size={22} />
-        </button>
-        <h2>Buy Now</h2>
-      </header>
-
-      {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS, with padding for fixed bottom nav) */}
-      <main className="app-scroll-content" style={{ padding: '16px 18px 100px 18px' }}>
-        
-        {/* Gold / Silver Segmented Selector at Top */}
-        <div style={{
-          backgroundColor: '#f1ecfe',
-          borderRadius: '30px',
-          padding: '4px',
-          display: 'flex',
-          margin: '0 auto 16px auto',
-          width: '100%',
-          maxWidth: '240px'
-        }}>
-          <button
-            type="button"
-            onClick={() => handleAssetSwitch('gold')}
-            style={{
-              flex: 1,
-              padding: '9px 0',
-              borderRadius: '24px',
-              border: 'none',
-              backgroundColor: isGold ? 'var(--primary-purple)' : 'transparent',
-              color: isGold ? '#ffffff' : '#736d85',
-              fontWeight: '700',
-              fontSize: '14.5px',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            Gold
-          </button>
-          <button
-            type="button"
-            onClick={() => handleAssetSwitch('silver')}
-            style={{
-              flex: 1,
-              padding: '9px 0',
-              borderRadius: '24px',
-              border: 'none',
-              backgroundColor: !isGold ? 'var(--primary-purple)' : 'transparent',
-              color: !isGold ? '#ffffff' : '#736d85',
-              fontWeight: '700',
-              fontSize: '14.5px',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            Silver
-          </button>
-        </div>
-
-        {/* Live Rate Header Box with Pill */}
-        <div style={{
-          backgroundColor: '#ffffff',
-          borderRadius: '20px',
-          padding: '14px 18px',
+    <div className="app-screen-layout" style={{ backgroundColor: '#eee7ff' }}>
+      {/* 1. Header Matching Screenshot */}
+      <header
+        style={{
+          backgroundColor: '#583cf5',
+          padding: '16px 18px 20px 18px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
-          marginBottom: '18px',
-          width: '100%'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{
-              backgroundColor: isGold ? '#ffd000' : '#e2e6ea',
-              color: '#000',
-              fontSize: '11px',
-              fontWeight: '900',
-              padding: '3px 8px',
-              borderRadius: '10px'
-            }}>24KT</span>
-            <span style={{ fontSize: '14px', fontWeight: '700', color: '#1e1b2e' }}>
-              Live {isGold ? 'Gold' : 'Silver'} Rate
+          gap: '14px',
+          flexShrink: 0
+        }}
+      >
+        <button
+          onClick={() => onNavigate('home')}
+          aria-label="Back"
+          style={{
+            width: '42px',
+            height: '42px',
+            borderRadius: '13px',
+            backgroundColor: '#ffffff',
+            border: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#1e1b2e',
+            cursor: 'pointer',
+            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)'
+          }}
+        >
+          <ArrowLeft size={20} strokeWidth={2.5} color="#1e1b2e" />
+        </button>
+        <h1 style={{ fontSize: '22px', fontWeight: '800', color: '#ffffff', margin: 0 }}>
+          Buy Now
+        </h1>
+      </header>
+
+      {/* 2. Scrollable Content Area */}
+      <main
+        className="app-scroll-content"
+        style={{
+          padding: '20px 18px 95px 18px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '18px',
+          backgroundColor: '#eee7ff'
+        }}
+      >
+        {/* Live Gold/Silver Rate Card */}
+        <div
+          style={{
+            backgroundColor: '#ded4fc',
+            borderRadius: '24px',
+            padding: '24px 18px',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            boxShadow: '0 4px 16px rgba(88, 60, 245, 0.04)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <div
+              style={{
+                width: '28px',
+                height: '28px',
+                borderRadius: '50%',
+                backgroundColor: isGold ? '#ffd000' : '#c0c5cb',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: isGold ? '0 2px 6px rgba(255, 208, 0, 0.4)' : '0 2px 6px rgba(0,0,0,0.1)'
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" fill={isGold ? '#f59e0b' : '#94a3b8'} />
+                <path d="M12 6v12M9 9h6M9 15h6" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </div>
+            <span style={{ fontSize: '17px', fontWeight: '800', color: '#1e1b2e' }}>
+              {isGold ? 'Gold Price' : 'Silver Price'}
             </span>
           </div>
-          <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--primary-purple)' }}>
-            ₹ {ratePerGram.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm
+
+          <div
+            style={{
+              fontSize: '30px',
+              fontWeight: '900',
+              color: '#583cf5',
+              marginTop: '4px',
+              letterSpacing: '-0.5px'
+            }}
+          >
+            ₹{ratePerGram.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / gm
+          </div>
+
+          <div style={{ fontSize: '13px', fontWeight: '700', color: '#736d85', marginTop: '2px' }}>
+            + 3% GST
           </div>
         </div>
 
-        {/* Input Mode Toggle (Buy in Rupees vs Buy in Grams) */}
-        <div style={{
-          display: 'flex',
-          borderBottom: '2px solid #f0eafc',
-          marginBottom: '20px',
-          width: '100%'
-        }}>
-          <button
-            type="button"
+        {/* Section Heading */}
+        <h2
+          style={{
+            fontSize: '20px',
+            fontWeight: '900',
+            color: '#1e1b2e',
+            textAlign: 'center',
+            margin: '4px 0 0 0'
+          }}
+        >
+          Buy Your Assets
+        </h2>
+
+        {/* Buy Mode Selector Pills */}
+        <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+          {/* Buy in Rupees Option */}
+          <div
             onClick={() => handleSwitchMode('rupees')}
             style={{
               flex: 1,
-              padding: '10px 0',
-              border: 'none',
-              backgroundColor: 'transparent',
-              borderBottom: mode === 'rupees' ? '3px solid var(--primary-purple)' : '3px solid transparent',
-              color: mode === 'rupees' ? 'var(--primary-purple)' : '#736d85',
-              fontWeight: '800',
-              fontSize: '15px',
+              backgroundColor: '#ffffff',
+              borderRadius: '16px',
+              padding: '14px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
               cursor: 'pointer',
-              marginBottom: '-2px'
+              boxShadow: mode === 'rupees' ? '0 4px 14px rgba(88, 60, 245, 0.08)' : 'none',
+              border: mode === 'rupees' ? '1.5px solid #583cf5' : '1px solid transparent',
+              transition: 'all 0.15s ease'
             }}
           >
-            Buy in Rupees (₹)
-          </button>
-          <button
-            type="button"
+            <div
+              style={{
+                width: '20px',
+                height: '20px',
+                borderRadius: '50%',
+                border: mode === 'rupees' ? '6px solid #583cf5' : '2px solid #b7a9ff',
+                backgroundColor: '#ffffff',
+                flexShrink: 0
+              }}
+            />
+            <span style={{ fontSize: '14.5px', fontWeight: '800', color: '#1e1b2e' }}>
+              Buy in Rupees
+            </span>
+          </div>
+
+          {/* Buy in Grams Option */}
+          <div
             onClick={() => handleSwitchMode('grams')}
             style={{
               flex: 1,
-              padding: '10px 0',
-              border: 'none',
-              backgroundColor: 'transparent',
-              borderBottom: mode === 'grams' ? '3px solid var(--primary-purple)' : '3px solid transparent',
-              color: mode === 'grams' ? 'var(--primary-purple)' : '#736d85',
-              fontWeight: '800',
-              fontSize: '15px',
+              backgroundColor: '#ffffff',
+              borderRadius: '16px',
+              padding: '14px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
               cursor: 'pointer',
-              marginBottom: '-2px'
+              boxShadow: mode === 'grams' ? '0 4px 14px rgba(88, 60, 245, 0.08)' : 'none',
+              border: mode === 'grams' ? '1.5px solid #583cf5' : '1px solid transparent',
+              transition: 'all 0.15s ease'
             }}
           >
-            Buy in Grams (gm)
-          </button>
+            <div
+              style={{
+                width: '20px',
+                height: '20px',
+                borderRadius: '50%',
+                border: mode === 'grams' ? '6px solid #583cf5' : '2px solid #b7a9ff',
+                backgroundColor: '#ffffff',
+                flexShrink: 0
+              }}
+            />
+            <span style={{ fontSize: '14.5px', fontWeight: '800', color: '#1e1b2e' }}>
+              Buy in Grams
+            </span>
+          </div>
         </div>
 
-        {/* Input Display Card */}
-        <div style={{
-          backgroundColor: '#ffffff',
-          borderRadius: '24px',
-          padding: '24px 20px',
-          boxShadow: '0 8px 24px rgba(88, 60, 245, 0.06)',
-          marginBottom: '20px',
-          textAlign: 'center',
-          width: '100%'
-        }}>
-          <div style={{ fontSize: '13px', color: '#736d85', fontWeight: '700', marginBottom: '8px' }}>
-            {mode === 'rupees' ? 'ENTER AMOUNT (₹)' : 'ENTER QUANTITY (GRAMS)'}
-          </div>
-
+        {/* Amount & Quantity Combined Input Card */}
+        <div
+          style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '18px',
+            border: '2px solid #583cf5',
+            padding: '16px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            boxShadow: '0 6px 18px rgba(88, 60, 245, 0.08)',
+            width: '100%',
+            boxSizing: 'border-box'
+          }}
+        >
           {mode === 'rupees' ? (
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', maxWidth: '100%' }}>
-                <span style={{ fontSize: '32px', fontWeight: '900', color: '#1e1b2e' }}>₹</span>
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
+                <span style={{ fontSize: '24px', fontWeight: '900', color: '#1e1b2e' }}>₹</span>
                 <input
                   type="number"
                   inputMode="decimal"
@@ -345,24 +393,23 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
                   placeholder="0"
                   style={{
                     border: 'none',
-                    fontSize: '34px',
+                    fontSize: '24px',
                     fontWeight: '900',
                     color: '#1e1b2e',
                     width: '100%',
-                    maxWidth: '180px',
-                    textAlign: 'left',
+                    maxWidth: '120px',
                     outline: 'none',
                     backgroundColor: 'transparent'
                   }}
                 />
               </div>
-              <div style={{ fontSize: '14.5px', color: 'var(--primary-purple)', fontWeight: '800', marginTop: '6px' }}>
-                ≈ {gramsVal} gm {isGold ? 'Gold' : 'Silver'}
+              <div style={{ fontSize: '19px', fontWeight: '900', color: '#1e1b2e', whiteSpace: 'nowrap' }}>
+                {gramsVal} <span style={{ fontSize: '16px', fontWeight: '700', color: '#736d85' }}>gm</span>
               </div>
-            </div>
+            </>
           ) : (
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', maxWidth: '100%' }}>
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
                 <input
                   type="number"
                   inputMode="decimal"
@@ -372,104 +419,143 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
                   placeholder="0.0000"
                   style={{
                     border: 'none',
-                    fontSize: '34px',
+                    fontSize: '24px',
                     fontWeight: '900',
                     color: '#1e1b2e',
                     width: '100%',
-                    maxWidth: '180px',
-                    textAlign: 'right',
+                    maxWidth: '120px',
                     outline: 'none',
                     backgroundColor: 'transparent'
                   }}
                 />
-                <span style={{ fontSize: '24px', fontWeight: '900', color: '#1e1b2e' }}>gm</span>
+                <span style={{ fontSize: '18px', fontWeight: '800', color: '#736d85' }}>gm</span>
               </div>
-              <div style={{ fontSize: '14.5px', color: 'var(--primary-purple)', fontWeight: '800', marginTop: '6px' }}>
-                ≈ ₹ {rupeesVal}
+              <div style={{ fontSize: '20px', fontWeight: '900', color: '#1e1b2e', whiteSpace: 'nowrap' }}>
+                ₹ {rupeesVal}
               </div>
-            </div>
+            </>
           )}
         </div>
 
         {/* Quick Amount / Gram Selectors */}
-        <div style={{ marginBottom: '24px', width: '100%' }}>
-          <div style={{ fontSize: '13.5px', color: '#736d85', fontWeight: '700', marginBottom: '10px', paddingLeft: '4px' }}>
-            Quick Select
-          </div>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', width: '100%' }}>
-            {mode === 'rupees' ? (
-              rupeesPresets.map((amt) => (
-                <button
-                  key={amt}
-                  type="button"
-                  onClick={() => handleSelectPresetRupees(amt)}
-                  style={{
-                    padding: '12px 0',
-                    borderRadius: '16px',
-                    border: selectedQuickOption === amt ? '2px solid var(--primary-purple)' : '1px solid #e8e2fa',
-                    backgroundColor: selectedQuickOption === amt ? '#f1ecfe' : '#ffffff',
-                    color: selectedQuickOption === amt ? 'var(--primary-purple)' : '#1e1b2e',
-                    fontWeight: '800',
-                    fontSize: '14.5px',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                    textAlign: 'center'
-                  }}
-                >
-                  ₹{amt}
-                </button>
-              ))
-            ) : (
-              gramsPresets.map((gm) => (
-                <button
-                  key={gm}
-                  type="button"
-                  onClick={() => handleSelectPresetGrams(gm)}
-                  style={{
-                    padding: '12px 2px',
-                    borderRadius: '16px',
-                    border: selectedQuickOption === gm ? '2px solid var(--primary-purple)' : '1px solid #e8e2fa',
-                    backgroundColor: selectedQuickOption === gm ? '#f1ecfe' : '#ffffff',
-                    color: selectedQuickOption === gm ? 'var(--primary-purple)' : '#1e1b2e',
-                    fontWeight: '800',
-                    fontSize: '13px',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                    textAlign: 'center'
-                  }}
-                >
-                  {gm}g
-                </button>
-              ))
-            )}
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', width: '100%' }}>
+          {mode === 'rupees' ? (
+            rupeesPresets.map((amt) => {
+              const isSelected = selectedQuickOption === amt;
+              const isPopular = amt === '200';
+              return (
+                <div key={amt} style={{ position: 'relative' }}>
+                  {isPopular && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: '-8px',
+                        right: '-3px',
+                        backgroundColor: '#ffd000',
+                        color: '#000000',
+                        fontSize: '9.5px',
+                        fontWeight: '900',
+                        padding: '2px 6px',
+                        borderRadius: '6px',
+                        zIndex: 2,
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.12)'
+                      }}
+                    >
+                      Popular
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleSelectPresetRupees(amt)}
+                    style={{
+                      width: '100%',
+                      padding: '14px 0',
+                      borderRadius: '16px',
+                      border: isSelected ? 'none' : '1.5px solid #a38cfb',
+                      backgroundColor: isSelected ? '#583cf5' : '#ede7fc',
+                      color: isSelected ? '#ffffff' : '#583cf5',
+                      fontWeight: '900',
+                      fontSize: '15px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      boxShadow: isSelected ? '0 4px 14px rgba(88, 60, 245, 0.4)' : 'none'
+                    }}
+                  >
+                    ₹ {amt}
+                  </button>
+                </div>
+              );
+            })
+          ) : (
+            gramsPresets.map((gm, idx) => {
+              const isSelected = selectedQuickOption === gm;
+              const isPopular = idx === 3;
+              return (
+                <div key={gm} style={{ position: 'relative' }}>
+                  {isPopular && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: '-8px',
+                        right: '-3px',
+                        backgroundColor: '#ffd000',
+                        color: '#000000',
+                        fontSize: '9.5px',
+                        fontWeight: '900',
+                        padding: '2px 6px',
+                        borderRadius: '6px',
+                        zIndex: 2,
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.12)'
+                      }}
+                    >
+                      Popular
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleSelectPresetGrams(gm)}
+                    style={{
+                      width: '100%',
+                      padding: '14px 0',
+                      borderRadius: '16px',
+                      border: isSelected ? 'none' : '1.5px solid #a38cfb',
+                      backgroundColor: isSelected ? '#583cf5' : '#ede7fc',
+                      color: isSelected ? '#ffffff' : '#583cf5',
+                      fontWeight: '900',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      boxShadow: isSelected ? '0 4px 14px rgba(88, 60, 245, 0.4)' : 'none'
+                    }}
+                  >
+                    {gm}g
+                  </button>
+                </div>
+              );
+            })
+          )}
         </div>
 
-        {/* GST Notice Box */}
-        <div style={{
-          backgroundColor: '#f6f2ff',
-          borderRadius: '16px',
-          padding: '12px 16px',
-          border: '1px solid #e2d9fa',
-          marginBottom: '24px',
-          fontSize: '13px',
-          color: '#5b5375',
-          lineHeight: '1.4',
-          width: '100%'
-        }}>
-          <strong>Note:</strong> Standard 3% GST will be calculated at checkout as per Govt. regulations.
-        </div>
-
-        {/* Primary Proceed CTA Button */}
+        {/* Big Primary Proceed CTA Button */}
         <button
           onClick={handleProceed}
-          className="btn-primary"
-          style={{ width: '100%', height: '52px', fontSize: '16.5px', borderRadius: '18px', fontWeight: '700' }}
+          style={{
+            width: '100%',
+            height: '54px',
+            backgroundColor: '#583cf5',
+            color: '#ffffff',
+            fontSize: '18px',
+            fontWeight: '800',
+            borderRadius: '18px',
+            border: 'none',
+            cursor: 'pointer',
+            boxShadow: '0 6px 20px rgba(88, 60, 245, 0.35)',
+            marginTop: '4px',
+            transition: 'all 0.15s ease'
+          }}
         >
-          Proceed to Buy {isGold ? 'Gold' : 'Silver'}
+          Proceed
         </button>
-
       </main>
 
       {/* 3. Fixed Bottom Nav */}
@@ -493,29 +579,33 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
                 </div>
 
                 {purchaseError && (
-                  <div style={{
-                    backgroundColor: '#fee2e2',
-                    border: '1px solid #ef4444',
-                    borderRadius: '12px',
-                    padding: '10px 14px',
-                    marginBottom: '14px',
-                    color: '#dc2626',
-                    fontSize: '13px',
-                    fontWeight: '700'
-                  }}>
+                  <div
+                    style={{
+                      backgroundColor: '#fee2e2',
+                      border: '1px solid #ef4444',
+                      borderRadius: '12px',
+                      padding: '10px 14px',
+                      marginBottom: '14px',
+                      color: '#dc2626',
+                      fontSize: '13px',
+                      fontWeight: '700'
+                    }}
+                  >
                     {purchaseError}
                   </div>
                 )}
 
-                <div style={{
-                  backgroundColor: '#f6f2ff',
-                  borderRadius: '16px',
-                  padding: '16px',
-                  marginBottom: '18px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px'
-                }}>
+                <div
+                  style={{
+                    backgroundColor: '#f6f2ff',
+                    borderRadius: '16px',
+                    padding: '16px',
+                    marginBottom: '18px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px'
+                  }}
+                >
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#5b5375', fontWeight: '600' }}>
                     <span>Asset</span>
                     <span style={{ fontWeight: '800', color: '#1e1b2e' }}>{isGold ? '24KT Gold' : '24KT Silver'}</span>
@@ -531,13 +621,13 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
                     <span style={{ fontWeight: '800', color: '#1e1b2e' }}>₹ {ratePerGram.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm</span>
                   </div>
 
-                  {/* 1. Base Amount Row */}
+                  {/* Base Amount Row */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#5b5375', fontWeight: '600' }}>
                     <span>Amount</span>
                     <span style={{ fontWeight: '800', color: '#1e1b2e' }}>₹ {rawAmount.toFixed(2)}</span>
                   </div>
 
-                  {/* 2. Dynamic 3% GST Row */}
+                  {/* Dynamic 3% GST Row */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#5b5375', fontWeight: '600' }}>
                     <span>GST (3%)</span>
                     <span style={{ fontWeight: '800', color: 'var(--primary-purple)' }}>+ ₹ {gstAmount.toFixed(2)}</span>
@@ -545,7 +635,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
 
                   <div style={{ height: '1px', backgroundColor: '#e2d9fa', margin: '4px 0' }}></div>
 
-                  {/* 3. Total Amount Row (Amount + 3% GST) */}
+                  {/* Total Amount Row (Amount + 3% GST) */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '17px', fontWeight: '900', color: '#1e1b2e' }}>
                     <span>Total Amount</span>
                     <span style={{ color: 'var(--primary-purple)' }}>₹ {totalAmountWithGst.toFixed(2)}</span>
@@ -577,10 +667,14 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
                         <div style={{ fontSize: '12px', color: '#6c727f' }}>Google Pay, PhonePe, Paytm</div>
                       </div>
                     </div>
-                    <div style={{
-                      width: '18px', height: '18px', borderRadius: '50%',
-                      border: selectedMethod === 'UPI' ? '6px solid var(--primary-purple)' : '2px solid #a49bbd'
-                    }}></div>
+                    <div
+                      style={{
+                        width: '18px',
+                        height: '18px',
+                        borderRadius: '50%',
+                        border: selectedMethod === 'UPI' ? '6px solid var(--primary-purple)' : '2px solid #a49bbd'
+                      }}
+                    ></div>
                   </div>
                 </div>
 
