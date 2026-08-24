@@ -16,6 +16,7 @@ export default function ProfileScreen({ onNavigate, onTogglePlus }) {
         const res = await profileService.getProfile();
         if (res?.data && isMounted) {
           const uData = res.data;
+          const pData = uData.profile || {};
           const isComplete = uData.profile_completed === true || !!(pData.address?.address_line && (pData.pan || pData.nominee_name || pData.account_number));
 
           setCurrentUser((prev) => ({
