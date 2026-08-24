@@ -12,7 +12,7 @@ const getRawBaseUrl = () => {
   if (envUrl && typeof envUrl === 'string') {
     return envUrl.trim().replace(/\/+$/, '');
   }
-  return 'http://localhost:8000';
+  return 'http://127.0.0.1:8000';
 };
 
 export const API_BASE_URL = getRawBaseUrl();
