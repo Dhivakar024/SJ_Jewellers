@@ -8,23 +8,24 @@ import { ENDPOINTS } from './api/endpoints';
 
 export const ratesService = {
   /**
-   * Fetch public live Gold and Silver active operational rates
+   * Fetch public live Gold and Silver active operational rates from FastAPI backend
    */
   getRates: async () => {
     return apiClient.get(ENDPOINTS.RATES.PUBLIC, { requiresAuth: false });
   },
 
   /**
-   * Legacy rates persistence helper (preserved for mock fallback)
+   * Update metal custom rates as Admin
    */
-  saveRates: async ({ goldRate, silverRate }) => {
-    try {
-      localStorage.setItem('sj_goldRate', goldRate.toString());
-      localStorage.setItem('sj_silverRate', silverRate.toString());
-    } catch {
-      // ignore
-    }
-    return { success: true, goldRate, silverRate };
+  updateCustomRate: async (metal, rateData) => {
+    return apiClient.put(`${ENDPOINTS.ADMIN.RATES_CUSTOM}/${metal}`, rateData);
+  },
+
+  /**
+   * Manually trigger backend sync with external rate provider
+   */
+  refreshApiRates: async () => {
+    return apiClient.post(ENDPOINTS.ADMIN.RATES_REFRESH);
   },
 };
 

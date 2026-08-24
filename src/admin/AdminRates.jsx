@@ -5,8 +5,8 @@ export default function AdminRates() {
   const { 
     goldRate, 
     silverRate, 
-    apiGoldRate = 13818.88,
-    apiSilverRate = 206.17,
+    apiGoldRate = 16263.65,
+    apiSilverRate = 267.00,
     isGoldCustom, 
     isSilverCustom, 
     customGoldInput, 
@@ -16,12 +16,12 @@ export default function AdminRates() {
 
   const [goldCustom, setGoldCustom] = useState(Boolean(isGoldCustom));
   const [silverCustom, setSilverCustom] = useState(Boolean(isSilverCustom));
-  const [goldInput, setGoldInput] = useState(customGoldInput || (goldRate ? goldRate.toString() : '13818.88'));
-  const [silverInput, setSilverInput] = useState(customSilverInput || (silverRate ? silverRate.toString() : '206.17'));
+  const [goldInput, setGoldInput] = useState(customGoldInput || (goldRate ? goldRate.toString() : '16263.65'));
+  const [silverInput, setSilverInput] = useState(customSilverInput || (silverRate ? silverRate.toString() : '267.00'));
   const [savedSuccess, setSavedSuccess] = useState(false);
 
-  const liveGoldRate = apiGoldRate || 13818.88;
-  const liveSilverRate = apiSilverRate || 206.17;
+  const liveGoldRate = apiGoldRate || 16263.65;
+  const liveSilverRate = apiSilverRate || 267.00;
 
   const handleToggleGold = () => {
     const nextCustom = !goldCustom;
