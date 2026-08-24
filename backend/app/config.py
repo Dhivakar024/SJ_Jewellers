@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
     
+    # Application Timezone
+    APP_TIMEZONE: str = "Asia/Kolkata"
+    
     # Database Settings
     MONGODB_URI: Optional[str] = None
     DATABASE_NAME: str = "gold_silver"
@@ -18,6 +21,10 @@ class Settings(BaseSettings):
     JWT_SECRET: str = "default_jwt_secret_please_set_in_env_file"
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    
+    # External Metal Rates API Settings
+    METAL_RATES_API_URL: Optional[str] = None
+    METAL_RATES_API_KEY: Optional[str] = None
 
     model_config = SettingsConfigDict(
         env_file=".env",

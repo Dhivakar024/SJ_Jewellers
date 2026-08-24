@@ -18,6 +18,18 @@ from app.schemas.kyc import (
     AdminKYCDetailResponse,
     KYCActionResponse,
 )
+from app.schemas.rates import (
+    MetalRatePublicResponse,
+    RatesPublicResponse,
+    MetalRateAdminResponse,
+    RatesAdminResponse,
+    MetalCustomRateInput,
+    SetCustomRatesRequest,
+    MetalRateSummary,
+    RefreshRatesResponse,
+    RateHistoryItem,
+    RateHistoryResponse,
+)
 
 __all__ = [
     "UserRegisterRequest",
@@ -34,4 +46,14 @@ __all__ = [
     "AdminKYCUserProfile",
     "AdminKYCDetailResponse",
     "KYCActionResponse",
+    "MetalRatePublicResponse",
+    "RatesPublicResponse",
+    "MetalRateAdminResponse",
+    "RatesAdminResponse",
+    "MetalCustomRateInput",
+    "SetCustomRatesRequest",
+    "MetalRateSummary",
+    "RefreshRatesResponse",
+    "RateHistoryItem",
+    "RateHistoryResponse",
 ]

@@ -7,3 +7,5 @@ email-validator
 pymongo[srv]
 pwdlib[argon2]
 pyjwt
+tzdata
+httpx
