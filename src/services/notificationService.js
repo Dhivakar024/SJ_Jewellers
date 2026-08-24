@@ -1,6 +1,6 @@
 /**
  * Notification Service
- * Manages customer notification retrieval, unread counts, and read receipts.
+ * Manages customer notification retrieval, unread counts, and read receipts from FastAPI backend.
  */
 
 import apiClient from './api/client';
@@ -31,6 +31,13 @@ export const notificationService = {
   },
 
   /**
+   * Fetch paginated notifications (alias)
+   */
+  getMyNotifications: async (params = {}) => {
+    return apiClient.get(ENDPOINTS.NOTIFICATIONS.LIST, { params });
+  },
+
+  /**
    * Fetch total unread notifications count for badge indicators
    */
   getUnreadCount: async () => {
@@ -56,6 +63,20 @@ export const notificationService = {
    */
   markAllAsRead: async () => {
     return apiClient.patch(ENDPOINTS.NOTIFICATIONS.MARK_ALL_READ);
+  },
+
+  /**
+   * Fetch paginated admin notifications
+   */
+  getAdminNotifications: async (params = {}) => {
+    return apiClient.get(ENDPOINTS.ADMIN.NOTIFICATIONS, { params });
+  },
+
+  /**
+   * Fetch admin unread count
+   */
+  getAdminUnreadCount: async () => {
+    return apiClient.get('/api/admin/notifications/unread-count');
   },
 };
 

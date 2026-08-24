@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authService, profileService, ratesService, holdingsService, transactionService } from '../services';
+import { authService, profileService, ratesService, holdingsService, transactionService, notificationService } from '../services';
 import { getAuthToken, getStoredUser, clearAllAuth } from '../utils/authStorage';
 
 const AppContext = createContext();
@@ -362,6 +362,62 @@ export function AppProvider({ children }) {
       fetchTransactions();
     }
   }, [currentUser?.isAuthenticated, fetchTransactions]);
+
+  // Notifications State from FastAPI backend
+  const [notifications, setNotifications] = useState([]);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+
+  const fetchNotifications = useCallback(async () => {
+    const token = getAuthToken();
+    if (!token) return;
+    try {
+      setNotificationsLoading(true);
+      const [listRes, countRes] = await Promise.allSettled([
+        notificationService.getNotifications({ limit: 50 }),
+        notificationService.getUnreadCount(),
+      ]);
+
+      if (listRes.status === 'fulfilled' && listRes.value?.data?.items) {
+        setNotifications(listRes.value.data.items);
+      }
+      if (countRes.status === 'fulfilled' && typeof countRes.value?.data?.unread_count === 'number') {
+        setUnreadNotificationsCount(countRes.value.data.unread_count);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }, []);
+
+  const markNotificationRead = useCallback(async (notificationId) => {
+    try {
+      await notificationService.markAsRead(notificationId);
+      setNotifications((prev) =>
+        prev.map((n) => (n.notification_id === notificationId || n._id === notificationId ? { ...n, is_read: true } : n))
+      );
+      setUnreadNotificationsCount((prev) => Math.max(0, prev - 1));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const markAllNotificationsRead = useCallback(async () => {
+    try {
+      await notificationService.markAllAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      setUnreadNotificationsCount(0);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    if (currentUser?.isAuthenticated) {
+      fetchNotifications();
+    }
+  }, [currentUser?.isAuthenticated, fetchNotifications]);
 
   // Members / Registered Users
   const [members, setMembers] = useState(() => {
@@ -912,6 +968,13 @@ export function AppProvider({ children }) {
         transactionsLoading,
         transactionsError,
         fetchTransactions,
+        notifications,
+        setNotifications,
+        unreadNotificationsCount,
+        notificationsLoading,
+        fetchNotifications,
+        markNotificationRead,
+        markAllNotificationsRead,
         members,
         setMembers,
         usersList: members,
