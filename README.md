@@ -1,101 +1,99 @@
-# SJ Jewelers — Gold & Silver Mobile App Platform
+# SJ Jewelers — Gold & Silver Application Ecosystem
 
-A modern, high-fidelity mobile application and administrative dashboard for gold and silver asset investments, built with React, Vite, and custom design tokens.
-
----
-
-## 🚀 Features
-
-- **User Mobile Application**:
-  - Sign In, Create Account & Forgot Username auth flows.
-  - Dynamic Gold & Silver live rate feeds and holdings balance summaries.
-  - Interactive Buy Now flow (Rupees & Grams calculation with quick presets).
-  - Mock Payment Gateway (UPI, Card, Net Banking) with transaction confirmation.
-  - Mode of Withdraw with interactive KYC verification flow.
-  - Real-time Transaction History and interactive Contact Us form.
-  - User profile overview and profile editing.
-  - Smooth vertical touch scrolling and mobile responsive sizing (`360px` - `430px`).
-
-- **Admin Dashboard**:
-  - Accessible via `#admin` route.
-  - Key performance analytics and visual transaction volume charts.
-  - Users management with view, edit, and account status controls.
-  - KYC management queue with Approve & Reject action engine.
-  - Transactions & Payments monitoring logs.
-  - Withdrawals management table.
-  - Live Gold & Silver rate management with real-time sync to the user application.
-  - System settings and Maintenance Mode controls.
+A full-stack gold and silver investment platform with real-time rates, wallet holdings, purchase checkout, KYC, withdrawal flows, and admin dashboard.
 
 ---
 
-## 🛠️ Tech Stack
+## 📁 Project Structure
 
-- **Framework**: React 19 + Vite
-- **Icons**: Lucide React
-- **State Management**: React Context (`AppContext`) with `localStorage` persistence
-- **Styling**: Vanilla CSS with custom theme variables (Purple & Lavender palette)
-- **Deployment Platform**: Vercel + GitHub
-
----
-
-## 💻 Local Development Setup
-
-### 1. Clone the repository
-```bash
-git clone https://github.com/your-username/sj-jewelers.git
-cd sj-jewelers
+```text
+project-root/
+│
+├── frontend/                     # React + Vite Client Application
+│   ├── src/
+│   │   ├── admin/                # Admin Portal views (Dashboard, Rates, Members, Analytics, etc.)
+│   │   ├── components/           # Reusable UI components (BottomNav, ActionSheet, Container)
+│   │   ├── config/               # Support and environment configuration
+│   │   ├── context/              # AppContext global state manager
+│   │   ├── screens/              # Customer screens (Home, BuyNow, Profile, Withdraw, Auth)
+│   │   ├── services/             # Centralized API client and domain services
+│   │   ├── styles/               # CSS themes, variables, and animations
+│   │   ├── utils/                # Auth tokens, storage, and formatters
+│   │   ├── App.jsx               # Route guards and screen orchestrator
+│   │   └── main.jsx              # React DOM entry point
+│   │
+│   ├── public/                   # Static assets (favicons, SVGs)
+│   ├── .env                      # Frontend environment configuration (VITE_API_BASE_URL)
+│   ├── .env.example              # Example environment template
+│   ├── index.html                # Single-page application template
+│   ├── package.json              # Frontend npm dependencies and scripts
+│   ├── vercel.json               # Vercel SPA routing rewrites
+│   └── vite.config.js            # Vite build configuration
+│
+├── backend/                      # FastAPI + MongoDB Atlas Backend
+│   ├── app/
+│   │   ├── database/             # MongoDB Atlas connection manager
+│   │   ├── middleware/           # OWASP security headers, CORS & request rate limiting
+│   │   ├── routes/               # Modular REST endpoints (auth, rates, purchases, holdings, etc.)
+│   │   ├── schemas/              # Pydantic v2 data models and validators
+│   │   ├── services/             # Business logic layer
+│   │   ├── utils/                # Argon2 password hashing & JWT token security
+│   │   ├── config.py             # Server settings
+│   │   └── main.py               # FastAPI application initialization
+│   │
+│   ├── tests/                    # Automated security and validation unit tests
+│   ├── requirements.txt          # Python dependencies
+│   ├── .env                      # Backend environment configuration
+│   └── README.md                 # Backend documentation
+│
+└── README.md                     # Root project documentation
 ```
 
-### 2. Install Dependencies
+---
+
+## 🚀 Running the Project
+
+### 1. Start Backend (FastAPI + MongoDB)
 ```bash
+cd backend
+# Activate virtual environment
+venv\Scripts\activate  # On Windows
+# source venv/bin/activate  # On Linux/macOS
+
+# Install dependencies (if not already installed)
+pip install -r requirements.txt
+
+# Start FastAPI server
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+- **Backend URL**: `http://127.0.0.1:8000`
+- **Interactive Swagger Docs**: `http://127.0.0.1:8000/docs`
+
+---
+
+### 2. Start Frontend (React + Vite)
+```bash
+cd frontend
+# Install dependencies
 npm install
-```
 
-### 3. Start Development Server
-```bash
+# Start Vite development server
 npm run dev
 ```
-The app will be available at `http://localhost:5173/`.
+- **Frontend App URL**: `http://localhost:5173/`
 
-### 4. Build for Production
+---
+
+## 🧪 Testing
+
+### Automated Backend Tests:
 ```bash
+cd backend
+python -m unittest tests/test_production_security.py
+```
+
+### Production Build:
+```bash
+cd frontend
 npm run build
 ```
-The optimized production output will be generated in the `dist/` directory.
-
-### 5. Preview Production Build
-```bash
-npm run preview
-```
-
----
-
-## 🌐 Deploying to Vercel via GitHub
-
-This project is pre-configured for automatic zero-config deployments on Vercel.
-
-### Deployment Steps:
-1. **Push your code to GitHub**:
-   ```bash
-   git add .
-   git commit -m "feat: complete SJ Jewelers app and deployment config"
-   git push origin main
-   ```
-2. **Import into Vercel**:
-   - Go to [Vercel Dashboard](https://vercel.com/dashboard) and click **"Add New Project"**.
-   - Select and import your GitHub repository.
-3. **Project Settings (Auto-Detected)**:
-   - **Framework Preset**: `Vite`
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-   - **Install Command**: `npm install`
-4. **Deploy**:
-   - Click **"Deploy"**. Vercel will build the project and assign a production URL.
-   - Every push to the `main` branch will automatically trigger a new deployment.
-   - Pull requests will generate preview deployments.
-
----
-
-## 📄 Routing Configuration
-
-SPA routing rewrites are configured in `vercel.json` to ensure direct link navigation works without 404 errors across all routes.
