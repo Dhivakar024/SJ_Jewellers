@@ -682,6 +682,57 @@ export function AppProvider({ children }) {
   }, []);
 
   // Auth Handlers
+  const sendSignupOtp = async ({ mobile, purpose = 'signup' }) => {
+    return authService.sendOtp({ mobile, purpose });
+  };
+
+  const verifySignupOtp = async ({ username, mobile, otp, password, purpose = 'signup' }) => {
+    const cleanName = (username || 'New User').trim();
+    const cleanMobile = (mobile || '').trim();
+    const pass = password || `SJ@${cleanMobile.replace(/\s+/g, '')}`;
+
+    const res = await authService.verifyOtp({
+      mobile: cleanMobile,
+      otp,
+      name: cleanName,
+      password: pass,
+      purpose,
+    });
+
+    if (res?.data?.user) {
+      const uData = res.data.user;
+      const newUser = {
+        id: uData.id || `USR-${Date.now()}`,
+        name: uData.name || cleanName,
+        mobile: uData.mobile || cleanMobile,
+        email: uData.email || '',
+        role: 'customer',
+        kycStatus: 'pending',
+        accountStatus: 'active',
+        profileCompleted: false,
+        isAuthenticated: true,
+        address: '',
+        pan: '',
+        aadhar: '',
+        accountNumber: '',
+        ifsc: '',
+        nomineeName: '',
+        nomineeMobile: '',
+        nomineeDob: '',
+        nomineeAddress: '',
+        relationship: '',
+        goldGrams: 0,
+        silverGrams: 0,
+        status: 'Active',
+        createdAt: new Date().toISOString().split('T')[0],
+      };
+
+      setCurrentUser(newUser);
+      return newUser;
+    }
+    throw new Error(res?.message || 'OTP verification failed');
+  };
+
   const registerNewUser = async ({ username, mobile, email, password }) => {
     const cleanName = (username || 'New User').trim();
     const cleanMobile = (mobile || '').trim();
@@ -1106,6 +1157,8 @@ export function AppProvider({ children }) {
         adminAuth,
         setAdminAuth,
         fetchAdminData,
+        sendSignupOtp,
+        verifySignupOtp,
         registerNewUser,
         loginUser,
         completeUserProfile,

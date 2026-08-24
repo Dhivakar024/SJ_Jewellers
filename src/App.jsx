@@ -163,6 +163,15 @@ function MainContent() {
       return;
     }
 
+    // If authenticated but profile is not completed
+    const skipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
+    if (!currentUser.profileCompleted && !skipped && screen !== 'create-profile' && screen !== 'profile' && screen !== 'contact') {
+      setUserScreen('create-profile');
+      window.location.hash = 'create-profile';
+      setIsActionSheetOpen(false);
+      return;
+    }
+
     setUserScreen(screen);
     window.location.hash = screen;
     setIsActionSheetOpen(false);

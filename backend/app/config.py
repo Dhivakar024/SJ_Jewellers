@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     JWT_SECRET: str = "default_jwt_secret_please_set_in_env_file"
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    DEV_OTP: str = "123456"
     
     # External Metal Rates API Settings
     METAL_RATES_API_URL: Optional[str] = None

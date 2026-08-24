@@ -15,6 +15,38 @@ export const ADMIN_DEMO_CREDENTIALS = {
 
 export const authService = {
   /**
+   * Send OTP to customer mobile number for signup or login
+   */
+  sendOtp: async ({ mobile, purpose = 'signup' }) => {
+    const payload = {
+      mobile: mobile?.trim(),
+      purpose,
+    };
+    return apiClient.post(ENDPOINTS.AUTH.SEND_OTP, payload, { requiresAuth: false });
+  },
+
+  /**
+   * Verify OTP and obtain authenticated JWT session / register new user
+   */
+  verifyOtp: async ({ mobile, otp, name, password, purpose = 'signup' }) => {
+    const payload = {
+      mobile: mobile?.trim(),
+      otp: otp?.trim(),
+      name: name?.trim(),
+      password: password?.trim(),
+      purpose,
+    };
+    const response = await apiClient.post(ENDPOINTS.AUTH.VERIFY_OTP, payload, { requiresAuth: false });
+    if (response?.data?.access_token) {
+      setAuthToken(response.data.access_token);
+      if (response.data.user) {
+        setStoredUser(response.data.user);
+      }
+    }
+    return response;
+  },
+
+  /**
    * Register a new customer account
    */
   register: async ({ name, mobile, email, password }) => {

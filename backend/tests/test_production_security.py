@@ -173,6 +173,57 @@ class TestProductionSecurity(unittest.TestCase):
         resp = self.client.post("/api/kyc/submit", json=invalid_gender_payload)
         self.assertEqual(resp.status_code, 422)
 
+    def test_10_send_otp_new_user(self):
+        """Verify send OTP endpoint sends dev OTP for an un-registered mobile number."""
+        mock_db = MagicMock()
+        mock_db.users.find_one.return_value = None  # Not registered
+        app.dependency_overrides[get_database] = lambda: mock_db
+
+        resp = self.client.post("/api/auth/send-otp", json={"mobile": "9123456780", "purpose": "signup"})
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data.get("otp_sent"))
+        self.assertEqual(data.get("dev_otp"), "123456")
+
+    def test_11_send_otp_existing_user_rejected(self):
+        """Verify send OTP for signup rejects an already registered mobile number."""
+        mock_db = MagicMock()
+        mock_db.users.find_one.return_value = {"mobile": "9876543210", "role": "customer"}
+        app.dependency_overrides[get_database] = lambda: mock_db
+
+        resp = self.client.post("/api/auth/send-otp", json={"mobile": "9876543210", "purpose": "signup"})
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("already registered", resp.json().get("detail", ""))
+
+    def test_12_verify_otp_creates_user_and_token(self):
+        """Verify valid OTP creates new user account and returns JWT token with profile_completed: False."""
+        mock_db = MagicMock()
+        mock_db.users.find_one.return_value = None
+        mock_db.users.insert_one.return_value = MagicMock(inserted_id="67b96000e783457a4eb182a1")
+        app.dependency_overrides[get_database] = lambda: mock_db
+
+        resp = self.client.post(
+            "/api/auth/verify-otp",
+            json={"mobile": "9123456780", "otp": "123456", "name": "Ravi Kumar", "purpose": "signup"}
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertIn("access_token", data)
+        self.assertEqual(data.get("user", {}).get("profile_completed"), False)
+
+    def test_13_verify_otp_invalid_rejected(self):
+        """Verify wrong OTP code is rejected with 400 Bad Request."""
+        mock_db = MagicMock()
+        mock_db.otps.find_one.return_value = None
+        app.dependency_overrides[get_database] = lambda: mock_db
+
+        resp = self.client.post(
+            "/api/auth/verify-otp",
+            json={"mobile": "9123456780", "otp": "999999", "name": "Ravi Kumar", "purpose": "signup"}
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("Invalid OTP", resp.json().get("detail", ""))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
