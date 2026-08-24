@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle2, ShieldCheck, Smartphone } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { purchaseService } from '../services';
 import BottomNav from '../components/BottomNav';
 
 export default function BuyNowScreen({ assetType = 'gold', onNavigate, onTogglePlus }) {
@@ -28,6 +29,8 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
   const [selectedMethod, setSelectedMethod] = useState('UPI');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [purchaseError, setPurchaseError] = useState('');
+  const [purchaseResponse, setPurchaseResponse] = useState(null);
 
   // Sync prop changes if user enters via direct link
   useEffect(() => {
@@ -112,47 +115,72 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
     }
   };
 
-  // Dynamic GST & Total calculations
+  // Dynamic GST & Total calculations for preview
   const rawAmount = parseFloat(rupeesVal || '0');
   const gstAmount = rawAmount * 0.03;
   const totalAmountWithGst = rawAmount + gstAmount;
 
   const handleProceed = () => {
-    if (parseFloat(rupeesVal) <= 0 || parseFloat(gramsVal) <= 0) {
+    const gNum = parseFloat(gramsVal);
+    if (parseFloat(rupeesVal) <= 0 || !gNum || gNum <= 0) {
       alert('Please enter a valid amount or gram quantity.');
       return;
     }
+    if (isGold && gNum < 0.005) {
+      alert('Minimum gold purchase quantity is 0.005 grams.');
+      return;
+    }
+    if (!isGold && gNum < 0.1) {
+      alert('Minimum silver purchase quantity is 0.1 grams.');
+      return;
+    }
+    setPurchaseError('');
     setShowConfirmModal(true);
     setPaymentSuccess(false);
     setIsProcessing(false);
   };
 
-  const handleConfirmPay = () => {
+  const handleConfirmPay = async () => {
+    if (isProcessing) return;
     setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      setPaymentSuccess(true);
-      
-      const currentAsset = (selectedAsset || 'gold').toLowerCase() === 'gold' ? 'gold' : 'silver';
-      const currentRate = currentAsset === 'gold' ? goldRate : silverRate;
-      const gramsNumber = parseFloat(gramsVal) || 0;
-      const amountNumber = parseFloat(totalAmountWithGst.toFixed(2)) || 0;
+    setPurchaseError('');
 
-      // Update global context state with exact selected asset & grams
-      addPurchaseTransaction({
-        assetType: currentAsset,
-        asset: currentAsset === 'gold' ? 'Gold' : 'Silver',
-        amount: amountNumber,
-        grams: gramsNumber,
-        ratePerGram: currentRate,
-        paymentMethod: selectedMethod || 'UPI'
+    const currentAsset = (selectedAsset || 'gold').toLowerCase() === 'gold' ? 'gold' : 'silver';
+    const gramsNumber = parseFloat(gramsVal) || 0;
+
+    try {
+      // Create purchase directly on FastAPI backend with server-authoritative rates and GST calculation
+      const res = await purchaseService.createPurchase({
+        metal: currentAsset,
+        quantityGrams: gramsNumber,
       });
 
-      setTimeout(() => {
-        setShowConfirmModal(false);
-        onNavigate('transactions');
-      }, 1500);
-    }, 1000);
+      const purchaseData = res?.data;
+      if (purchaseData) {
+        setPurchaseResponse(purchaseData);
+        setPaymentSuccess(true);
+
+        // Update local context for immediate display
+        addPurchaseTransaction({
+          id: purchaseData.transaction_id || purchaseData.purchase_id,
+          assetType: currentAsset,
+          asset: currentAsset === 'gold' ? 'Gold' : 'Silver',
+          amount: purchaseData.total_amount,
+          grams: purchaseData.quantity_grams,
+          ratePerGram: purchaseData.rate_per_gram,
+          paymentMethod: selectedMethod || 'UPI',
+        });
+
+        setTimeout(() => {
+          setShowConfirmModal(false);
+          onNavigate('transactions');
+        }, 1500);
+      }
+    } catch (err) {
+      setPurchaseError(err.message || 'Purchase failed. Please check your connection and try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -215,287 +243,234 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
           </button>
         </div>
 
-        {/* Live Price Box */}
-        <div style={{
-          backgroundColor: '#dcd0ff',
-          borderRadius: '22px',
-          padding: '18px 20px',
-          textAlign: 'center',
-          border: '1px solid #c9b8fc'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px' }}>
-            <div style={{
-              width: '28px', height: '28px', borderRadius: '50%',
-              backgroundColor: isGold ? '#ffd000' : '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}>
-              <span style={{ fontSize: '15px' }}>{isGold ? '🪙' : '🥈'}</span>
-            </div>
-            <span style={{ fontSize: '16px', fontWeight: '800', color: '#33295c' }}>
-              {isGold ? '24KT Gold Price' : '24KT Silver Price'}
-            </span>
-          </div>
-
-          <div style={{ fontSize: '26px', fontWeight: '900', color: 'var(--primary-purple)', margin: '4px 0' }}>
-            ₹{ratePerGram.toLocaleString('en-IN', { minimumFractionDigits: 2 })} / gm
-          </div>
-
-          <div style={{ fontSize: '12px', fontWeight: '700', color: '#685d8a' }}>
-            + 3% GST
-          </div>
-        </div>
-
-        {/* Section Heading */}
-        <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-dark)', margin: '20px 0 14px 0' }}>
-          Buy Your Assets
-        </h3>
-
-        {/* Radio Pill Selector */}
-        <div style={{
-          backgroundColor: '#f1ecfe',
-          borderRadius: '16px',
-          padding: '6px',
-          display: 'flex',
-          gap: '8px',
-          marginBottom: '20px'
-        }}>
-          <button
-            onClick={() => handleSwitchMode('rupees')}
-            style={{
-              flex: 1,
-              height: '46px',
-              borderRadius: '12px',
-              border: 'none',
-              backgroundColor: mode === 'rupees' ? '#ffffff' : 'transparent',
-              color: 'var(--text-dark)',
-              fontWeight: '700',
-              fontSize: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              cursor: 'pointer',
-              boxShadow: mode === 'rupees' ? '0 2px 8px rgba(0,0,0,0.06)' : 'none'
-            }}
-          >
-            <div style={{
-              width: '18px', height: '18px', borderRadius: '50%',
-              border: mode === 'rupees' ? '6px solid var(--primary-purple)' : '2px solid #a49bbd'
-            }}></div>
-            <span>Buy in Rupees</span>
-          </button>
-
-          <button
-            onClick={() => handleSwitchMode('grams')}
-            style={{
-              flex: 1,
-              height: '46px',
-              borderRadius: '12px',
-              border: 'none',
-              backgroundColor: mode === 'grams' ? '#ffffff' : 'transparent',
-              color: 'var(--text-dark)',
-              fontWeight: '700',
-              fontSize: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              cursor: 'pointer',
-              boxShadow: mode === 'grams' ? '0 2px 8px rgba(0,0,0,0.06)' : 'none'
-            }}
-          >
-            <div style={{
-              width: '18px', height: '18px', borderRadius: '50%',
-              border: mode === 'grams' ? '6px solid var(--primary-purple)' : '2px solid #a49bbd'
-            }}></div>
-            <span>Buy in Grams</span>
-          </button>
-        </div>
-
-        {/* Input Card */}
+        {/* Live Rate Header Box with Pill */}
         <div style={{
           backgroundColor: '#ffffff',
           borderRadius: '20px',
-          border: '2px solid var(--primary-purple)',
-          padding: '16px 20px',
+          padding: '14px 18px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: '22px'
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+          marginBottom: '18px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '20px', fontWeight: '800', color: '#1c1829' }}>₹</span>
-            <input
-              type="text"
-              value={rupeesVal}
-              onChange={(e) => handleRupeesChange(e.target.value)}
-              style={{
-                width: '110px',
-                border: 'none',
-                outline: 'none',
-                fontSize: '22px',
-                fontWeight: '900',
-                color: '#1c1829',
-                backgroundColor: 'transparent'
-              }}
-            />
-          </div>
-
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <input
-              type="text"
-              value={gramsVal}
-              onChange={(e) => handleGramsChange(e.target.value)}
-              style={{
-                width: '90px',
-                border: 'none',
-                outline: 'none',
-                fontSize: '16px',
-                fontWeight: '700',
-                color: '#1c1829',
-                textAlign: 'right',
-                backgroundColor: 'transparent'
-              }}
-            />
-            <span style={{ fontSize: '15px', fontWeight: '700', color: '#706987' }}>gm</span>
+            <span style={{
+              backgroundColor: isGold ? '#ffd000' : '#e2e6ea',
+              color: '#000',
+              fontSize: '11px',
+              fontWeight: '900',
+              padding: '3px 8px',
+              borderRadius: '10px'
+            }}>24KT</span>
+            <span style={{ fontSize: '14px', fontWeight: '700', color: '#1e1b2e' }}>
+              Live {isGold ? 'Gold' : 'Silver'} Rate
+            </span>
+          </div>
+          <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--primary-purple)' }}>
+            ₹ {ratePerGram.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm
           </div>
         </div>
 
-        {/* Quick Amount Preset Chips */}
-        {mode === 'rupees' ? (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '8px',
-            marginBottom: '24px'
-          }}>
-            {rupeesPresets.map((amt) => {
-              const isSelected = selectedQuickOption === amt;
-              return (
-                <div key={amt} style={{ position: 'relative' }}>
-                  <button
-                    type="button"
-                    onClick={() => handleSelectPresetRupees(amt)}
-                    style={{
-                      width: '100%',
-                      height: '52px',
-                      borderRadius: '14px',
-                      border: isSelected ? '1.5px solid var(--primary-purple)' : '1px solid var(--primary-purple)',
-                      backgroundColor: isSelected ? 'var(--primary-purple)' : '#ede7fc',
-                      color: isSelected ? '#ffffff' : 'var(--primary-purple)',
-                      fontSize: '15px',
-                      fontWeight: '800',
-                      cursor: 'pointer',
-                      boxShadow: isSelected ? '0 4px 14px rgba(88, 60, 245, 0.35)' : 'none',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    ₹ {amt}
-                  </button>
-                  {amt === '200' && (
-                    <span style={{
-                      position: 'absolute',
-                      top: '-8px',
-                      right: '-4px',
-                      backgroundColor: '#ffd000',
-                      color: '#000',
-                      fontSize: '9px',
-                      fontWeight: '900',
-                      padding: '1px 6px',
-                      borderRadius: '6px',
-                      boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
-                      pointerEvents: 'none'
-                    }}>
-                      Popular
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '8px',
-            marginBottom: '24px'
-          }}>
-            {gramsPresets.map((gm, idx) => {
-              const isSelected = selectedQuickOption === gm;
-              return (
-                <div key={gm} style={{ position: 'relative' }}>
-                  <button
-                    type="button"
-                    onClick={() => handleSelectPresetGrams(gm)}
-                    style={{
-                      width: '100%',
-                      height: '52px',
-                      borderRadius: '14px',
-                      border: isSelected ? '1.5px solid var(--primary-purple)' : '1px solid var(--primary-purple)',
-                      backgroundColor: isSelected ? 'var(--primary-purple)' : '#ede7fc',
-                      color: isSelected ? '#ffffff' : 'var(--primary-purple)',
-                      fontSize: '13px',
-                      fontWeight: '800',
-                      cursor: 'pointer',
-                      boxShadow: isSelected ? '0 4px 14px rgba(88, 60, 245, 0.35)' : 'none',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      lineHeight: '1.2'
-                    }}
-                  >
-                    <span>{gm}</span>
-                    <span style={{ fontSize: '11px', opacity: 0.9 }}>gm</span>
-                  </button>
-                  {idx === gramsPresets.length - 1 && (
-                    <span style={{
-                      position: 'absolute',
-                      top: '-8px',
-                      right: '-4px',
-                      backgroundColor: '#ffd000',
-                      color: '#000',
-                      fontSize: '9px',
-                      fontWeight: '900',
-                      padding: '1px 6px',
-                      borderRadius: '6px',
-                      boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
-                      pointerEvents: 'none'
-                    }}>
-                      Popular
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+        {/* Input Mode Toggle (Buy in Rupees vs Buy in Grams) */}
+        <div style={{
+          display: 'flex',
+          borderBottom: '2px solid #f0eafc',
+          marginBottom: '20px'
+        }}>
+          <button
+            type="button"
+            onClick={() => handleSwitchMode('rupees')}
+            style={{
+              flex: 1,
+              padding: '10px 0',
+              border: 'none',
+              backgroundColor: 'transparent',
+              borderBottom: mode === 'rupees' ? '3px solid var(--primary-purple)' : '3px solid transparent',
+              color: mode === 'rupees' ? 'var(--primary-purple)' : '#736d85',
+              fontWeight: '800',
+              fontSize: '15px',
+              cursor: 'pointer',
+              marginBottom: '-2px'
+            }}
+          >
+            Buy in Rupees (₹)
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSwitchMode('grams')}
+            style={{
+              flex: 1,
+              padding: '10px 0',
+              border: 'none',
+              backgroundColor: 'transparent',
+              borderBottom: mode === 'grams' ? '3px solid var(--primary-purple)' : '3px solid transparent',
+              color: mode === 'grams' ? 'var(--primary-purple)' : '#736d85',
+              fontWeight: '800',
+              fontSize: '15px',
+              cursor: 'pointer',
+              marginBottom: '-2px'
+            }}
+          >
+            Buy in Grams (gm)
+          </button>
+        </div>
 
-        {/* Large Proceed Button */}
+        {/* Input Display Card */}
+        <div style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '24px',
+          padding: '24px 20px',
+          boxShadow: '0 8px 24px rgba(88, 60, 245, 0.06)',
+          marginBottom: '20px',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '13px', color: '#736d85', fontWeight: '700', marginBottom: '8px' }}>
+            {mode === 'rupees' ? 'ENTER AMOUNT (₹)' : 'ENTER QUANTITY (GRAMS)'}
+          </div>
+
+          {mode === 'rupees' ? (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '32px', fontWeight: '900', color: '#1e1b2e' }}>₹</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={rupeesVal}
+                  onChange={(e) => handleRupeesChange(e.target.value)}
+                  placeholder="0"
+                  style={{
+                    border: 'none',
+                    fontSize: '36px',
+                    fontWeight: '900',
+                    color: '#1e1b2e',
+                    width: '180px',
+                    textAlign: 'left',
+                    outline: 'none',
+                    backgroundColor: 'transparent'
+                  }}
+                />
+              </div>
+              <div style={{ fontSize: '15px', color: 'var(--primary-purple)', fontWeight: '800', marginTop: '6px' }}>
+                ≈ {gramsVal} gm {isGold ? 'Gold' : 'Silver'}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="0.0001"
+                  value={gramsVal}
+                  onChange={(e) => handleGramsChange(e.target.value)}
+                  placeholder="0.0000"
+                  style={{
+                    border: 'none',
+                    fontSize: '36px',
+                    fontWeight: '900',
+                    color: '#1e1b2e',
+                    width: '180px',
+                    textAlign: 'right',
+                    outline: 'none',
+                    backgroundColor: 'transparent'
+                  }}
+                />
+                <span style={{ fontSize: '24px', fontWeight: '900', color: '#1e1b2e' }}>gm</span>
+              </div>
+              <div style={{ fontSize: '15px', color: 'var(--primary-purple)', fontWeight: '800', marginTop: '6px' }}>
+                ≈ ₹ {rupeesVal}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Quick Amount / Gram Selectors */}
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ fontSize: '13.5px', color: '#736d85', fontWeight: '700', marginBottom: '10px', paddingLeft: '4px' }}>
+            Quick Select
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+            {mode === 'rupees' ? (
+              rupeesPresets.map((amt) => (
+                <button
+                  key={amt}
+                  type="button"
+                  onClick={() => handleSelectPresetRupees(amt)}
+                  style={{
+                    padding: '12px 0',
+                    borderRadius: '16px',
+                    border: selectedQuickOption === amt ? '2px solid var(--primary-purple)' : '1px solid #e8e2fa',
+                    backgroundColor: selectedQuickOption === amt ? '#f1ecfe' : '#ffffff',
+                    color: selectedQuickOption === amt ? 'var(--primary-purple)' : '#1e1b2e',
+                    fontWeight: '800',
+                    fontSize: '15px',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  ₹{amt}
+                </button>
+              ))
+            ) : (
+              gramsPresets.map((gm) => (
+                <button
+                  key={gm}
+                  type="button"
+                  onClick={() => handleSelectPresetGrams(gm)}
+                  style={{
+                    padding: '12px 0',
+                    borderRadius: '16px',
+                    border: selectedQuickOption === gm ? '2px solid var(--primary-purple)' : '1px solid #e8e2fa',
+                    backgroundColor: selectedQuickOption === gm ? '#f1ecfe' : '#ffffff',
+                    color: selectedQuickOption === gm ? 'var(--primary-purple)' : '#1e1b2e',
+                    fontWeight: '800',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {gm}g
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* GST Notice Box */}
+        <div style={{
+          backgroundColor: '#f6f2ff',
+          borderRadius: '16px',
+          padding: '12px 16px',
+          border: '1px solid #e2d9fa',
+          marginBottom: '24px',
+          fontSize: '13px',
+          color: '#5b5375',
+          lineHeight: '1.4'
+        }}>
+          <strong>Note:</strong> Standard 3% GST will be calculated at checkout as per Govt. regulations.
+        </div>
+
+        {/* Primary Proceed CTA Button */}
         <button
           onClick={handleProceed}
           className="btn-primary"
-          style={{
-            marginTop: '6px',
-            marginBottom: '10px',
-            boxShadow: '0 6px 18px rgba(88, 60, 245, 0.35)'
-          }}
+          style={{ width: '100%', height: '54px', fontSize: '17px' }}
         >
-          Proceed
+          Proceed to Buy {isGold ? 'Gold' : 'Silver'}
         </button>
+
       </main>
 
-      {/* 3. Fixed Bottom Navigation Bar (Active Tab = 'buy') */}
+      {/* 3. Fixed Bottom Nav */}
       <BottomNav
         activeTab="buy"
         onSelectTab={(tab) => onNavigate(tab)}
         onTogglePlus={onTogglePlus}
       />
 
-      {/* 4. Mock Payment Gateway Modal Step with Dynamic 3% GST */}
+      {/* 4. Payment Confirmation / Bottom Sheet Modal */}
       {showConfirmModal && (
         <div className="modal-overlay" onClick={() => !isProcessing && setShowConfirmModal(false)}>
           <div className="bottom-sheet" onClick={(e) => e.stopPropagation()} style={{ padding: '28px 24px' }}>
@@ -508,6 +483,21 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
                   </h3>
                 </div>
 
+                {purchaseError && (
+                  <div style={{
+                    backgroundColor: '#fee2e2',
+                    border: '1px solid #ef4444',
+                    borderRadius: '12px',
+                    padding: '10px 14px',
+                    marginBottom: '14px',
+                    color: '#dc2626',
+                    fontSize: '13px',
+                    fontWeight: '700'
+                  }}>
+                    {purchaseError}
+                  </div>
+                )}
+
                 <div style={{
                   backgroundColor: '#f6f2ff',
                   borderRadius: '16px',
@@ -517,11 +507,6 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
                   flexDirection: 'column',
                   gap: '8px'
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#5b5375', fontWeight: '600' }}>
-                    <span>Order ID</span>
-                    <span style={{ fontWeight: '800', color: '#1e1b2e' }}>ORD-{Math.floor(100000 + Math.random() * 900000)}</span>
-                  </div>
-
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#5b5375', fontWeight: '600' }}>
                     <span>Asset</span>
                     <span style={{ fontWeight: '800', color: '#1e1b2e' }}>{isGold ? '24KT Gold' : '24KT Silver'}</span>
@@ -606,8 +591,13 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
                   Payment Successful!
                 </h3>
                 <p style={{ fontSize: '15px', color: '#6c727f', fontWeight: '600' }}>
-                  You have successfully purchased {gramsVal} gm of {isGold ? 'Gold' : 'Silver'}.
+                  You have successfully purchased {purchaseResponse?.quantity_grams || gramsVal} gm of {isGold ? 'Gold' : 'Silver'}.
                 </p>
+                {purchaseResponse?.transaction_id && (
+                  <p style={{ fontSize: '13px', color: '#908ba6', fontWeight: '700', marginTop: '6px' }}>
+                    Transaction ID: {purchaseResponse.transaction_id}
+                  </p>
+                )}
               </div>
             )}
           </div>

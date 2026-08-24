@@ -28,6 +28,13 @@ export const purchaseService = {
   },
 
   /**
+   * Fetch paginated purchase history for the authenticated customer (alias)
+   */
+  getMyPurchases: async (params = {}) => {
+    return apiClient.get(ENDPOINTS.PURCHASES.LIST, { params });
+  },
+
+  /**
    * Fetch single purchase transaction details by ID
    */
   getPurchaseById: async (purchaseId) => {
