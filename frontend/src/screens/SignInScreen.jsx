@@ -73,6 +73,7 @@ export default function SignInScreen({ onNavigate }) {
             }}
             disabled={isLoading}
             autoComplete="username"
+            style={{ backgroundColor: '#ffffff', border: '1.5px solid #dcd4fa' }}
           />
         </div>
 
@@ -88,7 +89,7 @@ export default function SignInScreen({ onNavigate }) {
             }}
             disabled={isLoading}
             autoComplete="current-password"
-            style={{ paddingRight: '48px' }}
+            style={{ backgroundColor: '#ffffff', border: '1.5px solid #dcd4fa', paddingRight: '48px' }}
           />
           <button
             type="button"

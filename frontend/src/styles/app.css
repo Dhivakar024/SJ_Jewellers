@@ -11,7 +11,7 @@
   --text-dark: #1e1b2e;
   --text-muted: #6c727f;
   --text-purple: #583cf5;
-  --input-bg: #f8f6ff;
+  --input-bg: #ffffff;
   --input-border: #dcd4fa;
   --card-white: #ffffff;
   --yellow-accent: #ffd000;
@@ -202,13 +202,14 @@ body,
   height: 56px;
   padding: 0 20px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--input-border);
-  background-color: var(--input-bg);
+  border: 1.5px solid var(--input-border);
+  background-color: #ffffff;
   font-size: 16px;
   font-weight: 500;
   color: var(--text-dark);
   outline: none;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(88, 60, 245, 0.02);
 }
 
 .custom-input::placeholder {
@@ -218,6 +219,7 @@ body,
 .custom-input:focus {
   border-color: var(--primary-purple);
   background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(88, 60, 245, 0.12);
 }
 
 /* Primary Button */
