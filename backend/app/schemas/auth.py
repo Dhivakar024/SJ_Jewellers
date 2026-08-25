@@ -57,45 +57,6 @@ class UserLoginRequest(BaseModel):
         return values
 
 
-class SendOtpRequest(BaseModel):
-    """Schema for requesting an OTP to a mobile number."""
-    mobile: str = Field(..., min_length=7, max_length=20, description="Mobile number")
-    purpose: str = Field("signup", description="Purpose: 'signup' or 'login' or 'forgot'")
-
-    @field_validator("mobile", mode="before")
-    @classmethod
-    def clean_mobile(cls, v: str) -> str:
-        if isinstance(v, str):
-            v = v.strip()
-            if not v:
-                raise ValueError("Mobile number cannot be empty")
-        return v
-
-
-class SendOtpResponse(BaseModel):
-    """Response returned when an OTP is sent."""
-    message: str = "OTP sent successfully"
-    mobile: str
-    otp_sent: bool = True
-    dev_otp: Optional[str] = None
-
-
-class VerifyOtpRequest(BaseModel):
-    """Schema for verifying OTP and creating/logging in user."""
-    mobile: str = Field(..., min_length=7, max_length=20, description="Mobile number")
-    otp: str = Field(..., min_length=4, max_length=10, description="OTP code")
-    name: Optional[str] = Field(None, description="Name for signup registration")
-    password: Optional[str] = Field(None, description="Password for account creation")
-    purpose: str = Field("signup", description="Purpose: 'signup' or 'login' or 'forgot'")
-
-    @field_validator("mobile", "otp", mode="before")
-    @classmethod
-    def strip_str(cls, v: str) -> str:
-        if isinstance(v, str):
-            return v.strip()
-        return v
-
-
 class UserResponse(BaseModel):
     """Safe user profile response (password/hash never returned)."""
     id: str = Field(..., description="Unique user identifier")

@@ -21,7 +21,7 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
           <div>
             <div style={{ fontSize: '15px', fontWeight: '500', opacity: 0.9 }}>Hello,</div>
             <div style={{ fontSize: '26px', fontWeight: '800', marginTop: '2px', letterSpacing: '-0.5px' }}>
-              {currentUser.name} !
+              {currentUser?.name || 'Customer'} !
             </div>
           </div>
 
@@ -48,8 +48,8 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
             </div>
             <div style={{ fontSize: '14px', fontWeight: '800', color: '#ffffff' }}>
               {metalTab === 'gold'
-                ? `Rs. ${goldRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm`
-                : `Rs. ${silverRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm`}
+                ? `Rs. ${(Number(goldRate) || 16263.65).toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm`
+                : `Rs. ${(Number(silverRate) || 267.00).toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm`}
             </div>
           </div>
         </div>
@@ -157,7 +157,7 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
                 </div>
                 <div style={{ fontSize: '13.5px', color: '#736d85', fontWeight: '700' }}>Gold</div>
                 <div style={{ fontSize: '22px', fontWeight: '900', color: '#1c1829', marginTop: '3px' }}>
-                  {holdings.goldGrams.toFixed(4)} gm
+                  {(Number(holdings?.goldGrams) || 0).toFixed(4)} gm
                 </div>
               </div>
             ) : (
@@ -175,7 +175,7 @@ export default function HomeScreen({ onNavigate, onTogglePlus }) {
                 </div>
                 <div style={{ fontSize: '13.5px', color: '#736d85', fontWeight: '700' }}>Silver</div>
                 <div style={{ fontSize: '22px', fontWeight: '900', color: '#1c1829', marginTop: '3px' }}>
-                  {holdings.silverGrams.toFixed(4)} gm
+                  {(Number(holdings?.silverGrams) || 0).toFixed(4)} gm
                 </div>
               </div>
             )}

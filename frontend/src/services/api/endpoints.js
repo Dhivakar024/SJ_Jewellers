@@ -6,8 +6,6 @@
 export const ENDPOINTS = {
   // Authentication
   AUTH: {
-    SEND_OTP: '/api/auth/send-otp',
-    VERIFY_OTP: '/api/auth/verify-otp',
     REGISTER: '/api/auth/register',
     LOGIN: '/api/auth/login',
     ME: '/api/auth/me',

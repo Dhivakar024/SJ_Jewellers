@@ -5,8 +5,8 @@ import { authService } from '../services/authService';
 
 export default function AdminLogin({ onLoginSuccess }) {
   const { setAdminAuth } = useApp() || {};
-  const [usernameOrEmail, setUsernameOrEmail] = useState('admin');
-  const [password, setPassword] = useState('admin123');
+  const [usernameOrEmail, setUsernameOrEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);

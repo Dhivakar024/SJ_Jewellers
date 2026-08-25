@@ -32,14 +32,9 @@ import './styles/app.css';
 
 // Helper to determine if current URL is an admin route
 function isAdminRoute() {
-  const path = (window.location.pathname || '').toLowerCase();
   const hash = (window.location.hash || '').toLowerCase();
-  const search = (window.location.search || '').toLowerCase();
-  const href = (window.location.href || '').toLowerCase();
-  return href.includes('admin') || 
-         path.includes('admin') || 
-         hash.includes('admin') || 
-         search.includes('admin');
+  const path = (window.location.pathname || '').toLowerCase();
+  return hash.startsWith('#admin') || hash.startsWith('#/admin') || path.startsWith('/admin');
 }
 
 // Helper to extract the active admin tab from URL
@@ -75,7 +70,7 @@ function MainContent() {
   const [adminTab, setAdminTab] = useState(() => getAdminTabFromUrl());
   const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
 
-  // Sync route on popstate / hashchange / pathname change
+  // Sync route on popstate / hashchange
   useEffect(() => {
     const handleUrlChange = () => {
       const isAdm = isAdminRoute();
@@ -108,7 +103,9 @@ function MainContent() {
         'profile', 'transactions', 'contact', 'withdraw', 'create-profile', 'edit-profile'
       ];
 
-      if (!currentUser.profileCompleted && hash !== 'create-profile' && hash !== 'contact') {
+      const isSkipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
+
+      if (!currentUser.profileCompleted && !isSkipped && hash !== 'create-profile' && hash !== 'contact') {
         setUserScreen('create-profile');
         window.location.hash = 'create-profile';
         return;
@@ -117,7 +114,7 @@ function MainContent() {
       if (validScreens.includes(hash)) {
         setUserScreen(hash);
       } else {
-        setUserScreen(currentUser.profileCompleted ? 'home' : 'create-profile');
+        setUserScreen((currentUser.profileCompleted || isSkipped) ? 'home' : 'create-profile');
       }
     };
 
@@ -129,7 +126,7 @@ function MainContent() {
     };
   }, [currentUser, isAuthLoading]);
 
-  // Auth & Profile Guard: Enforce Sign In on unauthenticated state or Create Profile on incomplete profile
+  // Auth & Profile Guard: Sync userScreen upon auth state change
   useEffect(() => {
     if (isAdminRoute() || isAuthLoading) return;
     if (!currentUser || !currentUser.isAuthenticated) {
@@ -138,14 +135,15 @@ function MainContent() {
         window.location.hash = 'signin';
       }
     } else {
-      if (!currentUser.profileCompleted && userScreen !== 'create-profile' && userScreen !== 'contact') {
+      const isSkipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
+      if (!currentUser.profileCompleted && !isSkipped && userScreen !== 'create-profile' && userScreen !== 'contact') {
         setUserScreen('create-profile');
         window.location.hash = 'create-profile';
       }
     }
   }, [currentUser, userScreen, isAuthLoading]);
 
-  const handleUserNavigate = (screen, force = false) => {
+  const handleUserNavigate = (screen) => {
     // If not authenticated, only allow auth screens
     if (!currentUser || !currentUser.isAuthenticated) {
       if (screen === 'signup' || screen === 'signin') {
@@ -159,12 +157,9 @@ function MainContent() {
       return;
     }
 
-    // If authenticated but profile is not completed (and not forced by immediate profile completion submit)
-    if (!currentUser.profileCompleted && !force && screen !== 'create-profile' && screen !== 'contact') {
-      setUserScreen('create-profile');
-      window.location.hash = 'create-profile';
-      setIsActionSheetOpen(false);
-      return;
+    // When skipping or navigating to home with incomplete profile, mark session as skipped
+    if (screen === 'home' && !currentUser.profileCompleted) {
+      sessionStorage.setItem('sj_session_skipped_profile', 'true');
     }
 
     setUserScreen(screen);
@@ -212,6 +207,25 @@ function MainContent() {
   // ==========================================
   // 2. CUSTOMER MOBILE APP (MOBILE CONTAINER)
   // ==========================================
+  if (isAuthLoading) {
+    return (
+      <div className="app-root-container">
+        <MobileContainer>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%', minHeight: '400px' }}>
+            <div style={{
+              width: '38px',
+              height: '38px',
+              border: '3.5px solid #e0d8fa',
+              borderTopColor: 'var(--primary-purple)',
+              borderRadius: '50%',
+              animation: 'spin 0.8s linear infinite'
+            }} />
+          </div>
+        </MobileContainer>
+      </div>
+    );
+  }
+
   return (
     <div className="app-root-container">
       <MobileContainer>

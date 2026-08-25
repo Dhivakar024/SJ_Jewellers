@@ -14,37 +14,6 @@ export const ADMIN_DEMO_CREDENTIALS = {
 };
 
 export const authService = {
-  /**
-   * Send OTP to customer mobile number for signup or login
-   */
-  sendOtp: async ({ mobile, purpose = 'signup' }) => {
-    const payload = {
-      mobile: mobile?.trim(),
-      purpose,
-    };
-    return apiClient.post(ENDPOINTS.AUTH.SEND_OTP, payload, { requiresAuth: false });
-  },
-
-  /**
-   * Verify OTP and obtain authenticated JWT session / register new user
-   */
-  verifyOtp: async ({ mobile, otp, name, password, purpose = 'signup' }) => {
-    const payload = {
-      mobile: mobile?.trim(),
-      otp: otp?.trim(),
-      name: name?.trim(),
-      password: password?.trim(),
-      purpose,
-    };
-    const response = await apiClient.post(ENDPOINTS.AUTH.VERIFY_OTP, payload, { requiresAuth: false });
-    if (response?.data?.access_token) {
-      setAuthToken(response.data.access_token);
-      if (response.data.user) {
-        setStoredUser(response.data.user);
-      }
-    }
-    return response;
-  },
 
   /**
    * Register a new customer account
@@ -199,7 +168,7 @@ export const authService = {
   getStoredAdminSession: () => {
     try {
       if (localStorage.getItem('sj_admin_logged_out') === 'true') {
-        return { isAuthenticated: false, email: '' };
+        return { isAuthenticated: false, username: '', email: '', role: null };
       }
       const saved = localStorage.getItem('sj_admin_session') || sessionStorage.getItem('sj_admin_session');
       if (saved) {
@@ -210,11 +179,10 @@ export const authService = {
       // ignore
     }
     return {
-      isAuthenticated: true,
-      username: 'admin',
-      email: 'admin@sjjewelers.com',
-      role: 'SUPER_ADMIN',
-      loginTime: new Date().toISOString(),
+      isAuthenticated: false,
+      username: '',
+      email: '',
+      role: null,
     };
   },
 

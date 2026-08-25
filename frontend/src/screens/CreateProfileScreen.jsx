@@ -107,12 +107,8 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
   };
 
   const handleSkip = () => {
-    if (!currentUser.profileCompleted) {
-      sessionStorage.setItem('sj_session_skipped_profile', 'true');
-      onNavigate('home');
-      return;
-    }
-    onNavigate('profile');
+    sessionStorage.setItem('sj_session_skipped_profile', 'true');
+    onNavigate('home');
   };
 
   const handleHeaderBack = () => {
