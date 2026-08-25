@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authService, profileService, ratesService, holdingsService, transactionService, notificationService, adminService } from '../services';
-import { getAuthToken, getStoredUser, clearAllAuth } from '../utils/authStorage';
+import { getAuthToken, getStoredUser, setStoredUser, clearStoredUser, clearAllAuth } from '../utils/authStorage';
 
 const AppContext = createContext();
 
@@ -660,13 +660,14 @@ export function AppProvider({ children }) {
             nomineeDob: profileObj?.nominee_dob || '',
             nomineeAddress: profileObj?.nominee_address || '',
             relationship: profileObj?.relationship || '',
-            goldGrams: holdings.goldGrams || 0,
-            silverGrams: holdings.silverGrams || 0,
+            goldGrams: holdings?.goldGrams || 0,
+            silverGrams: holdings?.silverGrams || 0,
             status: uData.account_status === 'active' ? 'Active' : uData.account_status,
             createdAt: uData.created_at ? uData.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
           };
 
           setCurrentUser(restoredUser);
+          setStoredUser(restoredUser);
         }
       } catch {
         if (isMounted) {
