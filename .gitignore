@@ -39,3 +39,13 @@ Thumbs.db
 
 # Vercel
 .vercel
+
+# Python virtual environment & cache
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+backend-python-backup/venv/
+backend/venv/
