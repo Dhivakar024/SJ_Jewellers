@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Calendar, ChevronDown, ArrowLeft } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { profileService } from '../services';
-import { cleanIndianMobileDigits, formatToE164, isValidIndianMobile } from '../utils/phoneUtils';
+import { cleanIndianMobileDigits, formatToE164, isValidIndianMobile, isValidFullName } from '../utils/phoneUtils';
 
 export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
   const { currentUser, completeUserProfile } = useApp();
@@ -127,12 +127,10 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
   const validateForm = () => {
     const newErrors = {};
 
-    // 1. Name Validation (min 2 chars)
+    // 1. Name Validation (alphabetic name validation, reject numbers-only, special-chars-only)
     const nameClean = (formData.name || '').trim();
-    if (!nameClean) {
-      newErrors.name = 'Full name is required';
-    } else if (nameClean.length < 2) {
-      newErrors.name = 'Full name must be at least 2 characters';
+    if (!nameClean || !isValidFullName(nameClean)) {
+      newErrors.name = 'Please enter a valid name';
     }
 
     // 2. Email Validation (optional, but validated if present)
@@ -141,11 +139,9 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
       newErrors.email = 'Enter a valid email address';
     }
 
-    // 3. User Mobile Validation (10 digits)
+    // 3. User Mobile Validation (10 digits, valid Indian mobile)
     const mobileClean = cleanIndianMobileDigits(formData.mobile);
-    if (!mobileClean) {
-      newErrors.mobile = 'Mobile number is required';
-    } else if (mobileClean.length !== 10 || !isValidIndianMobile(mobileClean)) {
+    if (!mobileClean || mobileClean.length !== 10 || !isValidIndianMobile(mobileClean)) {
       newErrors.mobile = 'Enter a valid 10-digit mobile number';
     }
 
@@ -178,7 +174,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
     if (!accountClean) {
       newErrors.accountNumber = 'Bank account number is required';
     } else if (accountClean.length < 9 || accountClean.length > 18) {
-      newErrors.accountNumber = 'Enter a valid account number (9-18 digits)';
+      newErrors.accountNumber = 'Enter a valid account number (9 to 18 digits)';
     }
 
     // 8. Bank IFSC Code (11-char alphanumeric: 4 letters, 0, 6 characters)
@@ -189,20 +185,16 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
       newErrors.ifsc = 'Enter valid 11-character IFSC (e.g. SBIN0001234)';
     }
 
-    // 9. Nominee Name
+    // 9. Nominee Name (alphabetic name validation, reject numbers-only, special-chars-only)
     const nomineeNameClean = (formData.nomineeName || '').trim();
-    if (!nomineeNameClean) {
-      newErrors.nomineeName = 'Nominee name is required';
-    } else if (nomineeNameClean.length < 2) {
-      newErrors.nomineeName = 'Nominee name must be at least 2 characters';
+    if (!nomineeNameClean || !isValidFullName(nomineeNameClean)) {
+      newErrors.nomineeName = 'Please enter a valid name';
     }
 
-    // 10. Nominee Mobile (10 digits)
+    // 10. Nominee Mobile (10 digits, valid Indian mobile)
     const nomineeMobileClean = cleanIndianMobileDigits(formData.nomineeMobile);
-    if (!nomineeMobileClean) {
-      newErrors.nomineeMobile = 'Nominee mobile number is required';
-    } else if (nomineeMobileClean.length !== 10 || !isValidIndianMobile(nomineeMobileClean)) {
-      newErrors.nomineeMobile = 'Enter a valid 10-digit nominee mobile';
+    if (!nomineeMobileClean || nomineeMobileClean.length !== 10 || !isValidIndianMobile(nomineeMobileClean)) {
+      newErrors.nomineeMobile = 'Enter a valid 10-digit mobile number';
     }
 
     // 11. Nominee DOB (DD/MM/YYYY)
@@ -415,20 +407,17 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
               <div className="profile-label-col">Mobile No.</div>
               <div className="profile-colon-col">:</div>
               <div className="profile-input-col">
-                <div className="profile-phone-wrapper">
-                  <div className="profile-phone-prefix">+91</div>
-                  <input
-                    type="tel"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    maxLength={10}
-                    placeholder="Enter 10 digits"
-                    value={cleanIndianMobileDigits(formData.mobile)}
-                    onChange={(e) => handleChange('mobile', cleanIndianMobileDigits(e.target.value))}
-                    className="profile-phone-input"
-                    disabled={isSubmitting}
-                  />
-                </div>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={10}
+                  placeholder="Enter 10-digit Mobile Number"
+                  value={cleanIndianMobileDigits(formData.mobile)}
+                  onChange={(e) => handleChange('mobile', cleanIndianMobileDigits(e.target.value))}
+                  className="profile-custom-input"
+                  disabled={isSubmitting}
+                />
                 {errors.mobile && <div className="profile-field-error">{errors.mobile}</div>}
               </div>
             </div>
@@ -575,20 +564,17 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
               <div className="profile-label-col">Mobile No.</div>
               <div className="profile-colon-col">:</div>
               <div className="profile-input-col">
-                <div className="profile-phone-wrapper">
-                  <div className="profile-phone-prefix">+91</div>
-                  <input
-                    type="tel"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    maxLength={10}
-                    placeholder="Enter 10 digits"
-                    value={cleanIndianMobileDigits(formData.nomineeMobile)}
-                    onChange={(e) => handleChange('nomineeMobile', cleanIndianMobileDigits(e.target.value))}
-                    className="profile-phone-input"
-                    disabled={isSubmitting}
-                  />
-                </div>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={10}
+                  placeholder="Enter 10-digit Mobile Number"
+                  value={cleanIndianMobileDigits(formData.nomineeMobile)}
+                  onChange={(e) => handleChange('nomineeMobile', cleanIndianMobileDigits(e.target.value))}
+                  className="profile-custom-input"
+                  disabled={isSubmitting}
+                />
                 {errors.nomineeMobile && <div className="profile-field-error">{errors.nomineeMobile}</div>}
               </div>
             </div>

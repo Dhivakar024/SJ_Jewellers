@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, Eye, EyeOff, Phone, RefreshCw } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { CUSTOMER_SUPPORT_PHONE, getTelephoneLink } from '../config/support';
-import { cleanIndianMobileDigits, formatToE164, isValidIndianMobile } from '../utils/phoneUtils';
+import { cleanIndianMobileDigits, formatToE164, isValidIndianMobile, isValidFullName } from '../utils/phoneUtils';
 import { authService } from '../services';
 
 export default function SignUpScreen({ onNavigate }) {
@@ -20,6 +20,7 @@ export default function SignUpScreen({ onNavigate }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
+  const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -27,21 +28,25 @@ export default function SignUpScreen({ onNavigate }) {
   const handleMobileChange = (e) => {
     const cleaned = cleanIndianMobileDigits(e.target.value);
     setMobileDigits(cleaned);
+    if (errors.mobile) setErrors((prev) => ({ ...prev, mobile: '' }));
     setErrorMessage('');
   };
 
   const handleOtpChange = (e) => {
     const val = e.target.value.replace(/\D/g, '').slice(0, 6);
     setOtp(val);
+    if (errors.otp) setErrors((prev) => ({ ...prev, otp: '' }));
     setErrorMessage('');
   };
 
   const handleBack = () => {
     if (step === 'details') {
       setStep('otp');
+      setErrors({});
       setErrorMessage('');
     } else if (step === 'otp') {
       setStep('mobile');
+      setErrors({});
       setErrorMessage('');
       setSuccessMessage('');
     } else {
@@ -56,25 +61,26 @@ export default function SignUpScreen({ onNavigate }) {
     setErrorMessage('');
     setSuccessMessage('');
 
+    const newErrors = {};
     const uName = name.trim();
-    if (!uName || uName.length < 2) {
-      setErrorMessage('Please enter your Full Name (minimum 2 characters).');
-      return;
+    if (!uName || !isValidFullName(uName)) {
+      newErrors.name = 'Please enter a valid name';
     }
 
-    if (!mobileDigits) {
-      setErrorMessage('Mobile number is required.');
-      return;
+    const cleanMobile = cleanIndianMobileDigits(mobileDigits);
+    if (!cleanMobile || cleanMobile.length !== 10 || !isValidIndianMobile(cleanMobile)) {
+      newErrors.mobile = 'Enter a valid 10-digit mobile number';
     }
 
-    if (mobileDigits.length !== 10 || !isValidIndianMobile(mobileDigits)) {
-      setErrorMessage('Please enter a valid 10-digit mobile number.');
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+    setErrors({});
 
     setIsLoading(true);
     try {
-      const formattedMobile = formatToE164(mobileDigits);
+      const formattedMobile = formatToE164(cleanMobile);
       await authService.sendOtp({ mobile: formattedMobile });
       setSuccessMessage('OTP has been sent to your mobile number.');
       setStep('otp');
@@ -93,14 +99,15 @@ export default function SignUpScreen({ onNavigate }) {
 
     const cleanOtp = otp.trim();
     if (!cleanOtp) {
-      setErrorMessage('Please enter the OTP.');
+      setErrors({ otp: 'Please enter the OTP' });
       return;
     }
 
     if (cleanOtp.length < 4) {
-      setErrorMessage('Please enter the complete OTP.');
+      setErrors({ otp: 'Please enter the complete OTP' });
       return;
     }
+    setErrors({});
 
     setIsLoading(true);
     try {
@@ -121,36 +128,38 @@ export default function SignUpScreen({ onNavigate }) {
     if (isLoading) return;
     setErrorMessage('');
 
-    const uName = name.trim();
+    const newErrors = {};
     const uEmail = email.trim();
     const uPass = password.trim();
     const uConfirmPass = confirmPassword.trim();
 
     if (uEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(uEmail)) {
-      setErrorMessage('Please enter a valid Email Address.');
-      return;
+      newErrors.email = 'Enter a valid email address';
     }
 
     if (!uPass) {
-      setErrorMessage('Please enter a password.');
-      return;
+      newErrors.password = 'Please enter a password';
+    } else if (uPass.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters long';
     }
 
-    if (uPass.length < 8) {
-      setErrorMessage('Password must be at least 8 characters long.');
-      return;
+    if (!uConfirmPass) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (uPass !== uConfirmPass) {
+      newErrors.confirmPassword = 'Passwords do not match';
     }
 
-    if (uPass !== uConfirmPass) {
-      setErrorMessage('Passwords do not match. Please re-enter.');
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+    setErrors({});
 
     setIsLoading(true);
     try {
       const formattedMobile = formatToE164(mobileDigits);
       await registerUser({
-        name: uName,
+        name: name.trim(),
         mobile: formattedMobile,
         email: uEmail || null,
         password: uPass,
@@ -167,16 +176,16 @@ export default function SignUpScreen({ onNavigate }) {
 
   return (
     <div className="auth-screen" style={{ padding: '16px 20px 24px 20px' }}>
-      {/* Back Button */}
-      <button className="back-btn" onClick={handleBack} aria-label="Back" style={{ marginBottom: '12px' }}>
-        <ArrowLeft size={22} />
-      </button>
-
-      {/* Heading positioned below Back Button with consistent alignment */}
-      <div style={{ marginBottom: '16px', textAlign: 'left' }}>
-        <h1 style={{ fontSize: '23px', fontWeight: '800', color: 'var(--text-dark)', lineHeight: '1.25', margin: 0 }}>
-          Welcome ! Create your<br />new account now.
-        </h1>
+      {/* Header with Back Button on top-left and Heading directly to its right */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', marginBottom: '18px', marginTop: '2px' }}>
+        <button className="back-btn" onClick={handleBack} aria-label="Back" style={{ flexShrink: 0, marginTop: '2px' }}>
+          <ArrowLeft size={22} />
+        </button>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h1 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-dark)', lineHeight: '1.25', margin: 0 }}>
+            Welcome ! Create your<br />new account now.
+          </h1>
+        </div>
       </div>
 
       {/* Messages */}
@@ -230,11 +239,13 @@ export default function SignUpScreen({ onNavigate }) {
               value={name}
               onChange={(e) => {
                 setName(e.target.value);
+                if (errors.name) setErrors((prev) => ({ ...prev, name: '' }));
                 setErrorMessage('');
               }}
               disabled={isLoading}
               autoComplete="name"
             />
+            {errors.name && <div className="field-error-text" style={{ color: '#ef4444', fontSize: '12px', fontWeight: '700', marginTop: '4px' }}>{errors.name}</div>}
           </div>
 
           <div className="input-group">
@@ -251,6 +262,7 @@ export default function SignUpScreen({ onNavigate }) {
               disabled={isLoading}
               autoComplete="off"
             />
+            {errors.mobile && <div className="field-error-text" style={{ color: '#ef4444', fontSize: '12px', fontWeight: '700', marginTop: '4px' }}>{errors.mobile}</div>}
           </div>
 
           <button
@@ -316,6 +328,7 @@ export default function SignUpScreen({ onNavigate }) {
               autoComplete="one-time-code"
               style={{ textAlign: 'center', letterSpacing: '4px', fontSize: '18px', fontWeight: '700' }}
             />
+            {errors.otp && <div className="field-error-text" style={{ color: '#ef4444', fontSize: '12px', fontWeight: '700', marginTop: '4px', textAlign: 'center' }}>{errors.otp}</div>}
           </div>
 
           <button
@@ -365,11 +378,13 @@ export default function SignUpScreen({ onNavigate }) {
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
+                if (errors.email) setErrors((prev) => ({ ...prev, email: '' }));
                 setErrorMessage('');
               }}
               disabled={isLoading}
               autoComplete="email"
             />
+            {errors.email && <div className="field-error-text" style={{ color: '#ef4444', fontSize: '12px', fontWeight: '700', marginTop: '4px' }}>{errors.email}</div>}
           </div>
 
           <div className="input-group">
@@ -382,6 +397,7 @@ export default function SignUpScreen({ onNavigate }) {
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
+                  if (errors.password) setErrors((prev) => ({ ...prev, password: '' }));
                   setErrorMessage('');
                 }}
                 disabled={isLoading}
@@ -410,6 +426,7 @@ export default function SignUpScreen({ onNavigate }) {
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
+            {errors.password && <div className="field-error-text" style={{ color: '#ef4444', fontSize: '12px', fontWeight: '700', marginTop: '4px' }}>{errors.password}</div>}
           </div>
 
           <div className="input-group">
@@ -422,6 +439,7 @@ export default function SignUpScreen({ onNavigate }) {
                 value={confirmPassword}
                 onChange={(e) => {
                   setConfirmPassword(e.target.value);
+                  if (errors.confirmPassword) setErrors((prev) => ({ ...prev, confirmPassword: '' }));
                   setErrorMessage('');
                 }}
                 disabled={isLoading}
@@ -450,6 +468,7 @@ export default function SignUpScreen({ onNavigate }) {
                 {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
+            {errors.confirmPassword && <div className="field-error-text" style={{ color: '#ef4444', fontSize: '12px', fontWeight: '700', marginTop: '4px' }}>{errors.confirmPassword}</div>}
           </div>
 
           <button type="submit" className="btn-primary" style={{ marginTop: '4px' }} disabled={isLoading}>

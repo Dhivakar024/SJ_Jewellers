@@ -49,3 +49,25 @@ export const isValidIndianMobile = (digits) => {
   const clean = cleanIndianMobileDigits(digits);
   return /^[6-9]\d{9}$/.test(clean);
 };
+
+/**
+ * Validates a person's full name:
+ * - Must be a non-empty string.
+ * - Must contain only alphabetic characters, spaces, periods, hyphens, and apostrophes.
+ * - Numbers-only or special-character-only strings are strictly rejected.
+ * - Must contain at least 2 alphabetic letters.
+ *
+ * @param {string} name
+ * @returns {boolean}
+ */
+export const isValidFullName = (name) => {
+  if (!name || typeof name !== 'string') return false;
+  const trimmed = name.trim();
+  if (trimmed.length < 2 || trimmed.length > 70) return false;
+  // Must only contain letters, spaces, dots, hyphens, and apostrophes
+  if (!/^[a-zA-Z\s.'-]+$/.test(trimmed)) return false;
+  // Must contain at least 2 letters
+  const letters = (trimmed.match(/[a-zA-Z]/g) || []).length;
+  return letters >= 2;
+};
+
