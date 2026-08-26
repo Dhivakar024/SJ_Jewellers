@@ -81,22 +81,34 @@ export default function AdminWithdrawal() {
       </div>
 
       {/* 3. Summary Box Card */}
-      <div className="admin-card">
-        <div style={{ fontSize: '13.5px', color: 'var(--admin-text-secondary)', fontWeight: '600' }}>
-          Total Withdrawal Amount
-        </div>
+      <div className="admin-card" style={{ padding: '20px 24px', textAlign: 'left' }}>
         <div style={{
-          fontSize: '28px',
+          fontSize: '16px',
+          color: 'var(--admin-text-heading)',
           fontWeight: '800',
-          letterSpacing: '-0.3px',
-          margin: '6px 0 3px 0',
-          color: '#ef4444',
+          letterSpacing: '-0.2px',
           whiteSpace: 'nowrap',
           lineHeight: '1.2'
         }}>
+          Total Withdrawal Amount
+        </div>
+        <div style={{
+          fontSize: '34px',
+          fontWeight: '800',
+          letterSpacing: '-0.5px',
+          margin: '8px 0 6px 0',
+          color: '#ef4444',
+          whiteSpace: 'nowrap',
+          lineHeight: '1.15'
+        }}>
           ₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
-        <div style={{ fontSize: '12.5px', color: 'var(--admin-text-muted)' }}>
+        <div style={{
+          fontSize: '14px',
+          color: 'var(--admin-text-value)',
+          fontWeight: '700',
+          lineHeight: '1.2'
+        }}>
           {filterMetal === 'All' ? 'All metals' : `${filterMetal} only`} · {filteredWithdrawals.length} withdrawal(s)
         </div>
       </div>
