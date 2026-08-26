@@ -143,7 +143,9 @@ function MainContent() {
     }
   }, [currentUser, userScreen, isAuthLoading]);
 
-  const handleUserNavigate = (screen) => {
+  const [navSource, setNavSource] = useState({});
+
+  const handleUserNavigate = (screen, options = {}) => {
     // If not authenticated, only allow auth screens
     if (!currentUser || !currentUser.isAuthenticated) {
       if (screen === 'signup' || screen === 'signin') {
@@ -160,6 +162,11 @@ function MainContent() {
     // When skipping or navigating to home with incomplete profile, mark session as skipped
     if (screen === 'home' && !currentUser.profileCompleted) {
       sessionStorage.setItem('sj_session_skipped_profile', 'true');
+    }
+
+    // Track navigation source if provided (e.g. { from: 'buy' } or { from: 'profile' })
+    if (options && options.from) {
+      setNavSource((prev) => ({ ...prev, [screen]: options.from }));
     }
 
     setUserScreen(screen);
@@ -239,9 +246,15 @@ function MainContent() {
         {userScreen === 'buy-silver' && (
           <BuyNowScreen assetType="silver" onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />
         )}
-        {userScreen === 'withdraw' && <WithdrawScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
-        {userScreen === 'transactions' && <TransactionHistoryScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
-        {userScreen === 'contact' && <ContactUsScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
+        {userScreen === 'withdraw' && (
+          <WithdrawScreen fromScreen={navSource['withdraw'] || 'home'} onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />
+        )}
+        {userScreen === 'transactions' && (
+          <TransactionHistoryScreen fromScreen={navSource['transactions'] || 'home'} onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />
+        )}
+        {userScreen === 'contact' && (
+          <ContactUsScreen fromScreen={navSource['contact'] || 'profile'} onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />
+        )}
         {userScreen === 'holdings' && <HoldingsScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
         {userScreen === 'profile' && <ProfileScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
         {userScreen === 'create-profile' && <CreateProfileScreen mode="create" onNavigate={handleUserNavigate} />}

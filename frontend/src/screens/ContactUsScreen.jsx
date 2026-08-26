@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Phone, Mail, MapPin, Send, CheckCircle2 } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
+import { CUSTOMER_SUPPORT_PHONE, CUSTOMER_SUPPORT_EMAIL, getTelephoneLink } from '../config/support';
 
-export default function ContactUsScreen({ onNavigate, onTogglePlus }) {
+export default function ContactUsScreen({ onNavigate, fromScreen = 'profile', onTogglePlus }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -28,7 +29,7 @@ export default function ContactUsScreen({ onNavigate, onTogglePlus }) {
     <div className="app-screen-layout">
       {/* 1. Fixed Top Header */}
       <header className="top-header-bar">
-        <button className="back-btn" onClick={() => onNavigate('home')} aria-label="Back">
+        <button className="back-btn" onClick={() => onNavigate(fromScreen || 'profile')} aria-label="Back">
           <ArrowLeft size={22} />
         </button>
         <h2>Contact Us</h2>
@@ -50,15 +51,37 @@ export default function ContactUsScreen({ onNavigate, onTogglePlus }) {
             SJ Jewelers Customer Support
           </h3>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#33295c', fontWeight: '600' }}>
+          <a
+            href={getTelephoneLink(CUSTOMER_SUPPORT_PHONE)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              fontSize: '14px',
+              color: '#33295c',
+              fontWeight: '600',
+              textDecoration: 'none'
+            }}
+          >
             <Phone size={18} color="var(--primary-purple)" />
-            <span>+91 94562-84829</span>
-          </div>
+            <span style={{ color: 'var(--primary-purple)', fontWeight: '700' }}>{CUSTOMER_SUPPORT_PHONE}</span>
+          </a>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#33295c', fontWeight: '600' }}>
+          <a
+            href={`mailto:${CUSTOMER_SUPPORT_EMAIL}`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              fontSize: '14px',
+              color: '#33295c',
+              fontWeight: '600',
+              textDecoration: 'none'
+            }}
+          >
             <Mail size={18} color="var(--primary-purple)" />
-            <span>goldhouse@gmail.com</span>
-          </div>
+            <span style={{ color: 'var(--primary-purple)', fontWeight: '700' }}>{CUSTOMER_SUPPORT_EMAIL}</span>
+          </a>
 
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', fontSize: '14px', color: '#33295c', fontWeight: '600' }}>
             <MapPin size={18} color="var(--primary-purple)" style={{ flexShrink: 0, marginTop: '2px' }} />

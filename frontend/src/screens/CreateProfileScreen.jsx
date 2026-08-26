@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Calendar, ChevronDown, ArrowLeft } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { profileService } from '../services';
+import { cleanIndianMobileDigits, formatToE164, isValidIndianMobile } from '../utils/phoneUtils';
 
 export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
   const { currentUser, completeUserProfile } = useApp();
@@ -123,79 +124,144 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
     e.preventDefault();
     setErrorMessage('');
 
-    const requiredFields = [
-      { key: 'name', label: 'Name' },
-      { key: 'mobile', label: 'Mobile No.' },
-      { key: 'address', label: 'Address' },
-      { key: 'pan', label: 'PAN Card' },
-      { key: 'aadhar', label: 'Aadhaar Card' },
-      { key: 'accountNumber', label: 'Account Number' },
-      { key: 'ifsc', label: 'IFSC Number' },
-      { key: 'nomineeName', label: 'Nominee Name' },
-      { key: 'nomineeMobile', label: 'Nominee Mobile No.' },
-      { key: 'nomineeDob', label: 'Nominee DOB' },
-      { key: 'nomineeAddress', label: 'Nominee Address' },
-      { key: 'relationship', label: 'Relationship' },
-    ];
-
-    const missingFields = requiredFields.filter((f) => !formData[f.key] || !formData[f.key].trim());
-
-    if (missingFields.length > 0) {
-      setErrorMessage(
-        `Please fill all required fields (${missingFields
-          .map((f) => f.label)
-          .slice(0, 3)
-          .join(', ')}${missingFields.length > 3 ? '...' : ''}).`
-      );
+    // 1. Name Validation
+    const nameClean = (formData.name || '').trim();
+    if (!nameClean || nameClean.length < 2) {
+      setErrorMessage('Please enter your full name (minimum 2 characters).');
       return;
     }
 
-    if (formData.relationship === 'Other' && (!formData.relationshipDetails || !formData.relationshipDetails.trim())) {
-      setErrorMessage('Please enter your Relationship Details.');
+    // 2. Email Validation (Optional format check)
+    const emailClean = (formData.email || '').trim();
+    if (emailClean && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailClean)) {
+      setErrorMessage('Please enter a valid Email Address.');
+      return;
+    }
+
+    // 3. User Mobile Validation (10 digits)
+    const mobileClean = cleanIndianMobileDigits(formData.mobile);
+    if (!mobileClean || mobileClean.length !== 10 || !isValidIndianMobile(mobileClean)) {
+      setErrorMessage('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+
+    // 4. Address Validation
+    const addressClean = (formData.address || '').trim();
+    if (!addressClean || addressClean.length < 5) {
+      setErrorMessage('Please enter your full address (minimum 5 characters).');
+      return;
+    }
+
+    // 5. PAN Card Validation (10-char alphanumeric: 5 letters, 4 digits, 1 letter)
+    const panClean = (formData.pan || '').trim().toUpperCase();
+    if (!panClean || !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panClean)) {
+      setErrorMessage('Please enter a valid 10-character PAN number (e.g. ABCDE1234F).');
+      return;
+    }
+
+    // 6. Aadhaar Card Validation (12 digits)
+    const aadharClean = (formData.aadhar || '').replace(/\D/g, '');
+    if (!aadharClean || aadharClean.length !== 12) {
+      setErrorMessage('Please enter a valid 12-digit Aadhaar number.');
+      return;
+    }
+
+    // 7. Bank Account Number (9 to 18 digits)
+    const accountClean = (formData.accountNumber || '').replace(/\D/g, '');
+    if (!accountClean || accountClean.length < 9 || accountClean.length > 18) {
+      setErrorMessage('Please enter a valid bank account number (9 to 18 digits).');
+      return;
+    }
+
+    // 8. Bank IFSC Code (11-char alphanumeric: 4 letters, 0, 6 characters)
+    const ifscClean = (formData.ifsc || '').trim().toUpperCase();
+    if (!ifscClean || !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifscClean)) {
+      setErrorMessage('Please enter a valid 11-character IFSC code (e.g. SBIN0001234).');
+      return;
+    }
+
+    // 9. Nominee Name
+    const nomineeNameClean = (formData.nomineeName || '').trim();
+    if (!nomineeNameClean || nomineeNameClean.length < 2) {
+      setErrorMessage('Please enter the nominee name (minimum 2 characters).');
+      return;
+    }
+
+    // 10. Nominee Mobile (10 digits)
+    const nomineeMobileClean = cleanIndianMobileDigits(formData.nomineeMobile);
+    if (!nomineeMobileClean || nomineeMobileClean.length !== 10 || !isValidIndianMobile(nomineeMobileClean)) {
+      setErrorMessage('Please enter a valid 10-digit nominee mobile number.');
+      return;
+    }
+
+    // 11. Nominee DOB (DD/MM/YYYY)
+    const nomineeDobClean = (formData.nomineeDob || '').trim();
+    if (!nomineeDobClean) {
+      setErrorMessage('Please select the nominee date of birth.');
+      return;
+    }
+
+    // 12. Nominee Address
+    const nomineeAddressClean = (formData.nomineeAddress || '').trim();
+    if (!nomineeAddressClean || nomineeAddressClean.length < 5) {
+      setErrorMessage('Please enter the nominee address (minimum 5 characters).');
+      return;
+    }
+
+    // 13. Relationship
+    const relClean = (formData.relationship || '').trim();
+    if (!relClean) {
+      setErrorMessage('Please select your relationship with the nominee.');
+      return;
+    }
+
+    const relDetailsClean = (formData.relationshipDetails || '').trim();
+    if (relClean === 'Other' && (!relDetailsClean || relDetailsClean.length < 2)) {
+      setErrorMessage('Please specify your relationship details.');
       return;
     }
 
     // Build backend update payload
     const payload = {
-      full_name: formData.name.trim(),
+      full_name: nameClean,
       address: {
-        address_line: formData.address.trim(),
+        address_line: addressClean,
         city: 'Salem',
         state: 'Tamil Nadu',
         pincode: '636001',
       },
-      pan: formData.pan.trim(),
-      aadhar: formData.aadhar.trim(),
-      account_number: formData.accountNumber.trim(),
-      ifsc: formData.ifsc.trim(),
-      nominee_name: formData.nomineeName.trim(),
-      nominee_mobile: formData.nomineeMobile.trim(),
-      nominee_dob: formData.nomineeDob.trim(),
-      nominee_address: formData.nomineeAddress.trim(),
-      relationship: formData.relationship.trim().toLowerCase(),
-      relationship_other: formData.relationship === 'Other' ? formData.relationshipDetails.trim() : null,
+      pan: panClean,
+      aadhar: aadharClean,
+      account_number: accountClean,
+      ifsc: ifscClean,
+      nominee_name: nomineeNameClean,
+      nominee_mobile: formatToE164(nomineeMobileClean),
+      nominee_dob: nomineeDobClean,
+      nominee_address: nomineeAddressClean,
+      relationship: relClean.toLowerCase(),
+      relationship_other: relClean === 'Other' ? relDetailsClean : null,
     };
 
     setIsSubmitting(true);
     try {
       // Save directly to MongoDB via Profile PATCH API
-      const res = await profileService.updateProfile(payload);
+      await profileService.updateProfile(payload);
       
       const updatedUserObj = {
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        mobile: formData.mobile.trim(),
-        address: formData.address.trim(),
-        pan: formData.pan.trim(),
-        aadhar: formData.aadhar.trim(),
-        accountNumber: formData.accountNumber.trim(),
-        ifsc: formData.ifsc.trim(),
-        nomineeName: formData.nomineeName.trim(),
-        nomineeMobile: formData.nomineeMobile.trim(),
-        nomineeDob: formData.nomineeDob.trim(),
-        nomineeAddress: formData.nomineeAddress.trim(),
-        relationship: formData.relationship,
-        relationshipDetails: formData.relationshipDetails,
+        name: nameClean,
+        email: emailClean,
+        mobile: formatToE164(mobileClean),
+        address: addressClean,
+        pan: panClean,
+        aadhar: aadharClean,
+        accountNumber: accountClean,
+        ifsc: ifscClean,
+        nomineeName: nomineeNameClean,
+        nomineeMobile: formatToE164(nomineeMobileClean),
+        nomineeDob: nomineeDobClean,
+        nomineeAddress: nomineeAddressClean,
+        relationship: relClean,
+        relationshipDetails: relClean === 'Other' ? relDetailsClean : '',
         profileCompleted: true,
         isAuthenticated: true,
       };
@@ -207,7 +273,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
         onNavigate('profile');
       } else {
         // Brand-new onboarding user: Navigate DIRECTLY to Home
-        onNavigate('home', true);
+        onNavigate('home');
       }
     } catch (err) {
       setErrorMessage(err.message || 'Failed to save profile. Please check your details and try again.');
@@ -307,14 +373,20 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
               <div className="profile-label-col">Mobile No.</div>
               <div className="profile-colon-col">:</div>
               <div className="profile-input-col">
-                <input
-                  type="tel"
-                  placeholder="Enter mobile number"
-                  value={formData.mobile}
-                  onChange={(e) => handleChange('mobile', e.target.value)}
-                  className="profile-custom-input"
-                  disabled={isSubmitting}
-                />
+                <div className="profile-phone-wrapper">
+                  <div className="profile-phone-prefix">+91</div>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={10}
+                    placeholder="Enter 10 digits"
+                    value={cleanIndianMobileDigits(formData.mobile)}
+                    onChange={(e) => handleChange('mobile', cleanIndianMobileDigits(e.target.value))}
+                    className="profile-phone-input"
+                    disabled={isSubmitting}
+                  />
+                </div>
               </div>
             </div>
 
@@ -348,10 +420,12 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
               <div className="profile-input-col">
                 <input
                   type="text"
-                  placeholder="Enter PAN number"
+                  maxLength={10}
+                  placeholder="e.g. ABCDE1234F"
                   value={formData.pan}
-                  onChange={(e) => handleChange('pan', e.target.value)}
+                  onChange={(e) => handleChange('pan', e.target.value.toUpperCase().slice(0, 10))}
                   className="profile-custom-input"
+                  style={{ textTransform: 'uppercase' }}
                   disabled={isSubmitting}
                 />
               </div>
@@ -363,10 +437,13 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
               <div className="profile-colon-col">:</div>
               <div className="profile-input-col">
                 <input
-                  type="text"
-                  placeholder="Enter Aadhaar number"
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={12}
+                  placeholder="12-digit Aadhaar"
                   value={formData.aadhar}
-                  onChange={(e) => handleChange('aadhar', e.target.value)}
+                  onChange={(e) => handleChange('aadhar', e.target.value.replace(/\D/g, '').slice(0, 12))}
                   className="profile-custom-input"
                   disabled={isSubmitting}
                 />
@@ -379,10 +456,13 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
               <div className="profile-colon-col">:</div>
               <div className="profile-input-col">
                 <input
-                  type="text"
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={18}
                   placeholder="Enter bank account no"
                   value={formData.accountNumber}
-                  onChange={(e) => handleChange('accountNumber', e.target.value)}
+                  onChange={(e) => handleChange('accountNumber', e.target.value.replace(/\D/g, '').slice(0, 18))}
                   className="profile-custom-input"
                   disabled={isSubmitting}
                 />
@@ -396,10 +476,12 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
               <div className="profile-input-col">
                 <input
                   type="text"
-                  placeholder="Enter bank IFSC code"
+                  maxLength={11}
+                  placeholder="e.g. SBIN0001234"
                   value={formData.ifsc}
-                  onChange={(e) => handleChange('ifsc', e.target.value)}
+                  onChange={(e) => handleChange('ifsc', e.target.value.toUpperCase().slice(0, 11))}
                   className="profile-custom-input"
+                  style={{ textTransform: 'uppercase' }}
                   disabled={isSubmitting}
                 />
               </div>
@@ -444,14 +526,20 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
               <div className="profile-label-col">Mobile No.</div>
               <div className="profile-colon-col">:</div>
               <div className="profile-input-col">
-                <input
-                  type="tel"
-                  placeholder="Enter nominee mobile"
-                  value={formData.nomineeMobile}
-                  onChange={(e) => handleChange('nomineeMobile', e.target.value)}
-                  className="profile-custom-input"
-                  disabled={isSubmitting}
-                />
+                <div className="profile-phone-wrapper">
+                  <div className="profile-phone-prefix">+91</div>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={10}
+                    placeholder="Enter 10 digits"
+                    value={cleanIndianMobileDigits(formData.nomineeMobile)}
+                    onChange={(e) => handleChange('nomineeMobile', cleanIndianMobileDigits(e.target.value))}
+                    className="profile-phone-input"
+                    disabled={isSubmitting}
+                  />
+                </div>
               </div>
             </div>
 

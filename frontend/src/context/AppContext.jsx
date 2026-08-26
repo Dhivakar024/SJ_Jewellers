@@ -442,6 +442,15 @@ export function AppProvider({ children }) {
     return localStorage.getItem('sj_admin_theme') || 'light';
   });
 
+  // Buy Now screen state preservation
+  const [buyNowState, setBuyNowState] = useState({
+    assetType: 'gold',
+    mode: 'rupees',
+    rupeesVal: '100',
+    gramsVal: '',
+    selectedQuickOption: '100',
+  });
+
   // Admin Settings
   const [adminSettings, setAdminSettings] = useState(() => {
     const saved = localStorage.getItem('sj_admin_settings');
@@ -1134,7 +1143,9 @@ export function AppProvider({ children }) {
         approveWithdrawal,
         verifyCustomer,
         deleteMember,
-        saveRates
+        saveRates,
+        buyNowState,
+        setBuyNowState
       }}
     >
       {children}

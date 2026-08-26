@@ -3,7 +3,7 @@ import { ArrowLeft, SlidersHorizontal, Smartphone, CreditCard, Building2, X, Rot
 import { useApp } from '../context/AppContext';
 import BottomNav from '../components/BottomNav';
 
-export default function TransactionHistoryScreen({ onNavigate, onTogglePlus }) {
+export default function TransactionHistoryScreen({ onNavigate, fromScreen = 'home', onTogglePlus }) {
   const { transactions, fetchTransactions, transactionsLoading } = useApp();
 
   useEffect(() => {
@@ -188,7 +188,7 @@ export default function TransactionHistoryScreen({ onNavigate, onTogglePlus }) {
         zIndex: 20
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button className="back-btn" onClick={() => onNavigate('home')} aria-label="Back">
+          <button className="back-btn" onClick={() => onNavigate(fromScreen || 'home')} aria-label="Back">
             <ArrowLeft size={22} />
           </button>
           <div>

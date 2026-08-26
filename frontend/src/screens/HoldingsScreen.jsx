@@ -67,16 +67,8 @@ export default function HoldingsScreen({ onNavigate, onTogglePlus }) {
   return (
     <div className="app-screen-layout">
       {/* 1. Fixed Top Header */}
-      <header className="top-header-bar" style={{ justifyContent: 'space-between' }}>
+      <header className="top-header-bar">
         <h2 style={{ fontSize: '26px', fontWeight: '800' }}>Holdings</h2>
-        <button
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-          aria-label="Refresh holdings"
-          style={{ backgroundColor: 'transparent', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-        >
-          <RotateCw size={24} style={{ transform: isRefreshing ? 'rotate(180deg)' : 'none', transition: 'transform 0.4s ease' }} />
-        </button>
       </header>
 
       {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}

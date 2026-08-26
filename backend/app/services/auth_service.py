@@ -61,13 +61,19 @@ def _normalize_mobile(raw_mobile: str) -> Tuple[str, list]:
     clean = (raw_mobile or "").strip()
     digits = "".join(filter(str.isdigit, clean))
     
-    # 10 digit Indian number
+    # Strip any redundant leading 91 or 0 prefixes while length > 10
+    while len(digits) > 10:
+        if digits.startswith("91"):
+            digits = digits[2:]
+        elif digits.startswith("0"):
+            digits = digits[1:]
+        else:
+            break
+
     if len(digits) == 10:
         clean = digits
-    elif len(digits) > 10 and digits.startswith("91") and len(digits) == 12:
-        clean = digits[2:]
 
-    variants = [clean, f"+91{clean}", f"91{clean}"]
+    variants = list(set([clean, f"+91{clean}", f"91{clean}", (raw_mobile or "").strip()]))
     return clean, variants
 
 

@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { ArrowLeft, Eye, EyeOff, Phone } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { CUSTOMER_SUPPORT_PHONE, getTelephoneLink } from '../config/support';
+import { cleanIndianMobileDigits, formatToE164, isValidIndianMobile } from '../utils/phoneUtils';
 
 export default function SignUpScreen({ onNavigate }) {
   const { registerUser } = useApp();
   const [name, setName] = useState('');
-  const [mobile, setMobile] = useState('');
+  const [mobileDigits, setMobileDigits] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -15,28 +16,38 @@ export default function SignUpScreen({ onNavigate }) {
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  const handleMobileChange = (e) => {
+    const cleaned = cleanIndianMobileDigits(e.target.value);
+    setMobileDigits(cleaned);
+    setErrorMessage('');
+  };
+
   const handleSignUp = async (e) => {
     e.preventDefault();
     setErrorMessage('');
 
     const uName = name.trim();
-    const uMobile = mobile.trim();
     const uEmail = email.trim();
     const uPass = password.trim();
     const uConfirmPass = confirmPassword.trim();
 
-    if (!uName) {
-      setErrorMessage('Please enter your Name.');
-      return;
-    }
-    if (!uMobile) {
-      setErrorMessage('Please enter your Mobile Number.');
+    if (!uName || uName.length < 2) {
+      setErrorMessage('Please enter your Full Name (minimum 2 characters).');
       return;
     }
 
-    const digitsOnly = uMobile.replace(/\D/g, '');
-    if (digitsOnly.length < 10) {
-      setErrorMessage('Please enter a valid 10-digit mobile number.');
+    if (!mobileDigits) {
+      setErrorMessage('Mobile number is required.');
+      return;
+    }
+
+    if (mobileDigits.length !== 10 || !isValidIndianMobile(mobileDigits)) {
+      setErrorMessage('Please enter a valid 10-digit Indian mobile number.');
+      return;
+    }
+
+    if (uEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(uEmail)) {
+      setErrorMessage('Please enter a valid Email Address.');
       return;
     }
 
@@ -57,10 +68,11 @@ export default function SignUpScreen({ onNavigate }) {
 
     setIsLoading(true);
     try {
-      // 1. Direct customer account registration via backend
+      // 1. Direct customer account registration via backend with normalized +91
+      const formattedMobile = formatToE164(mobileDigits);
       await registerUser({
         name: uName,
-        mobile: uMobile,
+        mobile: formattedMobile,
         email: uEmail || null,
         password: uPass,
       });
@@ -92,7 +104,19 @@ export default function SignUpScreen({ onNavigate }) {
       {/* Registration Form */}
       <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column' }}>
         {errorMessage && (
-          <div style={{ color: '#ef4444', fontSize: '13px', marginBottom: '12px', textAlign: 'center', fontWeight: 500 }}>
+          <div
+            style={{
+              color: '#ef4444',
+              backgroundColor: '#fee2e2',
+              border: '1px solid #fca5a5',
+              borderRadius: '10px',
+              padding: '8px 12px',
+              fontSize: '13px',
+              marginBottom: '14px',
+              textAlign: 'center',
+              fontWeight: 600,
+            }}
+          >
             {errorMessage}
           </div>
         )}
@@ -112,19 +136,25 @@ export default function SignUpScreen({ onNavigate }) {
           />
         </div>
 
+        {/* Mobile Number with Fixed +91 Prefix */}
         <div className="input-group">
-          <input
-            type="tel"
-            className="custom-input"
-            placeholder="Mobile Number"
-            value={mobile}
-            onChange={(e) => {
-              setMobile(e.target.value);
-              setErrorMessage('');
-            }}
-            disabled={isLoading}
-            autoComplete="tel"
-          />
+          <div className="phone-input-wrapper">
+            <div className="phone-prefix-badge">
+              <span>+91</span>
+            </div>
+            <input
+              type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={10}
+              className="phone-input-control"
+              placeholder="Enter 10-digit Mobile Number"
+              value={mobileDigits}
+              onChange={handleMobileChange}
+              disabled={isLoading}
+              autoComplete="tel-national"
+            />
+          </div>
         </div>
 
         <div className="input-group">

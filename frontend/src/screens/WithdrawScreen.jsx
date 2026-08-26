@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { withdrawalService, kycService } from '../services';
 import BottomNav from '../components/BottomNav';
 
-export default function WithdrawScreen({ onNavigate, onTogglePlus }) {
+export default function WithdrawScreen({ onNavigate, fromScreen = 'profile', onTogglePlus }) {
   const { currentUser, setCurrentUser, holdings, goldRate, silverRate, fetchHoldings } = useApp();
   
   // Persistent KYC verification state check
@@ -151,7 +151,7 @@ export default function WithdrawScreen({ onNavigate, onTogglePlus }) {
     <div className="app-screen-layout">
       {/* 1. Fixed Top Header */}
       <header className="top-header-bar">
-        <button className="back-btn" onClick={() => onNavigate('profile')} aria-label="Back">
+        <button className="back-btn" onClick={() => onNavigate(fromScreen || 'profile')} aria-label="Back">
           <ArrowLeft size={22} />
         </button>
         <h2>Mode of Withdraw</h2>

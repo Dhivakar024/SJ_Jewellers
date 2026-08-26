@@ -5,17 +5,17 @@ import { purchaseService } from '../services';
 import BottomNav from '../components/BottomNav';
 
 export default function BuyNowScreen({ assetType = 'gold', onNavigate, onTogglePlus }) {
-  const { goldRate, silverRate, addPurchaseTransaction } = useApp();
+  const { goldRate, silverRate, addPurchaseTransaction, buyNowState, setBuyNowState } = useApp();
   
   // Dynamic Gold / Silver state on the SAME page
-  const [selectedAsset, setSelectedAsset] = useState(assetType || 'gold');
+  const [selectedAsset, setSelectedAsset] = useState(() => buyNowState?.assetType || assetType || 'gold');
   const isGold = selectedAsset === 'gold';
   const ratePerGram = isGold ? goldRate : silverRate;
 
-  const [mode, setMode] = useState('rupees'); // 'rupees' or 'grams'
+  const [mode, setMode] = useState(() => buyNowState?.mode || 'rupees'); // 'rupees' or 'grams'
   
   // Reusable selected quick option state
-  const [selectedQuickOption, setSelectedQuickOption] = useState('100');
+  const [selectedQuickOption, setSelectedQuickOption] = useState(() => buyNowState?.selectedQuickOption || '100');
 
   // Presets definition
   const rupeesPresets = ['50', '100', '150', '200'];
@@ -23,8 +23,8 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
     ? ['0.0050', '0.0100', '0.0200', '0.0500'] 
     : ['1.00', '5.00', '10.00', '25.00'];
 
-  const [rupeesVal, setRupeesVal] = useState('100');
-  const [gramsVal, setGramsVal] = useState((100 / ratePerGram).toFixed(4));
+  const [rupeesVal, setRupeesVal] = useState(() => buyNowState?.rupeesVal || '100');
+  const [gramsVal, setGramsVal] = useState(() => buyNowState?.gramsVal || (100 / ratePerGram).toFixed(4));
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState('UPI');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -32,9 +32,22 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
   const [purchaseError, setPurchaseError] = useState('');
   const [purchaseResponse, setPurchaseResponse] = useState(null);
 
-  // Sync prop changes if user enters via direct link
+  // Sync state back to context for complete preservation when navigating away and back
   useEffect(() => {
-    if (assetType) {
+    if (typeof setBuyNowState === 'function') {
+      setBuyNowState({
+        assetType: selectedAsset,
+        mode,
+        rupeesVal,
+        gramsVal,
+        selectedQuickOption,
+      });
+    }
+  }, [selectedAsset, mode, rupeesVal, gramsVal, selectedQuickOption, setBuyNowState]);
+
+  // Sync prop changes if user enters via direct link with different asset
+  useEffect(() => {
+    if (assetType && assetType !== selectedAsset && !buyNowState?.assetType) {
       setSelectedAsset(assetType);
     }
   }, [assetType]);
@@ -173,7 +186,7 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
 
         setTimeout(() => {
           setShowConfirmModal(false);
-          onNavigate('transactions');
+          onNavigate('transactions', { from: 'buy' });
         }, 1500);
       }
     } catch (err) {

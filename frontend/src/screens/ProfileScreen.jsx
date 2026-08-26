@@ -176,7 +176,7 @@ export default function ProfileScreen({ onNavigate, onTogglePlus }) {
         >
           {/* Mode of Withdraw */}
           <div
-            onClick={() => onNavigate('withdraw')}
+            onClick={() => onNavigate('withdraw', { from: 'profile' })}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -195,7 +195,7 @@ export default function ProfileScreen({ onNavigate, onTogglePlus }) {
 
           {/* Transaction History */}
           <div
-            onClick={() => onNavigate('transactions')}
+            onClick={() => onNavigate('transactions', { from: 'profile' })}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -214,7 +214,7 @@ export default function ProfileScreen({ onNavigate, onTogglePlus }) {
 
           {/* Contact Us */}
           <div
-            onClick={() => onNavigate('contact')}
+            onClick={() => onNavigate('contact', { from: 'profile' })}
             style={{
               display: 'flex',
               alignItems: 'center',
