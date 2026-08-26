@@ -1,46 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { TrendingUp, Clock, BarChart2, Calendar } from 'lucide-react';
+import { TrendingUp, Clock, BarChart2, Calendar, Activity } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-
-// Helper for polar to cartesian coordinates (for Donut SVG)
-function polarToCartesian(cx, cy, radius, angleInDegrees) {
-  const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
-  return {
-    x: cx + radius * Math.cos(angleInRadians),
-    y: cy + radius * Math.sin(angleInRadians)
-  };
-}
-
-// Helper to generate a mathematically perfect SVG Donut Segment
-function getDonutSegmentPath(cx, cy, outerR, innerR, startAngle, endAngle) {
-  if (isNaN(startAngle) || isNaN(endAngle)) return '';
-  const sweep = endAngle - startAngle;
-  if (sweep >= 359.99) {
-    return [
-      `M ${cx} ${cy - outerR}`,
-      `A ${outerR} ${outerR} 0 1 0 ${cx} ${cy + outerR}`,
-      `A ${outerR} ${outerR} 0 1 0 ${cx} ${cy - outerR}`,
-      `M ${cx} ${cy - innerR}`,
-      `A ${innerR} ${innerR} 0 1 1 ${cx} ${cy + innerR}`,
-      `A ${innerR} ${innerR} 0 1 1 ${cx} ${cy - innerR}`,
-      'Z'
-    ].join(' ');
-  }
-
-  const startOuter = polarToCartesian(cx, cy, outerR, startAngle);
-  const endOuter = polarToCartesian(cx, cy, outerR, endAngle);
-  const startInner = polarToCartesian(cx, cy, innerR, endAngle);
-  const endInner = polarToCartesian(cx, cy, innerR, startAngle);
-  const largeArcFlag = sweep > 180 ? 1 : 0;
-
-  return [
-    `M ${startOuter.x} ${startOuter.y}`,
-    `A ${outerR} ${outerR} 0 ${largeArcFlag} 1 ${endOuter.x} ${endOuter.y}`,
-    `L ${startInner.x} ${startInner.y}`,
-    `A ${innerR} ${innerR} 0 ${largeArcFlag} 0 ${endInner.x} ${endInner.y}`,
-    'Z'
-  ].join(' ');
-}
 
 // Helper to parse transaction amounts safely
 function parseTxnAmount(amt) {
@@ -79,7 +39,7 @@ function parseTxnDate(dateStr) {
   return null;
 }
 
-// Helper for formatting Y-axis INR currency cleanly (e.g. ₹50K, ₹10K, ₹500, ₹0)
+// Helper for formatting Y-axis INR currency cleanly (e.g. ₹1.2M, ₹50K, ₹10K, ₹500, ₹0)
 function formatYAxisINR(val) {
   if (val === undefined || val === null || isNaN(val)) return '₹0';
   if (val >= 1000000) return `₹${(val / 1000000).toFixed(1)}M`;
@@ -92,371 +52,448 @@ function formatYAxisINR(val) {
 }
 
 // =========================================================================
-// Interactive Donut Chart Component with Live Data, Tooltips & Legend Toggle
+// 1. Sales By Metal Bar Chart Component (Value & Transactions)
 // =========================================================================
-function InteractiveDonutCard({
+function MetalBarChartCard({
   title,
   type = 'value', // 'value' | 'transactions'
   goldRaw = 0,
   silverRaw = 0,
-  goldColor = '#cfa024',
-  silverColor = '#b0b7c3'
+  goldColor = '#D4A017',
+  silverColor = '#94a3b8'
 }) {
-  const [showGold, setShowGold] = useState(true);
-  const [showSilver, setShowSilver] = useState(true);
-  const [hoveredCategory, setHoveredCategory] = useState(null); // 'gold' | 'silver' | null
+  const [hoveredBar, setHoveredBar] = useState(null);
 
-  // Calculate visible values and recalculated percentages
-  const visibleGoldVal = showGold ? goldRaw : 0;
-  const visibleSilverVal = showSilver ? silverRaw : 0;
-  const totalVisible = visibleGoldVal + visibleSilverVal;
+  const total = goldRaw + silverRaw;
+  const goldPct = total > 0 ? (goldRaw / total) * 100 : 50;
+  const silverPct = total > 0 ? (silverRaw / total) * 100 : 50;
 
-  let goldPct = 0;
-  let silverPct = 0;
+  const maxVal = Math.max(goldRaw, silverRaw, 1);
+  const goldBarPct = (goldRaw / maxVal) * 100;
+  const silverBarPct = (silverRaw / maxVal) * 100;
 
-  if (totalVisible > 0) {
-    if (showGold && showSilver) {
-      goldPct = (visibleGoldVal / totalVisible) * 100;
-      silverPct = (visibleSilverVal / totalVisible) * 100;
-    } else if (showGold) {
-      goldPct = 100;
-      silverPct = 0;
-    } else if (showSilver) {
-      goldPct = 0;
-      silverPct = 100;
-    }
-  }
-
-  // Dimensions
-  const cx = 95;
-  const cy = 95;
-  const baseOuterR = 75;
-  const baseInnerR = 42;
-  const textR = (baseOuterR + baseInnerR) / 2;
-
-  // Dynamic outer radius on hover for subtle animation
-  const isGoldHovered = hoveredCategory === 'gold';
-  const isSilverHovered = hoveredCategory === 'silver';
-
-  const goldOuterR = isGoldHovered ? baseOuterR + 4 : baseOuterR;
-  const silverOuterR = isSilverHovered ? baseOuterR + 4 : baseOuterR;
-
-  // Angles calculation (Gold from 0° to goldAngle, Silver from goldAngle to 360°)
-  const goldAngle = Math.max(0, Math.min(360, (goldPct / 100) * 360));
-
-  let goldPath = '';
-  let silverPath = '';
-  let goldTextPos = null;
-  let silverTextPos = null;
-
-  if (showGold && goldPct > 0) {
-    if (goldPct >= 99.9) {
-      goldPath = getDonutSegmentPath(cx, cy, goldOuterR, baseInnerR, 0, 359.99);
-      goldTextPos = polarToCartesian(cx, cy, textR, 0);
-    } else {
-      goldPath = getDonutSegmentPath(cx, cy, goldOuterR, baseInnerR, 0, goldAngle);
-      goldTextPos = polarToCartesian(cx, cy, textR, goldAngle / 2);
-    }
-  }
-
-  if (showSilver && silverPct > 0) {
-    if (silverPct >= 99.9) {
-      silverPath = getDonutSegmentPath(cx, cy, silverOuterR, baseInnerR, 0, 359.99);
-      silverTextPos = polarToCartesian(cx, cy, textR, 180);
-    } else {
-      silverPath = getDonutSegmentPath(cx, cy, silverOuterR, baseInnerR, goldAngle, 360);
-      silverTextPos = polarToCartesian(cx, cy, textR, goldAngle + (360 - goldAngle) / 2);
-    }
-  }
-
-  // Subtext calculation
   let subtext = '';
   if (type === 'value') {
     if (goldRaw >= silverRaw) {
-      subtext = `Gold sells more by value (₹${goldRaw.toLocaleString('en-IN', { maximumFractionDigits: 2 })})`;
+      subtext = `Gold leads by value with ₹${goldRaw.toLocaleString('en-IN', { maximumFractionDigits: 2 })} (${goldPct.toFixed(1)}%)`;
     } else {
-      subtext = `Silver sells more by value (₹${silverRaw.toLocaleString('en-IN', { maximumFractionDigits: 2 })})`;
+      subtext = `Silver leads by value with ₹${silverRaw.toLocaleString('en-IN', { maximumFractionDigits: 2 })} (${silverPct.toFixed(1)}%)`;
     }
   } else {
     if (goldRaw >= silverRaw) {
-      subtext = `Gold has more orders (${goldRaw})`;
+      subtext = `Gold has more volume with ${goldRaw} orders (${goldPct.toFixed(1)}%)`;
     } else {
-      subtext = `Silver has more orders (${silverRaw})`;
+      subtext = `Silver has more volume with ${silverRaw} orders (${silverPct.toFixed(1)}%)`;
     }
   }
 
   return (
-    <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', minHeight: '340px', boxSizing: 'border-box', position: 'relative' }}>
+    <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', minHeight: '260px', boxSizing: 'border-box', position: 'relative' }}>
       {/* Title */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-        <Clock size={16} color="var(--admin-text-muted)" />
-        <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--admin-text-heading)' }}>
-          {title}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Clock size={16} color="var(--admin-text-muted)" />
+          <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--admin-text-heading)' }}>
+            {title}
+          </span>
+        </div>
+        <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--admin-text-muted)' }}>
+          Total: {type === 'value' ? `₹${total.toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : `${total} orders`}
         </span>
       </div>
 
-      {/* Donut Chart Area */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        minHeight: '190px'
-      }}>
-        <svg
-          width="190"
-          height="190"
-          viewBox="0 0 190 190"
-          style={{
-            display: 'block',
-            margin: '0 auto',
-            maxWidth: '100%',
-            height: 'auto',
-            aspectRatio: '1 / 1',
-            overflow: 'visible'
-          }}
+      {/* Bar Chart Area */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', flex: 1, justifyContent: 'center' }}>
+        
+        {/* Gold Bar Row */}
+        <div 
+          onMouseEnter={() => setHoveredBar('gold')}
+          onMouseLeave={() => setHoveredBar(null)}
+          style={{ cursor: 'pointer' }}
         >
-          {/* Empty state background ring if both hidden */}
-          {!showGold && !showSilver && (
-            <circle
-              cx={cx}
-              cy={cy}
-              r={(baseOuterR + baseInnerR) / 2}
-              fill="none"
-              stroke="#e5e7eb"
-              strokeWidth={baseOuterR - baseInnerR}
-              opacity="0.6"
-            />
-          )}
-
-          {/* Silver Donut Segment */}
-          {showSilver && silverPath && (
-            <path
-              d={silverPath}
-              fill={silverColor}
-              stroke="#ffffff"
-              strokeWidth="2"
-              onMouseEnter={() => setHoveredCategory('silver')}
-              onMouseLeave={() => setHoveredCategory(null)}
-              style={{
-                cursor: 'pointer',
-                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                filter: isSilverHovered ? 'drop-shadow(0 4px 10px rgba(0,0,0,0.18)) brightness(1.08)' : 'none',
-                opacity: hoveredCategory && hoveredCategory !== 'silver' ? 0.45 : 1
-              }}
-            />
-          )}
-
-          {/* Gold Donut Segment */}
-          {showGold && goldPath && (
-            <path
-              d={goldPath}
-              fill={goldColor}
-              stroke="#ffffff"
-              strokeWidth="2"
-              onMouseEnter={() => setHoveredCategory('gold')}
-              onMouseLeave={() => setHoveredCategory(null)}
-              style={{
-                cursor: 'pointer',
-                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                filter: isGoldHovered ? 'drop-shadow(0 4px 10px rgba(0,0,0,0.18)) brightness(1.08)' : 'none',
-                opacity: hoveredCategory && hoveredCategory !== 'gold' ? 0.45 : 1
-              }}
-            />
-          )}
-
-          {/* Silver Percentage Label */}
-          {showSilver && silverPct >= 9 && silverTextPos && (
-            <text
-              x={silverTextPos.x}
-              y={silverTextPos.y}
-              dominantBaseline="central"
-              textAnchor="middle"
-              fontSize="12"
-              fontWeight="700"
-              fill="#ffffff"
-              style={{ pointerEvents: 'none', userSelect: 'none' }}
-            >
-              {silverPct.toFixed(1)}%
-            </text>
-          )}
-
-          {/* Gold Percentage Label */}
-          {showGold && goldPct >= 9 && goldTextPos && (
-            <text
-              x={goldTextPos.x}
-              y={goldTextPos.y}
-              dominantBaseline="central"
-              textAnchor="middle"
-              fontSize="12"
-              fontWeight="700"
-              fill="#ffffff"
-              style={{ pointerEvents: 'none', userSelect: 'none' }}
-            >
-              {goldPct.toFixed(1)}%
-            </text>
-          )}
-
-          {/* Empty state label */}
-          {!showGold && !showSilver && (
-            <text
-              x={cx}
-              y={cy}
-              dominantBaseline="central"
-              textAnchor="middle"
-              fontSize="11"
-              fontWeight="600"
-              fill="#9ca3af"
-              style={{ pointerEvents: 'none', userSelect: 'none' }}
-            >
-              Hidden
-            </text>
-          )}
-        </svg>
-
-        {/* Interactive Floating Tooltip */}
-        {hoveredCategory && (
-          <div style={{
-            position: 'absolute',
-            top: '4px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            backgroundColor: '#1e293b',
-            color: '#ffffff',
-            padding: '8px 14px',
-            borderRadius: '8px',
-            fontSize: '11.5px',
-            boxShadow: '0 6px 18px rgba(0,0,0,0.25)',
-            zIndex: 20,
-            pointerEvents: 'none',
-            whiteSpace: 'nowrap',
-            textAlign: 'center'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: '700', marginBottom: '2px' }}>
-              <span style={{
-                width: '7px',
-                height: '7px',
-                borderRadius: '50%',
-                backgroundColor: hoveredCategory === 'gold' ? goldColor : silverColor
-              }}></span>
-              <span style={{ color: '#f8fafc' }}>
-                {hoveredCategory === 'gold' ? 'Gold' : 'Silver'}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: goldColor }}></span>
+              <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--admin-gold-text)' }}>Gold</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--admin-text-value)' }}>
+                {type === 'value' ? `₹${goldRaw.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `${goldRaw} orders`}
+              </span>
+              <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--admin-text-muted)' }}>
+                ({goldPct.toFixed(1)}%)
               </span>
             </div>
+          </div>
 
-            <div style={{ color: '#a5b4fc', fontWeight: '700', fontSize: '12px' }}>
-              {type === 'value' ? (
-                <>Actual Value: ₹{(hoveredCategory === 'gold' ? goldRaw : silverRaw).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</>
-              ) : (
-                <>Transaction Count: {hoveredCategory === 'gold' ? goldRaw : silverRaw} orders</>
-              )}
+          {/* Bar track */}
+          <div style={{ width: '100%', height: '14px', backgroundColor: 'var(--admin-border-subtle)', borderRadius: '7px', overflow: 'hidden' }}>
+            <div 
+              style={{ 
+                width: `${goldBarPct}%`, 
+                height: '100%', 
+                backgroundColor: goldColor, 
+                borderRadius: '7px',
+                transition: 'width 0.4s ease',
+                boxShadow: hoveredBar === 'gold' ? '0 0 10px rgba(212, 160, 23, 0.5)' : 'none'
+              }} 
+            />
+          </div>
+        </div>
+
+        {/* Silver Bar Row */}
+        <div 
+          onMouseEnter={() => setHoveredBar('silver')}
+          onMouseLeave={() => setHoveredBar(null)}
+          style={{ cursor: 'pointer' }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: silverColor }}></span>
+              <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--admin-silver-text)' }}>Silver</span>
             </div>
-
-            <div style={{ fontSize: '11px', color: '#cbd5e1', marginTop: '2px', fontWeight: '600' }}>
-              Share: {(hoveredCategory === 'gold' ? goldPct : silverPct).toFixed(1)}%
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--admin-text-value)' }}>
+                {type === 'value' ? `₹${silverRaw.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `${silverRaw} orders`}
+              </span>
+              <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--admin-text-muted)' }}>
+                ({silverPct.toFixed(1)}%)
+              </span>
             </div>
           </div>
-        )}
-      </div>
 
-      {/* Interactive Legend (Clickable to toggle visibility) */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '20px',
-        marginTop: '10px',
-        fontSize: '12.5px',
-        userSelect: 'none'
-      }}>
-        {/* Gold Legend Item */}
-        <div
-          onClick={() => setShowGold(!showGold)}
-          onMouseEnter={() => showGold && setHoveredCategory('gold')}
-          onMouseLeave={() => setHoveredCategory(null)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            cursor: 'pointer',
-            opacity: showGold ? 1 : 0.4,
-            transition: 'opacity 0.15s ease',
-            padding: '2px 6px',
-            borderRadius: '4px'
-          }}
-          title={showGold ? 'Click to hide Gold' : 'Click to show Gold'}
-        >
-          <span style={{
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            backgroundColor: goldColor,
-            border: !showGold ? '1px dashed var(--admin-text-muted)' : 'none'
-          }}></span>
-          <span style={{
-            color: 'var(--admin-text-secondary)',
-            fontWeight: showGold ? '700' : '400',
-            textDecoration: !showGold ? 'line-through' : 'none'
-          }}>
-            Gold
-          </span>
+          {/* Bar track */}
+          <div style={{ width: '100%', height: '14px', backgroundColor: 'var(--admin-border-subtle)', borderRadius: '7px', overflow: 'hidden' }}>
+            <div 
+              style={{ 
+                width: `${silverBarPct}%`, 
+                height: '100%', 
+                backgroundColor: silverColor, 
+                borderRadius: '7px',
+                transition: 'width 0.4s ease',
+                boxShadow: hoveredBar === 'silver' ? '0 0 10px rgba(148, 163, 184, 0.5)' : 'none'
+              }} 
+            />
+          </div>
         </div>
 
-        {/* Silver Legend Item */}
-        <div
-          onClick={() => setShowSilver(!showSilver)}
-          onMouseEnter={() => showSilver && setHoveredCategory('silver')}
-          onMouseLeave={() => setHoveredCategory(null)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            cursor: 'pointer',
-            opacity: showSilver ? 1 : 0.4,
-            transition: 'opacity 0.15s ease',
-            padding: '2px 6px',
-            borderRadius: '4px'
-          }}
-          title={showSilver ? 'Click to hide Silver' : 'Click to show Silver'}
-        >
-          <span style={{
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            backgroundColor: silverColor,
-            border: !showSilver ? '1px dashed var(--admin-text-muted)' : 'none'
-          }}></span>
-          <span style={{
-            color: 'var(--admin-text-secondary)',
-            fontWeight: showSilver ? '700' : '400',
-            textDecoration: !showSilver ? 'line-through' : 'none'
-          }}>
-            Silver
-          </span>
-        </div>
       </div>
 
       {/* Subtext */}
-      <div style={{ textAlign: 'center', fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '6px' }}>
+      <div style={{ textAlign: 'left', fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '14px', paddingTop: '10px', borderTop: '1px solid var(--admin-border-subtle)' }}>
         {subtext}
       </div>
     </div>
   );
 }
 
+// =========================================================================
+// 2. Stock-Market-Style Financial Trend Line Graph Component
+// =========================================================================
+function StockMarketLineGraph({
+  title,
+  subtitle,
+  icon,
+  data = [],
+  maxVal = 1000,
+  lineColor = '#4f46e5',
+  areaColor = '#6366f1',
+  isDaily = false
+}) {
+  const [hoveredIndex, setHoveredIndex] = useState(null);
+
+  const safeData = Array.isArray(data) ? data : [];
+  const count = safeData.length;
+  const safeMax = typeof maxVal === 'number' && !isNaN(maxVal) && maxVal > 0 ? maxVal : 1000;
+
+  const yTicks = [
+    safeMax,
+    safeMax * 0.75,
+    safeMax * 0.5,
+    safeMax * 0.25,
+    0
+  ];
+
+  // SVG Coordinate calculations
+  const svgWidth = 800;
+  const svgHeight = 220;
+  const paddingLeft = 10;
+  const paddingRight = 10;
+  const paddingTop = 15;
+  const paddingBottom = 20;
+
+  const plotWidth = svgWidth - paddingLeft - paddingRight;
+  const plotHeight = svgHeight - paddingTop - paddingBottom;
+
+  // Calculate (x, y) coordinates for each data point
+  const points = safeData.map((item, idx) => {
+    const x = count > 1 ? paddingLeft + (idx / (count - 1)) * plotWidth : paddingLeft + plotWidth / 2;
+    const normalizedY = safeMax > 0 ? (item.totalValue / safeMax) : 0;
+    const y = paddingTop + plotHeight - (normalizedY * plotHeight);
+    return { ...item, x, y, idx };
+  });
+
+  // Generate smooth cubic bezier spline path
+  let pathString = '';
+  if (points.length > 0) {
+    pathString = `M ${points[0].x} ${points[0].y}`;
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[i];
+      const p1 = points[i + 1];
+      const cpX = (p0.x + p1.x) / 2;
+      pathString += ` C ${cpX} ${p0.y}, ${cpX} ${p1.y}, ${p1.x} ${p1.y}`;
+    }
+  }
+
+  // Generate Area Fill Path closing at baseline
+  let areaPathString = '';
+  if (points.length > 0 && pathString) {
+    const baselineY = paddingTop + plotHeight;
+    const lastPoint = points[points.length - 1];
+    const firstPoint = points[0];
+    areaPathString = `${pathString} L ${lastPoint.x} ${baselineY} L ${firstPoint.x} ${baselineY} Z`;
+  }
+
+  const activePoint = hoveredIndex !== null ? points[hoveredIndex] : null;
+
+  return (
+    <div className="admin-card" style={{ textAlign: 'left', overflow: 'visible', position: 'relative' }}>
+      {/* Title Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {icon}
+          <span style={{ fontSize: '15px', fontWeight: '700', color: 'var(--admin-text-heading)' }}>
+            {title}
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#10b981', fontWeight: '700' }}>
+          <TrendingUp size={14} />
+          <span>Market Trend</span>
+        </div>
+      </div>
+      <div style={{ fontSize: '13px', color: 'var(--admin-text-secondary)', marginBottom: '16px' }}>
+        {subtitle}
+      </div>
+
+      {/* Chart Drawing Container */}
+      <div style={{
+        height: '260px',
+        position: 'relative',
+        display: 'flex',
+        paddingLeft: '60px',
+        paddingRight: '10px',
+        boxSizing: 'border-box'
+      }}>
+        {/* Y-axis Labels on Left */}
+        <div style={{
+          position: 'absolute',
+          left: 0,
+          top: `${paddingTop}px`,
+          height: `${plotHeight}px`,
+          width: '54px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          fontSize: '11px',
+          fontWeight: '600',
+          color: 'var(--admin-text-muted)',
+          userSelect: 'none',
+          textAlign: 'right',
+          paddingRight: '6px',
+          boxSizing: 'border-box'
+        }}>
+          {yTicks.map((t, idx) => (
+            <span key={idx} style={{ lineHeight: 1 }}>{formatYAxisINR(t)}</span>
+          ))}
+        </div>
+
+        {/* SVG Drawing Canvas */}
+        <div style={{ flex: 1, height: '100%', position: 'relative' }}>
+          <svg
+            viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+            style={{ width: '100%', height: '100%', overflow: 'visible', display: 'block' }}
+            preserveAspectRatio="none"
+          >
+            <defs>
+              {/* Stock Market Area Gradient Fill */}
+              <linearGradient id={`grad-${title.replace(/\s+/g, '-')}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={areaColor} stopOpacity="0.32" />
+                <stop offset="60%" stopColor={areaColor} stopOpacity="0.08" />
+                <stop offset="100%" stopColor={areaColor} stopOpacity="0.00" />
+              </linearGradient>
+            </defs>
+
+            {/* Horizontal Dashed Grid Lines */}
+            {[0, 0.25, 0.5, 0.75, 1].map((pct, idx) => {
+              const y = paddingTop + plotHeight * (1 - pct);
+              return (
+                <line
+                  key={idx}
+                  x1={paddingLeft}
+                  y1={y}
+                  x2={svgWidth - paddingRight}
+                  y2={y}
+                  stroke="var(--admin-border-subtle)"
+                  strokeWidth="1"
+                  strokeDasharray={pct === 0 ? 'none' : '4 4'}
+                />
+              );
+            })}
+
+            {/* Gradient Area Fill */}
+            {areaPathString && (
+              <path
+                d={areaPathString}
+                fill={`url(#grad-${title.replace(/\s+/g, '-')})`}
+              />
+            )}
+
+            {/* Financial Trend Continuous Line */}
+            {pathString && (
+              <path
+                d={pathString}
+                fill="none"
+                stroke={lineColor}
+                strokeWidth="2.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
+
+            {/* Hover Vertical Crosshair */}
+            {activePoint && (
+              <line
+                x1={activePoint.x}
+                y1={paddingTop}
+                x2={activePoint.x}
+                y2={paddingTop + plotHeight}
+                stroke="#6366f1"
+                strokeWidth="1.5"
+                strokeDasharray="3 3"
+                opacity="0.85"
+              />
+            )}
+
+            {/* Data Nodes */}
+            {points.map((p, idx) => {
+              const isHovered = hoveredIndex === idx;
+              return (
+                <g key={idx}>
+                  {/* Invisible enlarged hit target for effortless hovering */}
+                  <circle
+                    cx={p.x}
+                    cy={p.y}
+                    r="12"
+                    fill="transparent"
+                    style={{ cursor: 'pointer' }}
+                    onMouseEnter={() => setHoveredIndex(idx)}
+                    onMouseLeave={() => setHoveredIndex(null)}
+                  />
+                  {/* Visible Data Dot */}
+                  <circle
+                    cx={p.x}
+                    cy={p.y}
+                    r={isHovered ? '6' : (isDaily ? '2.5' : '4')}
+                    fill={isHovered ? '#ffffff' : lineColor}
+                    stroke={lineColor}
+                    strokeWidth={isHovered ? '3' : '1.5'}
+                    style={{ pointerEvents: 'none', transition: 'all 0.15s ease' }}
+                  />
+                </g>
+              );
+            })}
+          </svg>
+
+          {/* Floating Tooltip Card */}
+          {activePoint && (
+            <div style={{
+              position: 'absolute',
+              top: '8px',
+              left: `${(activePoint.x / svgWidth) * 100}%`,
+              transform: 'translateX(-50%)',
+              backgroundColor: 'var(--admin-bg-card)',
+              color: 'var(--admin-text-main)',
+              border: '1px solid var(--admin-border)',
+              padding: '8px 14px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+              zIndex: 20,
+              pointerEvents: 'none',
+              whiteSpace: 'nowrap',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontWeight: '800', color: 'var(--admin-text-value)', marginBottom: '2px' }}>
+                {activePoint.fullLabel || activePoint.label}
+              </div>
+              <div style={{ color: '#4f46e5', fontWeight: '800', fontSize: '13px' }}>
+                ₹{activePoint.totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--admin-text-secondary)', marginTop: '4px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                <span style={{ color: 'var(--admin-gold-text)', fontWeight: '700' }}>
+                  Gold: ₹{(activePoint.goldValue || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                </span>
+                <span style={{ color: 'var(--admin-silver-text)', fontWeight: '700' }}>
+                  Silver: ₹{(activePoint.silverValue || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                </span>
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--admin-text-muted)', marginTop: '2px' }}>
+                Total Orders: {activePoint.count || 0}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* X-axis Labels */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        paddingLeft: '60px',
+        paddingRight: '10px',
+        marginTop: '6px',
+        fontSize: '11.5px',
+        color: 'var(--admin-text-muted)',
+        userSelect: 'none'
+      }}>
+        {safeData.map((item, idx) => {
+          let isVisible = true;
+          if (isDaily) {
+            isVisible = idx === 0 || idx === 5 || idx === 10 || idx === 15 || idx === 20 || idx === 25 || idx === safeData.length - 1;
+          }
+
+          return (
+            <div
+              key={item.key || idx}
+              style={{
+                textAlign: 'center',
+                visibility: isVisible ? 'visible' : 'hidden',
+                fontWeight: item.totalValue > 0 ? '700' : '500',
+                color: item.totalValue > 0 ? 'var(--admin-text-value)' : 'var(--admin-text-muted)',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {item.label}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// =========================================================================
+// Main Admin Dashboard
+// =========================================================================
 export default function AdminDashboard({ onSelectTab }) {
   const appContext = useApp();
   const rawGoldRate = appContext?.goldRate;
   const rawSilverRate = appContext?.silverRate;
   const rawTransactions = appContext?.transactions;
 
-  const goldRate = typeof rawGoldRate === 'number' && !isNaN(rawGoldRate) ? rawGoldRate : (parseFloat(rawGoldRate) || 13818.88);
-  const silverRate = typeof rawSilverRate === 'number' && !isNaN(rawSilverRate) ? rawSilverRate : (parseFloat(rawSilverRate) || 206.17);
+  const goldRate = typeof rawGoldRate === 'number' && !isNaN(rawGoldRate) ? rawGoldRate : (parseFloat(rawGoldRate) || 16263.65);
+  const silverRate = typeof rawSilverRate === 'number' && !isNaN(rawSilverRate) ? rawSilverRate : (parseFloat(rawSilverRate) || 267.00);
   const transactions = Array.isArray(rawTransactions) ? rawTransactions : [];
-
-  // Hovered tooltip state for bar charts
-  const [hoveredBar, setHoveredBar] = useState(null);
 
   // Reference date: latest transaction date or current system date
   const referenceDate = useMemo(() => {
@@ -503,9 +540,7 @@ export default function AdminDashboard({ onSelectTab }) {
     };
   }, [transactions]);
 
-  // =========================================================================
-  // 1. Annual Transactions Aggregation (Last 5 Years)
-  // =========================================================================
+  // 1. Annual Transactions Aggregation (Last 5 Years: 2022 to 2026)
   const annualChartData = useMemo(() => {
     const currentYear = referenceDate.getFullYear();
     const years = [currentYear - 4, currentYear - 3, currentYear - 2, currentYear - 1, currentYear];
@@ -547,16 +582,13 @@ export default function AdminDashboard({ onSelectTab }) {
 
     const items = years.map((y) => map[y]);
     let max = Math.max(...items.map((i) => i.totalValue), 0);
-    if (max === 0 || isNaN(max)) max = 50000;
-    else if (max < 10000) max = 10000;
-    else max = Math.ceil(max / 10000) * 10000;
+    if (max === 0 || isNaN(max)) max = 100000;
+    else max = Math.ceil(max / 50000) * 50000;
 
     return { items, maxVal: max };
   }, [transactions, referenceDate]);
 
-  // =========================================================================
   // 2. Monthly Transactions Aggregation (Last 12 Months)
-  // =========================================================================
   const monthlyChartData = useMemo(() => {
     const months = [];
     const refYear = referenceDate.getFullYear();
@@ -608,17 +640,13 @@ export default function AdminDashboard({ onSelectTab }) {
     });
 
     let max = Math.max(...months.map((i) => i.totalValue), 0);
-    if (max === 0 || isNaN(max)) max = 30000;
-    else if (max < 5000) max = 5000;
-    else if (max < 20000) max = Math.ceil(max / 5000) * 5000;
+    if (max === 0 || isNaN(max)) max = 50000;
     else max = Math.ceil(max / 10000) * 10000;
 
     return { items: months, maxVal: max };
   }, [transactions, referenceDate]);
 
-  // =========================================================================
   // 3. Daily Transactions Aggregation (Last 30 Days)
-  // =========================================================================
   const dailyChartData = useMemo(() => {
     const days = [];
     const refYear = referenceDate.getFullYear();
@@ -638,7 +666,6 @@ export default function AdminDashboard({ onSelectTab }) {
         key,
         label: shortLabel,
         fullLabel,
-        dayIdx: 29 - i,
         totalValue: 0,
         goldValue: 0,
         silverValue: 0,
@@ -675,235 +702,11 @@ export default function AdminDashboard({ onSelectTab }) {
     });
 
     let max = Math.max(...days.map((i) => i.totalValue), 0);
-    if (max === 0 || isNaN(max)) max = 1000;
-    else if (max < 500) max = 500;
-    else if (max < 1000) max = 1000;
-    else if (max < 5000) max = Math.ceil(max / 1000) * 1000;
+    if (max === 0 || isNaN(max)) max = 20000;
     else max = Math.ceil(max / 5000) * 5000;
 
     return { items: days, maxVal: max };
   }, [transactions, referenceDate]);
-
-  // Reusable Bar Chart Component with spacious 320px height, INR labels and tooltips
-  const renderBarChart = ({ 
-    title, 
-    subtitle, 
-    icon, 
-    data, 
-    maxVal, 
-    barMaxWidth = '48px',
-    isDaily = false
-  }) => {
-    const safeData = Array.isArray(data) ? data : [];
-    const safeMax = typeof maxVal === 'number' && !isNaN(maxVal) && maxVal > 0 ? maxVal : 1000;
-
-    const yTicks = [
-      safeMax,
-      safeMax * 0.8,
-      safeMax * 0.6,
-      safeMax * 0.4,
-      safeMax * 0.2,
-      0
-    ];
-
-    return (
-      <div className="admin-card" style={{ textAlign: 'left', overflow: 'visible', position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-          {icon}
-          <span style={{ fontSize: '15px', fontWeight: '700', color: 'var(--admin-text-heading)' }}>
-            {title}
-          </span>
-        </div>
-        <div style={{ fontSize: '13px', color: 'var(--admin-text-secondary)', marginBottom: '20px' }}>
-          {subtitle}
-        </div>
-
-        {/* Spacious Chart Drawing Area (320px Height) */}
-        <div style={{
-          height: '320px',
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'flex-end',
-          paddingLeft: '56px',
-          paddingRight: '16px',
-          borderBottom: '1px solid var(--admin-border)'
-        }}>
-          {/* Y-axis tick labels with INR currency */}
-          <div style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: '50px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            fontSize: '11px',
-            fontWeight: '600',
-            color: 'var(--admin-text-muted)',
-            userSelect: 'none',
-            textAlign: 'right',
-            paddingRight: '8px'
-          }}>
-            {yTicks.map((t, idx) => (
-              <span key={idx}>{formatYAxisINR(t)}</span>
-            ))}
-          </div>
-
-          {/* Background Dashed Grid Lines */}
-          <div style={{
-            position: 'absolute',
-            left: '56px',
-            right: '16px',
-            top: 0,
-            bottom: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            pointerEvents: 'none'
-          }}>
-            <div style={{ borderTop: '1px dashed var(--admin-border-subtle)', width: '100%' }}></div>
-            <div style={{ borderTop: '1px dashed var(--admin-border-subtle)', width: '100%' }}></div>
-            <div style={{ borderTop: '1px dashed var(--admin-border-subtle)', width: '100%' }}></div>
-            <div style={{ borderTop: '1px dashed var(--admin-border-subtle)', width: '100%' }}></div>
-            <div style={{ borderTop: '1px dashed var(--admin-border-subtle)', width: '100%' }}></div>
-            <div style={{ borderTop: '1px solid var(--admin-border)', width: '100%' }}></div>
-          </div>
-
-          {/* Bars Container */}
-          <div style={{
-            flex: 1,
-            display: 'flex',
-            justifyContent: 'space-around',
-            height: '100%',
-            alignItems: 'flex-end',
-            zIndex: 2,
-            gap: isDaily ? '3px' : '8px'
-          }}>
-            {safeData.map((item, idx) => {
-              const heightPct = safeMax > 0 ? Math.min(100, Math.max(item.totalValue > 0 ? 3 : 0, (item.totalValue / safeMax) * 100)) : 0;
-              const isHovered = hoveredBar && hoveredBar.key === item.key;
-
-              return (
-                <div
-                  key={item.key || idx}
-                  onMouseEnter={() => setHoveredBar(item)}
-                  onMouseLeave={() => setHoveredBar(null)}
-                  style={{
-                    flex: 1,
-                    maxWidth: barMaxWidth,
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'flex-end',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    position: 'relative'
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '100%',
-                      height: `${heightPct}%`,
-                      backgroundColor: isHovered ? '#4f46e5' : '#6366f1',
-                      borderRadius: '4px 4px 0 0',
-                      transition: 'all 0.15s ease',
-                      opacity: item.totalValue > 0 ? 1 : 0.12,
-                      minHeight: item.totalValue > 0 ? '6px' : '0px'
-                    }}
-                  />
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Floating Tooltip */}
-          {hoveredBar && (
-            <div style={{
-              position: 'absolute',
-              top: '14px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              backgroundColor: 'var(--admin-bg-card)',
-              color: 'var(--admin-text-main)',
-              border: '1px solid var(--admin-border)',
-              padding: '10px 16px',
-              borderRadius: '8px',
-              fontSize: '12px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-              zIndex: 20,
-              pointerEvents: 'none',
-              whiteSpace: 'nowrap',
-              textAlign: 'center'
-            }}>
-              <div style={{ fontWeight: '700', color: 'var(--admin-text-value)', marginBottom: '3px' }}>
-                {hoveredBar.fullLabel || hoveredBar.label}
-              </div>
-              <div style={{ color: '#4f46e5', fontWeight: '700', fontSize: '13px' }}>
-                Transaction Value: ₹{hoveredBar.totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-              {hoveredBar.count > 0 ? (
-                <div style={{ fontSize: '11px', color: 'var(--admin-text-secondary)', marginTop: '6px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                  {hoveredBar.goldCount > 0 && (
-                    <span style={{ color: 'var(--admin-gold-text)' }}>
-                      Gold: ₹{hoveredBar.goldValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })} ({hoveredBar.goldCount})
-                    </span>
-                  )}
-                  {hoveredBar.silverCount > 0 && (
-                    <span style={{ color: 'var(--admin-silver-text)' }}>
-                      Silver: ₹{hoveredBar.silverValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })} ({hoveredBar.silverCount})
-                    </span>
-                  )}
-                </div>
-              ) : (
-                <div style={{ fontSize: '11px', color: 'var(--admin-text-muted)', marginTop: '3px' }}>
-                  No transactions recorded
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* X-axis Labels */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-around',
-          paddingLeft: '56px',
-          paddingRight: '16px',
-          marginTop: '10px',
-          fontSize: '11.5px',
-          color: 'var(--admin-text-muted)',
-          userSelect: 'none'
-        }}>
-          {safeData.map((item, idx) => {
-            let isVisible = true;
-            if (isDaily) {
-              isVisible = idx === 0 || idx === 5 || idx === 10 || idx === 15 || idx === 20 || idx === 25 || idx === safeData.length - 1;
-            }
-
-            return (
-              <div
-                key={item.key || idx}
-                style={{
-                  flex: 1,
-                  maxWidth: barMaxWidth,
-                  textAlign: 'center',
-                  visibility: isVisible ? 'visible' : 'hidden',
-                  fontWeight: item.totalValue > 0 ? '700' : '500',
-                  color: item.totalValue > 0 ? 'var(--admin-text-value)' : 'var(--admin-text-muted)',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}
-              >
-                {item.label}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
 
   const now = new Date();
   const updatedTimestamp = `${now.toLocaleDateString('en-US')}, ${now.toLocaleTimeString('en-US')}`;
@@ -911,26 +714,26 @@ export default function AdminDashboard({ onSelectTab }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', boxSizing: 'border-box' }}>
       
-      {/* 1. Page Header (Left-aligned) */}
+      {/* 1. Page Header (Left-aligned, Bold matching Dashboard) */}
       <div className="admin-page-header">
-        <h1 className="admin-page-title">Dashboard</h1>
+        <h1 className="admin-page-title" style={{ fontWeight: '800' }}>Dashboard</h1>
         <p className="admin-page-sub">
           Live metal rates, transaction analytics, and account verification notifications
         </p>
       </div>
 
-      {/* 2. Top Two Rate Cards (Side by Side) */}
+      {/* 2. Top Two Rate Cards (Compact, Reduced Size, Equal & Aligned) */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '20px'
+        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+        gap: '16px'
       }}>
         {/* Gold (24K) Card */}
-        <div className="admin-holdings-card-gold" style={{ borderLeft: '4px solid #D4A017' }}>
+        <div className="admin-holdings-card-gold" style={{ padding: '14px 18px', borderLeft: '4px solid #D4A017', gap: '6px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{
-              width: '34px',
-              height: '34px',
+              width: '28px',
+              height: '28px',
               borderRadius: '50%',
               backgroundColor: '#fef3c7',
               color: '#D4A017',
@@ -938,32 +741,32 @@ export default function AdminDashboard({ onSelectTab }) {
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: '800',
-              fontSize: '15px'
+              fontSize: '14px'
             }}>
-              $
+              ₹
             </div>
-            <TrendingUp size={16} color="var(--admin-green-trend)" />
+            <TrendingUp size={15} color="var(--admin-green-trend)" />
           </div>
 
           <div style={{ textAlign: 'left' }}>
-            <div className="admin-holdings-title-gold">
+            <div className="admin-holdings-title-gold" style={{ fontSize: '13px' }}>
               Gold (24K)
             </div>
-            <div className="admin-holdings-value-gold" style={{ margin: '4px 0 2px 0' }}>
+            <div className="admin-holdings-value-gold" style={{ fontSize: '22px', margin: '2px 0 1px 0' }}>
               ₹{goldRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div className="admin-holdings-sub-gold">
+            <div className="admin-holdings-sub-gold" style={{ fontSize: '12px' }}>
               per gram · INR
             </div>
           </div>
         </div>
 
         {/* Silver Card */}
-        <div className="admin-holdings-card-silver" style={{ borderLeft: '4px solid #94a3b8' }}>
+        <div className="admin-holdings-card-silver" style={{ padding: '14px 18px', borderLeft: '4px solid #94a3b8', gap: '6px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{
-              width: '34px',
-              height: '34px',
+              width: '28px',
+              height: '28px',
               borderRadius: '50%',
               backgroundColor: '#f1f5f9',
               color: '#64748b',
@@ -971,92 +774,96 @@ export default function AdminDashboard({ onSelectTab }) {
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: '800',
-              fontSize: '15px'
+              fontSize: '14px'
             }}>
-              $
+              ₹
             </div>
-            <TrendingUp size={16} color="var(--admin-green-trend)" />
+            <TrendingUp size={15} color="var(--admin-green-trend)" />
           </div>
 
           <div style={{ textAlign: 'left' }}>
-            <div className="admin-holdings-title-silver">
+            <div className="admin-holdings-title-silver" style={{ fontSize: '13px' }}>
               Silver
             </div>
-            <div className="admin-holdings-value-silver" style={{ margin: '4px 0 2px 0' }}>
+            <div className="admin-holdings-value-silver" style={{ fontSize: '22px', margin: '2px 0 1px 0' }}>
               ₹{silverRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div className="admin-holdings-sub-silver">
+            <div className="admin-holdings-sub-silver" style={{ fontSize: '12px' }}>
               per gram · INR
             </div>
           </div>
         </div>
       </div>
 
-      {/* 3. Sales By Metal Donut Charts (Interactive, Symmetrical, Live Data Connected) */}
+      {/* 3. Sales By Metal Bar Charts (Separate Value & Transactions Cards) */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '20px'
+        gap: '16px'
       }}>
         {/* Sales by metal (value) */}
-        <InteractiveDonutCard
-          title="Sales by metal (value)"
+        <MetalBarChartCard
+          title="Sales by Metal (Value)"
           type="value"
           goldRaw={goldValue}
           silverRaw={silverValue}
-          goldColor="#cfa024"
-          silverColor="#b0b7c3"
+          goldColor="#D4A017"
+          silverColor="#94a3b8"
         />
 
         {/* Sales by metal (transactions) */}
-        <InteractiveDonutCard
-          title="Sales by metal (transactions)"
+        <MetalBarChartCard
+          title="Sales by Metal (Transactions)"
           type="transactions"
           goldRaw={goldTxnCount}
           silverRaw={silverTxnCount}
-          goldColor="#cfa024"
-          silverColor="#b0b7c3"
+          goldColor="#D4A017"
+          silverColor="#94a3b8"
         />
       </div>
 
-      {/* 4. A. Annual Transactions (Last 5 Years, 320px Height) */}
-      {renderBarChart({
-        title: 'Annual transactions (last 5 years)',
-        subtitle: 'Annual transaction value (INR)',
-        icon: <BarChart2 size={16} color="var(--admin-text-muted)" />,
-        data: annualChartData.items,
-        maxVal: annualChartData.maxVal,
-        barMaxWidth: '64px',
-        isDaily: false
-      })}
+      {/* 4. Annual Transactions (Last 5 Years - Stock Market Line Graph) */}
+      <StockMarketLineGraph
+        title="Annual Transactions (Last 5 Years)"
+        subtitle="Annual transaction value trend (INR) across 5 years"
+        icon={<Activity size={16} color="var(--admin-text-muted)" />}
+        data={annualChartData.items}
+        maxVal={annualChartData.maxVal}
+        lineColor="#4f46e5"
+        areaColor="#6366f1"
+        isDaily={false}
+      />
 
-      {/* 5. B. Monthly Transactions (Last 12 Months, 320px Height) */}
-      {renderBarChart({
-        title: 'Monthly transactions (last 12 months)',
-        subtitle: 'Monthly transaction value (INR)',
-        icon: <Calendar size={16} color="var(--admin-text-muted)" />,
-        data: monthlyChartData.items,
-        maxVal: monthlyChartData.maxVal,
-        barMaxWidth: '44px',
-        isDaily: false
-      })}
+      {/* 5. Monthly Transactions (Last 12 Months - Stock Market Line Graph) */}
+      <StockMarketLineGraph
+        title="Monthly Transactions (Last 12 Months)"
+        subtitle="Monthly transaction value trend (INR) across 12 months"
+        icon={<Calendar size={16} color="var(--admin-text-muted)" />}
+        data={monthlyChartData.items}
+        maxVal={monthlyChartData.maxVal}
+        lineColor="#2563eb"
+        areaColor="#3b82f6"
+        isDaily={false}
+      />
 
-      {/* 6. C. Daily Transactions (Last 30 Days, 320px Height) */}
-      {renderBarChart({
-        title: 'Daily transactions (last 30 days)',
-        subtitle: 'Daily transaction value (INR)',
-        icon: <BarChart2 size={16} color="var(--admin-text-muted)" />,
-        data: dailyChartData.items,
-        maxVal: dailyChartData.maxVal,
-        barMaxWidth: '20px',
-        isDaily: true
-      })}
+      {/* 6. Daily Transactions (Last 30 Days - Stock Market Line Graph) */}
+      <StockMarketLineGraph
+        title="Daily Transactions (Last 30 Days)"
+        subtitle="Daily transaction volume & revenue trend (INR) for past 30 days"
+        icon={<BarChart2 size={16} color="var(--admin-text-muted)" />}
+        data={dailyChartData.items}
+        maxVal={dailyChartData.maxVal}
+        lineColor="#059669"
+        areaColor="#10b981"
+        isDaily={true}
+      />
 
       {/* 7. Footer Rates Updated Timestamp */}
-      <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '8px', textAlign: 'left' }}>
+      <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '4px', textAlign: 'left' }}>
         Rates updated: {updatedTimestamp}
       </div>
 
     </div>
   );
 }
+

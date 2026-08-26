@@ -82,13 +82,21 @@ export default function AdminWithdrawal() {
 
       {/* 3. Summary Box Card */}
       <div className="admin-card">
-        <div style={{ fontSize: '13px', color: 'var(--admin-text-secondary)', fontWeight: '600' }}>
-          Total withdrawal amount
+        <div style={{ fontSize: '13.5px', color: 'var(--admin-text-secondary)', fontWeight: '600' }}>
+          Total Withdrawal Amount
         </div>
-        <div style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.3px', margin: '4px 0 2px 0', color: 'var(--admin-text-value)' }}>
+        <div style={{
+          fontSize: '28px',
+          fontWeight: '800',
+          letterSpacing: '-0.3px',
+          margin: '6px 0 3px 0',
+          color: '#ef4444',
+          whiteSpace: 'nowrap',
+          lineHeight: '1.2'
+        }}>
           ₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
-        <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)' }}>
+        <div style={{ fontSize: '12.5px', color: 'var(--admin-text-muted)' }}>
           {filterMetal === 'All' ? 'All metals' : `${filterMetal} only`} · {filteredWithdrawals.length} withdrawal(s)
         </div>
       </div>

@@ -778,7 +778,7 @@ export default function AdminMembers() {
   // VIEW 2: ALL MEMBERS TABLE VIEW
   // =========================================================================
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', boxSizing: 'border-box' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 108px)', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
       
       {/* Toast Message */}
       {toastMessage && (
@@ -803,27 +803,36 @@ export default function AdminMembers() {
         </div>
       )}
 
-      {/* 1. Page Header */}
-      <div className="admin-page-header">
+      {/* 1. Page Header (Fixed at top) */}
+      <div className="admin-page-header" style={{ flexShrink: 0, marginBottom: '14px' }}>
         <h1 className="admin-page-title">Members</h1>
         <p className="admin-page-sub">
           All registered users ({members.length})
         </p>
       </div>
 
-      {/* 2. Members Table Container */}
-      <div className="admin-table-container">
-        <table className="admin-table">
-          <thead>
+      {/* 2. Members Table Container (ONLY THIS AREA SCROLLS) */}
+      <div 
+        className="admin-table-container" 
+        style={{ 
+          flex: 1, 
+          minHeight: 0, 
+          overflowY: 'auto', 
+          overflowX: 'auto', 
+          boxSizing: 'border-box' 
+        }}
+      >
+        <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
             <tr>
               <th>ID</th>
-              <th>USERNAME</th>
+              <th>CUSTOMER NAME</th>
               <th>MOBILE</th>
               <th>ROLE</th>
-              <th>VERIFIED</th>
+              <th>KYC VERIFIED</th>
               <th>MOBILE VERIFIED</th>
               <th>ACTIVE</th>
-              <th>CREATED</th>
+              <th>JOINED</th>
               <th style={{ textAlign: 'right' }}>ACTION</th>
             </tr>
           </thead>
@@ -838,9 +847,16 @@ export default function AdminMembers() {
                 <tr key={m.id || idx}>
                   <td style={{ color: 'var(--admin-text-secondary)', fontWeight: '600' }}>#{m.id}</td>
                   
-                  {/* Username in orange/terracotta color */}
-                  <td style={{ fontWeight: '700', color: 'var(--admin-orange)' }}>
-                    {m.username}
+                  {/* Customer Name & Username */}
+                  <td>
+                    <div style={{ fontWeight: '700', color: 'var(--admin-orange)' }}>
+                      {m.name || m.username}
+                    </div>
+                    {m.name && m.username && m.name !== m.username && (
+                      <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '2px' }}>
+                        @{m.username}
+                      </div>
+                    )}
                   </td>
 
                   <td style={{ fontWeight: '500', color: 'var(--admin-text-secondary)' }}>
