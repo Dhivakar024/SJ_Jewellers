@@ -26,6 +26,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
     relationshipDetails: currentUser.relationshipDetails || '',
   });
 
+  const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -79,6 +80,9 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
       }
       return updated;
     });
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: '' }));
+    }
     setErrorMessage('');
   };
 
@@ -120,106 +124,142 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMessage('');
+  const validateForm = () => {
+    const newErrors = {};
 
-    // 1. Name Validation
+    // 1. Name Validation (min 2 chars)
     const nameClean = (formData.name || '').trim();
-    if (!nameClean || nameClean.length < 2) {
-      setErrorMessage('Please enter your full name (minimum 2 characters).');
-      return;
+    if (!nameClean) {
+      newErrors.name = 'Full name is required';
+    } else if (nameClean.length < 2) {
+      newErrors.name = 'Full name must be at least 2 characters';
     }
 
-    // 2. Email Validation (Optional format check)
+    // 2. Email Validation (optional, but validated if present)
     const emailClean = (formData.email || '').trim();
     if (emailClean && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailClean)) {
-      setErrorMessage('Please enter a valid Email Address.');
-      return;
+      newErrors.email = 'Enter a valid email address';
     }
 
     // 3. User Mobile Validation (10 digits)
     const mobileClean = cleanIndianMobileDigits(formData.mobile);
-    if (!mobileClean || mobileClean.length !== 10 || !isValidIndianMobile(mobileClean)) {
-      setErrorMessage('Please enter a valid 10-digit mobile number.');
-      return;
+    if (!mobileClean) {
+      newErrors.mobile = 'Mobile number is required';
+    } else if (mobileClean.length !== 10 || !isValidIndianMobile(mobileClean)) {
+      newErrors.mobile = 'Enter a valid 10-digit mobile number';
     }
 
-    // 4. Address Validation
+    // 4. Address Validation (min 5 chars)
     const addressClean = (formData.address || '').trim();
-    if (!addressClean || addressClean.length < 5) {
-      setErrorMessage('Please enter your full address (minimum 5 characters).');
-      return;
+    if (!addressClean) {
+      newErrors.address = 'Full address is required';
+    } else if (addressClean.length < 5) {
+      newErrors.address = 'Address must be at least 5 characters';
     }
 
     // 5. PAN Card Validation (10-char alphanumeric: 5 letters, 4 digits, 1 letter)
     const panClean = (formData.pan || '').trim().toUpperCase();
-    if (!panClean || !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panClean)) {
-      setErrorMessage('Please enter a valid 10-character PAN number (e.g. ABCDE1234F).');
-      return;
+    if (!panClean) {
+      newErrors.pan = 'PAN card number is required';
+    } else if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panClean)) {
+      newErrors.pan = 'Enter valid 10-char PAN (e.g. ABCDE1234F)';
     }
 
     // 6. Aadhaar Card Validation (12 digits)
     const aadharClean = (formData.aadhar || '').replace(/\D/g, '');
-    if (!aadharClean || aadharClean.length !== 12) {
-      setErrorMessage('Please enter a valid 12-digit Aadhaar number.');
-      return;
+    if (!aadharClean) {
+      newErrors.aadhar = 'Aadhaar number is required';
+    } else if (aadharClean.length !== 12) {
+      newErrors.aadhar = 'Enter a valid 12-digit Aadhaar number';
     }
 
     // 7. Bank Account Number (9 to 18 digits)
     const accountClean = (formData.accountNumber || '').replace(/\D/g, '');
-    if (!accountClean || accountClean.length < 9 || accountClean.length > 18) {
-      setErrorMessage('Please enter a valid bank account number (9 to 18 digits).');
-      return;
+    if (!accountClean) {
+      newErrors.accountNumber = 'Bank account number is required';
+    } else if (accountClean.length < 9 || accountClean.length > 18) {
+      newErrors.accountNumber = 'Enter a valid account number (9-18 digits)';
     }
 
     // 8. Bank IFSC Code (11-char alphanumeric: 4 letters, 0, 6 characters)
     const ifscClean = (formData.ifsc || '').trim().toUpperCase();
-    if (!ifscClean || !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifscClean)) {
-      setErrorMessage('Please enter a valid 11-character IFSC code (e.g. SBIN0001234).');
-      return;
+    if (!ifscClean) {
+      newErrors.ifsc = 'IFSC code is required';
+    } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifscClean)) {
+      newErrors.ifsc = 'Enter valid 11-character IFSC (e.g. SBIN0001234)';
     }
 
     // 9. Nominee Name
     const nomineeNameClean = (formData.nomineeName || '').trim();
-    if (!nomineeNameClean || nomineeNameClean.length < 2) {
-      setErrorMessage('Please enter the nominee name (minimum 2 characters).');
-      return;
+    if (!nomineeNameClean) {
+      newErrors.nomineeName = 'Nominee name is required';
+    } else if (nomineeNameClean.length < 2) {
+      newErrors.nomineeName = 'Nominee name must be at least 2 characters';
     }
 
     // 10. Nominee Mobile (10 digits)
     const nomineeMobileClean = cleanIndianMobileDigits(formData.nomineeMobile);
-    if (!nomineeMobileClean || nomineeMobileClean.length !== 10 || !isValidIndianMobile(nomineeMobileClean)) {
-      setErrorMessage('Please enter a valid 10-digit nominee mobile number.');
-      return;
+    if (!nomineeMobileClean) {
+      newErrors.nomineeMobile = 'Nominee mobile number is required';
+    } else if (nomineeMobileClean.length !== 10 || !isValidIndianMobile(nomineeMobileClean)) {
+      newErrors.nomineeMobile = 'Enter a valid 10-digit nominee mobile';
     }
 
     // 11. Nominee DOB (DD/MM/YYYY)
     const nomineeDobClean = (formData.nomineeDob || '').trim();
     if (!nomineeDobClean) {
-      setErrorMessage('Please select the nominee date of birth.');
-      return;
+      newErrors.nomineeDob = 'Nominee date of birth is required';
     }
 
-    // 12. Nominee Address
+    // 12. Nominee Address (min 5 chars)
     const nomineeAddressClean = (formData.nomineeAddress || '').trim();
-    if (!nomineeAddressClean || nomineeAddressClean.length < 5) {
-      setErrorMessage('Please enter the nominee address (minimum 5 characters).');
-      return;
+    if (!nomineeAddressClean) {
+      newErrors.nomineeAddress = 'Nominee address is required';
+    } else if (nomineeAddressClean.length < 5) {
+      newErrors.nomineeAddress = 'Nominee address must be at least 5 characters';
     }
 
     // 13. Relationship
     const relClean = (formData.relationship || '').trim();
     if (!relClean) {
-      setErrorMessage('Please select your relationship with the nominee.');
-      return;
+      newErrors.relationship = 'Please select a relationship';
     }
 
+    // 14. Relationship Details
     const relDetailsClean = (formData.relationshipDetails || '').trim();
     if (relClean === 'Other' && (!relDetailsClean || relDetailsClean.length < 2)) {
-      setErrorMessage('Please specify your relationship details.');
+      newErrors.relationshipDetails = 'Please specify relationship details';
+    }
+
+    return newErrors;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMessage('');
+
+    const formErrors = validateForm();
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+      setErrorMessage('Please correct the highlighted fields before submitting.');
       return;
     }
+    setErrors({});
+
+    const nameClean = (formData.name || '').trim();
+    const emailClean = (formData.email || '').trim();
+    const mobileClean = cleanIndianMobileDigits(formData.mobile);
+    const addressClean = (formData.address || '').trim();
+    const panClean = (formData.pan || '').trim().toUpperCase();
+    const aadharClean = (formData.aadhar || '').replace(/\D/g, '');
+    const accountClean = (formData.accountNumber || '').replace(/\D/g, '');
+    const ifscClean = (formData.ifsc || '').trim().toUpperCase();
+    const nomineeNameClean = (formData.nomineeName || '').trim();
+    const nomineeMobileClean = cleanIndianMobileDigits(formData.nomineeMobile);
+    const nomineeDobClean = (formData.nomineeDob || '').trim();
+    const nomineeAddressClean = (formData.nomineeAddress || '').trim();
+    const relClean = (formData.relationship || '').trim();
+    const relDetailsClean = (formData.relationshipDetails || '').trim();
 
     // Build backend update payload
     const payload = {
@@ -349,6 +389,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
                   className="profile-custom-input"
                   disabled={isSubmitting}
                 />
+                {errors.name && <div className="profile-field-error">{errors.name}</div>}
               </div>
             </div>
 
@@ -365,6 +406,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
                   className="profile-custom-input"
                   disabled={isSubmitting}
                 />
+                {errors.email && <div className="profile-field-error">{errors.email}</div>}
               </div>
             </div>
 
@@ -387,6 +429,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
                     disabled={isSubmitting}
                   />
                 </div>
+                {errors.mobile && <div className="profile-field-error">{errors.mobile}</div>}
               </div>
             </div>
 
@@ -410,6 +453,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
                   }}
                   disabled={isSubmitting}
                 />
+                {errors.address && <div className="profile-field-error">{errors.address}</div>}
               </div>
             </div>
 
@@ -428,6 +472,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
                   style={{ textTransform: 'uppercase' }}
                   disabled={isSubmitting}
                 />
+                {errors.pan && <div className="profile-field-error">{errors.pan}</div>}
               </div>
             </div>
 
@@ -447,6 +492,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
                   className="profile-custom-input"
                   disabled={isSubmitting}
                 />
+                {errors.aadhar && <div className="profile-field-error">{errors.aadhar}</div>}
               </div>
             </div>
 
@@ -466,6 +512,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
                   className="profile-custom-input"
                   disabled={isSubmitting}
                 />
+                {errors.accountNumber && <div className="profile-field-error">{errors.accountNumber}</div>}
               </div>
             </div>
 
@@ -484,6 +531,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
                   style={{ textTransform: 'uppercase' }}
                   disabled={isSubmitting}
                 />
+                {errors.ifsc && <div className="profile-field-error">{errors.ifsc}</div>}
               </div>
             </div>
           </div>
@@ -518,6 +566,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
                   className="profile-custom-input"
                   disabled={isSubmitting}
                 />
+                {errors.nomineeName && <div className="profile-field-error">{errors.nomineeName}</div>}
               </div>
             </div>
 
@@ -540,6 +589,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
                     disabled={isSubmitting}
                   />
                 </div>
+                {errors.nomineeMobile && <div className="profile-field-error">{errors.nomineeMobile}</div>}
               </div>
             </div>
 
@@ -594,6 +644,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
                   aria-label="Select Date of Birth"
                   disabled={isSubmitting}
                 />
+                {errors.nomineeDob && <div className="profile-field-error">{errors.nomineeDob}</div>}
               </div>
             </div>
 
@@ -617,6 +668,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
                   }}
                   disabled={isSubmitting}
                 />
+                {errors.nomineeAddress && <div className="profile-field-error">{errors.nomineeAddress}</div>}
               </div>
             </div>
 
@@ -642,6 +694,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
                   <option value="Other">Other</option>
                 </select>
                 <ChevronDown size={18} color="#2c2642" style={{ position: 'absolute', right: '12px', top: '13px', pointerEvents: 'none' }} />
+                {errors.relationship && <div className="profile-field-error">{errors.relationship}</div>}
               </div>
             </div>
 
@@ -659,6 +712,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
                     className="profile-custom-input"
                     disabled={isSubmitting}
                   />
+                  {errors.relationshipDetails && <div className="profile-field-error">{errors.relationshipDetails}</div>}
                 </div>
               </div>
             )}

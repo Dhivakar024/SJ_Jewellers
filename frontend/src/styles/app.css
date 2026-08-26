@@ -589,6 +589,16 @@ body,
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
+  flex-direction: column;
+}
+
+.profile-field-error {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #dc2626;
+  margin-top: 3px;
+  line-height: 1.25;
+  text-align: left;
 }
 
 .profile-custom-input {

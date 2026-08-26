@@ -256,7 +256,9 @@ function MainContent() {
         {userScreen === 'contact' && (
           <ContactUsScreen fromScreen={navSource['contact'] || 'home'} onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />
         )}
-        {userScreen === 'holdings' && <HoldingsScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
+        {userScreen === 'holdings' && (
+          <HoldingsScreen fromScreen={navSource['holdings'] || 'home'} onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />
+        )}
         {userScreen === 'profile' && <ProfileScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
         {userScreen === 'create-profile' && <CreateProfileScreen mode="create" onNavigate={handleUserNavigate} />}
         {userScreen === 'edit-profile' && <CreateProfileScreen mode="edit" onNavigate={handleUserNavigate} />}

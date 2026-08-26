@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Eye, EyeOff, Phone, CheckCircle2, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, Phone, RefreshCw } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { CUSTOMER_SUPPORT_PHONE, getTelephoneLink } from '../config/support';
 import { cleanIndianMobileDigits, formatToE164, isValidIndianMobile } from '../utils/phoneUtils';
@@ -166,13 +166,15 @@ export default function SignUpScreen({ onNavigate }) {
   };
 
   return (
-    <div className="auth-screen" style={{ padding: '20px 20px 24px 20px' }}>
-      {/* Aligned Header: [ Back ] Welcome ! Create your new account now. */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px', marginTop: '2px' }}>
-        <button className="back-btn" onClick={handleBack} aria-label="Back" style={{ flexShrink: 0 }}>
-          <ArrowLeft size={22} />
-        </button>
-        <h1 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-dark)', lineHeight: '1.25', margin: 0 }}>
+    <div className="auth-screen" style={{ padding: '16px 20px 24px 20px' }}>
+      {/* Back Button */}
+      <button className="back-btn" onClick={handleBack} aria-label="Back" style={{ marginBottom: '12px' }}>
+        <ArrowLeft size={22} />
+      </button>
+
+      {/* Heading positioned below Back Button with consistent alignment */}
+      <div style={{ marginBottom: '16px', textAlign: 'left' }}>
+        <h1 style={{ fontSize: '23px', fontWeight: '800', color: 'var(--text-dark)', lineHeight: '1.25', margin: 0 }}>
           Welcome ! Create your<br />new account now.
         </h1>
       </div>
@@ -220,10 +222,11 @@ export default function SignUpScreen({ onNavigate }) {
       {step === 'mobile' && (
         <form onSubmit={handleGetOtp} style={{ display: 'flex', flexDirection: 'column' }}>
           <div className="input-group">
+            <label className="input-field-label">Full Name</label>
             <input
               type="text"
               className="custom-input"
-              placeholder="Full Name"
+              placeholder="Enter Full Name"
               value={name}
               onChange={(e) => {
                 setName(e.target.value);
@@ -235,6 +238,7 @@ export default function SignUpScreen({ onNavigate }) {
           </div>
 
           <div className="input-group">
+            <label className="input-field-label">Mobile Number</label>
             <input
               type="tel"
               inputMode="numeric"
@@ -249,7 +253,12 @@ export default function SignUpScreen({ onNavigate }) {
             />
           </div>
 
-          <button type="submit" className="btn-primary" style={{ marginTop: '4px' }} disabled={isLoading}>
+          <button
+            type="submit"
+            className="btn-primary"
+            style={{ marginTop: '4px' }}
+            disabled={isLoading || mobileDigits.length !== 10}
+          >
             {isLoading ? 'Sending OTP...' : 'Get OTP'}
           </button>
         </form>
@@ -293,6 +302,7 @@ export default function SignUpScreen({ onNavigate }) {
           </div>
 
           <div className="input-group">
+            <label className="input-field-label">Enter OTP</label>
             <input
               type="tel"
               inputMode="numeric"
@@ -308,7 +318,12 @@ export default function SignUpScreen({ onNavigate }) {
             />
           </div>
 
-          <button type="submit" className="btn-primary" style={{ marginTop: '4px' }} disabled={isLoading}>
+          <button
+            type="submit"
+            className="btn-primary"
+            style={{ marginTop: '4px' }}
+            disabled={isLoading || otp.length < 4}
+          >
             {isLoading ? 'Verifying OTP...' : 'Submit'}
           </button>
 
@@ -342,6 +357,7 @@ export default function SignUpScreen({ onNavigate }) {
       {step === 'details' && (
         <form onSubmit={handleCreateAccount} style={{ display: 'flex', flexDirection: 'column' }}>
           <div className="input-group">
+            <label className="input-field-label">Email Address</label>
             <input
               type="email"
               className="custom-input"
@@ -356,78 +372,84 @@ export default function SignUpScreen({ onNavigate }) {
             />
           </div>
 
-          <div className="input-group" style={{ position: 'relative' }}>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              className="custom-input"
-              placeholder="Password (Min 8 chars)"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setErrorMessage('');
-              }}
-              disabled={isLoading}
-              autoComplete="new-password"
-              style={{ paddingRight: '48px' }}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
-              style={{
-                position: 'absolute',
-                right: '14px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                color: '#8b849c',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '4px',
-              }}
-            >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
+          <div className="input-group">
+            <label className="input-field-label">Password</label>
+            <div style={{ position: 'relative', width: '100%' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="custom-input"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setErrorMessage('');
+                }}
+                disabled={isLoading}
+                autoComplete="new-password"
+                style={{ paddingRight: '48px' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                style={{
+                  position: 'absolute',
+                  right: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: '#8b849c',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '4px',
+                }}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
 
-          <div className="input-group" style={{ position: 'relative' }}>
-            <input
-              type={showConfirmPassword ? 'text' : 'password'}
-              className="custom-input"
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.target.value);
-                setErrorMessage('');
-              }}
-              disabled={isLoading}
-              autoComplete="new-password"
-              style={{ paddingRight: '48px' }}
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
-              style={{
-                position: 'absolute',
-                right: '14px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                color: '#8b849c',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '4px',
-              }}
-            >
-              {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
+          <div className="input-group">
+            <label className="input-field-label">Confirm Password</label>
+            <div style={{ position: 'relative', width: '100%' }}>
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                className="custom-input"
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  setErrorMessage('');
+                }}
+                disabled={isLoading}
+                autoComplete="new-password"
+                style={{ paddingRight: '48px' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                style={{
+                  position: 'absolute',
+                  right: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: '#8b849c',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '4px',
+                }}
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
 
           <button type="submit" className="btn-primary" style={{ marginTop: '4px' }} disabled={isLoading}>

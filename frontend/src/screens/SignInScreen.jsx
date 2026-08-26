@@ -195,11 +195,29 @@ export default function SignInScreen({ onNavigate }) {
       </div>
 
       {/* Sign Up Link */}
-      <div className="auth-footer-text" style={{ marginTop: '10px', marginBottom: '2px' }}>
-        Don't have an account?{' '}
-        <span onClick={() => onNavigate('signup')} style={{ cursor: 'pointer', color: 'var(--primary-purple)', fontWeight: '700' }}>
+      <div className="auth-footer-text" style={{ marginTop: '10px', marginBottom: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+        <span>Don't have an account?</span>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onNavigate('signup');
+          }}
+          style={{
+            background: 'none',
+            border: 'none',
+            padding: '4px 6px',
+            color: 'var(--primary-purple)',
+            fontWeight: '800',
+            fontSize: '14px',
+            cursor: 'pointer',
+            textDecoration: 'none',
+            display: 'inline-block',
+          }}
+        >
           Sign Up
-        </span>
+        </button>
       </div>
     </div>
   );

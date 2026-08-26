@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { RotateCw } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { holdingsService } from '../services';
 import BottomNav from '../components/BottomNav';
 
-export default function HoldingsScreen({ onNavigate, onTogglePlus }) {
+export default function HoldingsScreen({ onNavigate, fromScreen = 'home', onTogglePlus }) {
   const { holdings, setHoldings, goldRate, silverRate, fetchHoldings } = useApp();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(() => {
@@ -66,9 +66,12 @@ export default function HoldingsScreen({ onNavigate, onTogglePlus }) {
 
   return (
     <div className="app-screen-layout">
-      {/* 1. Fixed Top Header */}
-      <header className="top-header-bar">
-        <h2 style={{ fontSize: '26px', fontWeight: '800' }}>Holdings</h2>
+      {/* 1. Fixed Top Header with Back Button */}
+      <header className="top-header-bar" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <button className="back-btn" onClick={() => onNavigate(fromScreen || 'home')} aria-label="Back">
+          <ArrowLeft size={22} />
+        </button>
+        <h2 style={{ fontSize: '24px', fontWeight: '800' }}>Holdings</h2>
       </header>
 
       {/* 2. Middle Scrollable Content (ONLY THIS SCROLLS) */}
@@ -81,10 +84,10 @@ export default function HoldingsScreen({ onNavigate, onTogglePlus }) {
           textAlign: 'center',
           border: '1px solid #c9b8fc'
         }}>
-          <div style={{ fontSize: '15px', fontWeight: '700', color: '#44386e', marginBottom: '6px' }}>
+          <div style={{ fontSize: '15px', fontWeight: '700', color: '#1e1b2e', marginBottom: '6px' }}>
             Total Current Value
           </div>
-          <div style={{ fontSize: '32px', fontWeight: '900', color: 'var(--primary-purple)' }}>
+          <div style={{ fontSize: '32px', fontWeight: '900', color: '#e05252', letterSpacing: '-0.5px' }}>
             ₹{totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
         </div>
@@ -106,13 +109,13 @@ export default function HoldingsScreen({ onNavigate, onTogglePlus }) {
             <span style={{ fontSize: '20px', fontWeight: '800', color: '#1e1b2e' }}>Gold</span>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#55497c' }}>
-            <span>Grams Held</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', fontWeight: '600' }}>
+            <span style={{ color: '#1e1b2e', fontWeight: '700' }}>Grams Held</span>
             <span style={{ fontWeight: '800', color: '#1e1b2e' }}>{goldGrams.toFixed(4)} gm</span>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '14px', fontWeight: '600', color: '#55497c' }}>
-            <span>Current Rate</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '14px', fontWeight: '600' }}>
+            <span style={{ color: '#1e1b2e', fontWeight: '700' }}>Current Rate</span>
             <span style={{ fontWeight: '800', color: '#1e1b2e' }}>
               ₹{currentGoldRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm
             </span>
@@ -145,13 +148,13 @@ export default function HoldingsScreen({ onNavigate, onTogglePlus }) {
             <span style={{ fontSize: '20px', fontWeight: '800', color: '#1e1b2e' }}>Silver</span>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#55497c' }}>
-            <span>Grams Held</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', fontWeight: '600' }}>
+            <span style={{ color: '#1e1b2e', fontWeight: '700' }}>Grams Held</span>
             <span style={{ fontWeight: '800', color: '#1e1b2e' }}>{silverGrams.toFixed(4)} gm</span>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '14px', fontWeight: '600', color: '#55497c' }}>
-            <span>Current Rate</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '14px', fontWeight: '600' }}>
+            <span style={{ color: '#1e1b2e', fontWeight: '700' }}>Current Rate</span>
             <span style={{ fontWeight: '800', color: '#1e1b2e' }}>
               ₹{currentSilverRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm
             </span>
