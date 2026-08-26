@@ -180,21 +180,45 @@ body,
 .auth-header-left {
   text-align: left;
   margin-top: 10px;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .auth-header-left h1 {
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 800;
   color: var(--text-dark);
   line-height: 1.3;
 }
 
+.auth-signup-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+  margin-bottom: 16px;
+}
+
+.auth-signup-header h1 {
+  font-size: 21px;
+  font-weight: 800;
+  color: var(--text-dark);
+  line-height: 1.25;
+}
+
 /* Input Fields */
 .input-group {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   display: flex;
   flex-direction: column;
+}
+
+.input-field-label {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #2c2642;
+  margin-bottom: 6px;
+  display: block;
+  text-align: left;
 }
 
 .custom-input {

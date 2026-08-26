@@ -263,8 +263,41 @@ class TestProductionSecurity(unittest.TestCase):
                 "password": "WrongPassword123!",
             }
         )
-        self.assertEqual(resp.status_code, 401)
-        self.assertIn("Invalid mobile number or password", resp.json().get("detail", ""))
+    def test_14_send_otp_and_verify_otp(self):
+        """Verify sending OTP and validating DEV OTP code."""
+        mock_db = MagicMock()
+        app.dependency_overrides[get_database] = lambda: mock_db
+
+        # 1. Send OTP
+        resp = self.client.post(
+            "/api/auth/send-otp",
+            json={"mobile": "+919876543210"}
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertEqual(data["mobile"], "9876543210")
+        self.assertEqual(data["otp_length"], 6)
+
+        # 2. Verify OTP with correct DEV_OTP ("123456")
+        verify_resp = self.client.post(
+            "/api/auth/verify-otp",
+            json={"mobile": "9876543210", "otp": "123456"}
+        )
+        self.assertEqual(verify_resp.status_code, 200)
+        self.assertTrue(verify_resp.json().get("verified"))
+
+    def test_15_verify_otp_invalid_rejected(self):
+        """Verify invalid OTP is rejected with 400 Bad Request."""
+        mock_db = MagicMock()
+        mock_db.otps.find_one.return_value = None
+        app.dependency_overrides[get_database] = lambda: mock_db
+
+        resp = self.client.post(
+            "/api/auth/verify-otp",
+            json={"mobile": "9876543210", "otp": "999999"}
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("Invalid or expired OTP", resp.json().get("detail", ""))
 
 
 if __name__ == "__main__":

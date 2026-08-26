@@ -9,7 +9,7 @@ export default function ActionSheet({ isOpen, onClose, onNavigate }) {
       <div className="bottom-sheet" onClick={(e) => e.stopPropagation()}>
         <div 
           className="sheet-item" 
-          onClick={() => { onNavigate('withdraw'); onClose(); }}
+          onClick={() => { onNavigate('withdraw', { from: 'home', source: 'plus-menu' }); onClose(); }}
         >
           <Hand size={24} color="#583cf5" />
           <span>Mode of Withdraw</span>
@@ -17,7 +17,7 @@ export default function ActionSheet({ isOpen, onClose, onNavigate }) {
 
         <div 
           className="sheet-item" 
-          onClick={() => { onNavigate('transactions'); onClose(); }}
+          onClick={() => { onNavigate('transactions', { from: 'home', source: 'plus-menu' }); onClose(); }}
         >
           <FileText size={24} color="#583cf5" />
           <span>Transaction History</span>
@@ -25,7 +25,7 @@ export default function ActionSheet({ isOpen, onClose, onNavigate }) {
 
         <div 
           className="sheet-item" 
-          onClick={() => { onNavigate('contact'); onClose(); }}
+          onClick={() => { onNavigate('contact', { from: 'home', source: 'plus-menu' }); onClose(); }}
         >
           <Phone size={24} color="#583cf5" />
           <span>Contact Us</span>

@@ -20,6 +20,7 @@ export default function SignInScreen({ onNavigate }) {
 
   const handleSignIn = async (e) => {
     e.preventDefault();
+    if (isLoading) return;
     setErrorMessage('');
 
     if (!mobileDigits) {
@@ -62,8 +63,8 @@ export default function SignInScreen({ onNavigate }) {
   return (
     <div className="auth-screen-signin">
       {/* Centered Heading */}
-      <div className="auth-header" style={{ marginTop: '10px', marginBottom: '20px' }}>
-        <h1 style={{ fontSize: '26px', lineHeight: '1.25' }}>
+      <div className="auth-header" style={{ marginTop: '6px', marginBottom: '16px' }}>
+        <h1 style={{ fontSize: '25px', lineHeight: '1.25' }}>
           Welcome !<br />
           Glad to see you !
         </h1>
@@ -80,7 +81,7 @@ export default function SignInScreen({ onNavigate }) {
               borderRadius: '10px',
               padding: '8px 12px',
               fontSize: '13px',
-              marginBottom: '14px',
+              marginBottom: '12px',
               textAlign: 'center',
               fontWeight: 600,
             }}
@@ -89,63 +90,62 @@ export default function SignInScreen({ onNavigate }) {
           </div>
         )}
 
-        {/* Mobile Number with Fixed +91 Prefix */}
+        {/* Mobile Number with Label Above */}
         <div className="input-group">
-          <div className="phone-input-wrapper">
-            <div className="phone-prefix-badge">
-              <span>+91</span>
-            </div>
-            <input
-              type="tel"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              maxLength={10}
-              className="phone-input-control"
-              placeholder="Enter 10-digit Mobile Number"
-              value={mobileDigits}
-              onChange={handleMobileChange}
-              disabled={isLoading}
-              autoComplete="tel-national"
-            />
-          </div>
+          <label className="input-field-label">Mobile Number</label>
+          <input
+            type="tel"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={10}
+            className="custom-input"
+            placeholder="Enter 10-digit Mobile Number"
+            value={mobileDigits}
+            onChange={handleMobileChange}
+            disabled={isLoading}
+            autoComplete="off"
+          />
         </div>
 
-        {/* Password */}
-        <div className="input-group" style={{ position: 'relative' }}>
-          <input
-            type={showPassword ? 'text' : 'password'}
-            className="custom-input"
-            placeholder="Enter Password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setErrorMessage('');
-            }}
-            disabled={isLoading}
-            autoComplete="current-password"
-            style={{ backgroundColor: '#ffffff', border: '1.5px solid #dcd4fa', paddingRight: '48px' }}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
-            style={{
-              position: 'absolute',
-              right: '14px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: 'none',
-              border: 'none',
-              color: '#8b849c',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '4px',
-            }}
-          >
-            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-          </button>
+        {/* Password with Label Above */}
+        <div className="input-group">
+          <label className="input-field-label">Password</label>
+          <div style={{ position: 'relative', width: '100%' }}>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              className="custom-input"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setErrorMessage('');
+              }}
+              disabled={isLoading}
+              autoComplete="new-password"
+              style={{ backgroundColor: '#ffffff', border: '1.5px solid #dcd4fa', paddingRight: '48px' }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              style={{
+                position: 'absolute',
+                right: '14px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                color: '#8b849c',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '4px',
+              }}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
         </div>
 
         <button type="submit" className="btn-primary" disabled={isLoading} style={{ marginTop: '4px' }}>
@@ -158,17 +158,17 @@ export default function SignInScreen({ onNavigate }) {
         style={{
           backgroundColor: '#ffffff',
           borderRadius: '16px',
-          padding: '14px 16px',
-          marginTop: '12px',
+          padding: '12px 14px',
+          marginTop: '10px',
           border: '1px solid #e8e2fa',
           boxShadow: '0 4px 14px rgba(88, 60, 245, 0.04)',
           textAlign: 'center',
         }}
       >
-        <div style={{ fontSize: '13.5px', fontWeight: '800', color: '#1e1b2e', marginBottom: '4px' }}>
+        <div style={{ fontSize: '13.5px', fontWeight: '800', color: '#1e1b2e', marginBottom: '3px' }}>
           Need help signing in?
         </div>
-        <p style={{ fontSize: '11.5px', color: '#6b7280', margin: '0 0 10px 0', lineHeight: '1.4' }}>
+        <p style={{ fontSize: '11.5px', color: '#6b7280', margin: '0 0 8px 0', lineHeight: '1.4' }}>
           If you forgot your password or are unable to access your account, please contact Customer Support for account verification and assistance.
         </p>
         <a
@@ -181,8 +181,8 @@ export default function SignInScreen({ onNavigate }) {
             backgroundColor: '#f1ecfe',
             color: 'var(--primary-purple)',
             fontWeight: '800',
-            fontSize: '13.5px',
-            padding: '8px 16px',
+            fontSize: '13px',
+            padding: '7px 14px',
             borderRadius: '12px',
             textDecoration: 'none',
             border: '1px solid #ded5fb',
@@ -195,7 +195,7 @@ export default function SignInScreen({ onNavigate }) {
       </div>
 
       {/* Sign Up Link */}
-      <div className="auth-footer-text" style={{ marginTop: '12px', marginBottom: '4px' }}>
+      <div className="auth-footer-text" style={{ marginTop: '10px', marginBottom: '2px' }}>
         Don't have an account?{' '}
         <span onClick={() => onNavigate('signup')} style={{ cursor: 'pointer', color: 'var(--primary-purple)', fontWeight: '700' }}>
           Sign Up

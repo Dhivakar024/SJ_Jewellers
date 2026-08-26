@@ -38,6 +38,39 @@ class UserRegisterRequest(BaseModel):
         return v
 
 
+class SendOtpRequest(BaseModel):
+    """Schema for requesting an OTP."""
+    mobile: str = Field(..., min_length=7, max_length=20, description="Mobile number to receive OTP")
+
+    @field_validator("mobile", mode="before")
+    @classmethod
+    def clean_mobile(cls, v: str) -> str:
+        if isinstance(v, str):
+            v = v.strip()
+            if not v:
+                raise ValueError("Mobile cannot be empty")
+        return v
+
+
+class SendOtpResponse(BaseModel):
+    """Schema for OTP dispatch response."""
+    message: str = "OTP sent successfully"
+    mobile: str
+    otp_length: int = 6
+
+
+class VerifyOtpRequest(BaseModel):
+    """Schema for verifying an OTP."""
+    mobile: str = Field(..., min_length=7, max_length=20, description="Mobile number")
+    otp: str = Field(..., min_length=4, max_length=10, description="One-time password")
+
+
+class VerifyOtpResponse(BaseModel):
+    """Schema for OTP verification response."""
+    message: str = "OTP verified successfully"
+    verified: bool = True
+
+
 class UserLoginRequest(BaseModel):
     """Schema for user login using mobile/identifier and password."""
     mobile: Optional[str] = Field(None, description="Registered mobile number or username")

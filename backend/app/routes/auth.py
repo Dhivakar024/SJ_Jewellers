@@ -9,15 +9,43 @@ from app.schemas.auth import (
     UserResponse,
     RegisterResponse,
     TokenResponse,
+    SendOtpRequest,
+    SendOtpResponse,
+    VerifyOtpRequest,
+    VerifyOtpResponse,
 )
 from app.services.auth_service import (
     register_user,
     login_user,
+    send_otp,
+    verify_otp,
     format_user_response,
 )
 from app.utils.security import get_current_user, create_access_token
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+
+
+@router.post(
+    "/send-otp",
+    response_model=SendOtpResponse,
+    summary="Send OTP to mobile number",
+    description="Dispatches a 6-digit one-time password for mobile verification.",
+)
+async def send_otp_endpoint(data: SendOtpRequest, db: Database = Depends(get_database)):
+    clean_mobile, _ = send_otp(db, data.mobile)
+    return SendOtpResponse(message="OTP sent successfully", mobile=clean_mobile, otp_length=6)
+
+
+@router.post(
+    "/verify-otp",
+    response_model=VerifyOtpResponse,
+    summary="Verify mobile OTP",
+    description="Verifies the 6-digit one-time password for a mobile number.",
+)
+async def verify_otp_endpoint(data: VerifyOtpRequest, db: Database = Depends(get_database)):
+    verify_otp(db, data.mobile, data.otp)
+    return VerifyOtpResponse(message="OTP verified successfully", verified=True)
 
 
 @router.post(

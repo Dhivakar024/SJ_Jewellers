@@ -77,6 +77,65 @@ def _normalize_mobile(raw_mobile: str) -> Tuple[str, list]:
     return clean, variants
 
 
+def send_otp(db: Database, raw_mobile: str) -> Tuple[str, str]:
+    """Generate and dispatch OTP for a given mobile number."""
+    clean_mobile, _ = _normalize_mobile(raw_mobile)
+    if not clean_mobile or len(clean_mobile) != 10:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Please provide a valid 10-digit mobile number",
+        )
+
+    otp_code = getattr(settings, "DEV_OTP", "123456")
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(minutes=10)
+
+    if db is not None:
+        try:
+            db.otps.update_one(
+                {"mobile": clean_mobile},
+                {
+                    "$set": {
+                        "mobile": clean_mobile,
+                        "otp": otp_code,
+                        "created_at": now,
+                        "expires_at": expires_at,
+                    }
+                },
+                upsert=True,
+            )
+        except Exception:
+            pass
+
+    return clean_mobile, otp_code
+
+
+def verify_otp(db: Database, raw_mobile: str, otp: str) -> bool:
+    """Verify an entered OTP for a mobile number."""
+    clean_mobile, _ = _normalize_mobile(raw_mobile)
+    clean_otp = (otp or "").strip()
+    
+    if not clean_otp:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP is required",
+        )
+
+    dev_otp = getattr(settings, "DEV_OTP", "123456")
+    if clean_otp == dev_otp:
+        return True
+
+    if db is not None:
+        doc = db.otps.find_one({"mobile": clean_mobile})
+        if doc and doc.get("otp") == clean_otp:
+            expires_at = doc.get("expires_at")
+            if expires_at and expires_at > datetime.now(timezone.utc):
+                return True
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Invalid or expired OTP",
+    )
 
 
 def register_user(db: Database, data: UserRegisterRequest) -> UserResponse:

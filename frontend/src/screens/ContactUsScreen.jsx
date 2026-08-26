@@ -3,7 +3,7 @@ import { ArrowLeft, Phone, Mail, MapPin, Send, CheckCircle2 } from 'lucide-react
 import BottomNav from '../components/BottomNav';
 import { CUSTOMER_SUPPORT_PHONE, CUSTOMER_SUPPORT_EMAIL, getTelephoneLink } from '../config/support';
 
-export default function ContactUsScreen({ onNavigate, fromScreen = 'profile', onTogglePlus }) {
+export default function ContactUsScreen({ onNavigate, fromScreen = 'home', onTogglePlus }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -29,7 +29,7 @@ export default function ContactUsScreen({ onNavigate, fromScreen = 'profile', on
     <div className="app-screen-layout">
       {/* 1. Fixed Top Header */}
       <header className="top-header-bar">
-        <button className="back-btn" onClick={() => onNavigate(fromScreen || 'profile')} aria-label="Back">
+        <button className="back-btn" onClick={() => onNavigate(fromScreen || 'home')} aria-label="Back">
           <ArrowLeft size={22} />
         </button>
         <h2>Contact Us</h2>

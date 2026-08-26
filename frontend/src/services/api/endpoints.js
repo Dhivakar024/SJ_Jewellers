@@ -9,6 +9,8 @@ export const ENDPOINTS = {
     REGISTER: '/api/auth/register',
     LOGIN: '/api/auth/login',
     ME: '/api/auth/me',
+    SEND_OTP: '/api/auth/send-otp',
+    VERIFY_OTP: '/api/auth/verify-otp',
   },
 
   // Customer Profile

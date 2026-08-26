@@ -147,7 +147,8 @@ function MainContent() {
 
   const handleUserNavigate = (screen, options = {}) => {
     // If not authenticated, only allow auth screens
-    if (!currentUser || !currentUser.isAuthenticated) {
+    const isAuth = !!(currentUser?.isAuthenticated || getAuthToken());
+    if (!isAuth) {
       if (screen === 'signup' || screen === 'signin') {
         setUserScreen(screen);
         window.location.hash = screen;
@@ -160,11 +161,11 @@ function MainContent() {
     }
 
     // When skipping or navigating to home with incomplete profile, mark session as skipped
-    if (screen === 'home' && !currentUser.profileCompleted) {
+    if (screen === 'home' && !currentUser?.profileCompleted) {
       sessionStorage.setItem('sj_session_skipped_profile', 'true');
     }
 
-    // Track navigation source if provided (e.g. { from: 'buy' } or { from: 'profile' })
+    // Track navigation source if provided (e.g. { from: 'buy' } or { from: 'profile' } or { from: 'home' })
     if (options && options.from) {
       setNavSource((prev) => ({ ...prev, [screen]: options.from }));
     }
@@ -253,7 +254,7 @@ function MainContent() {
           <TransactionHistoryScreen fromScreen={navSource['transactions'] || 'home'} onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />
         )}
         {userScreen === 'contact' && (
-          <ContactUsScreen fromScreen={navSource['contact'] || 'profile'} onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />
+          <ContactUsScreen fromScreen={navSource['contact'] || 'home'} onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />
         )}
         {userScreen === 'holdings' && <HoldingsScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}
         {userScreen === 'profile' && <ProfileScreen onNavigate={handleUserNavigate} onTogglePlus={() => setIsActionSheetOpen(true)} />}

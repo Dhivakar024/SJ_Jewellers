@@ -14,6 +14,27 @@ export const ADMIN_DEMO_CREDENTIALS = {
 };
 
 export const authService = {
+  /**
+   * Request OTP for mobile verification
+   */
+  sendOtp: async ({ mobile }) => {
+    return apiClient.post(
+      ENDPOINTS.AUTH.SEND_OTP,
+      { mobile: mobile?.trim() },
+      { requiresAuth: false }
+    );
+  },
+
+  /**
+   * Verify mobile OTP
+   */
+  verifyOtp: async ({ mobile, otp }) => {
+    return apiClient.post(
+      ENDPOINTS.AUTH.VERIFY_OTP,
+      { mobile: mobile?.trim(), otp: otp?.trim() },
+      { requiresAuth: false }
+    );
+  },
 
   /**
    * Register a new customer account
