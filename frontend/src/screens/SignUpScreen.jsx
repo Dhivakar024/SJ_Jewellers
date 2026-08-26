@@ -459,11 +459,30 @@ export default function SignUpScreen({ onNavigate }) {
       )}
 
       {/* Footer link */}
-      <div className="auth-footer-text" style={{ marginTop: '16px', marginBottom: '2px' }}>
-        Already have an account?{' '}
-        <span onClick={() => onNavigate('signin')} style={{ cursor: 'pointer', color: 'var(--primary-purple)', fontWeight: '700' }}>
+      <div className="auth-footer-text" style={{ marginTop: '16px', marginBottom: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+        <span>Already have an account?</span>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onNavigate('signin');
+          }}
+          className="auth-link"
+          style={{
+            background: 'none',
+            border: 'none',
+            padding: '2px 4px',
+            color: 'var(--primary-purple)',
+            fontWeight: '800',
+            fontSize: '14px',
+            cursor: 'pointer',
+            textDecoration: 'none',
+            display: 'inline-block',
+          }}
+        >
           Sign In
-        </span>
+        </button>
       </div>
 
       {/* Small Customer Support Option */}

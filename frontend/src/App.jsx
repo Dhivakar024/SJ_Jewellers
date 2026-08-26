@@ -86,21 +86,24 @@ function MainContent() {
       // Customer App Routing
       const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
 
+      // Direct Auth Screens
+      if (hash === 'signup' || hash === 'signin' || hash === 'forgot-username') {
+        setUserScreen(hash);
+        return;
+      }
+
       // Unauthenticated users can only view auth screens
       if (!currentUser || !currentUser.isAuthenticated) {
-        if (hash === 'signup') {
-          setUserScreen('signup');
-        } else {
-          setUserScreen('signin');
-          window.location.hash = 'signin';
-        }
+        setUserScreen('signin');
+        window.location.hash = 'signin';
         return;
       }
 
       // Authenticated customer users
       const validScreens = [
         'home', 'buy', 'buy-gold', 'buy-silver', 'holdings',
-        'profile', 'transactions', 'contact', 'withdraw', 'create-profile', 'edit-profile'
+        'profile', 'transactions', 'contact', 'withdraw', 'create-profile', 'edit-profile',
+        'signup', 'signin', 'forgot-username'
       ];
 
       const isSkipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
@@ -129,11 +132,12 @@ function MainContent() {
   // Auth & Profile Guard: Sync userScreen upon auth state change
   useEffect(() => {
     if (isAdminRoute() || isAuthLoading) return;
+    if (userScreen === 'signin' || userScreen === 'signup' || userScreen === 'forgot-username') {
+      return;
+    }
     if (!currentUser || !currentUser.isAuthenticated) {
-      if (userScreen !== 'signin' && userScreen !== 'signup') {
-        setUserScreen('signin');
-        window.location.hash = 'signin';
-      }
+      setUserScreen('signin');
+      window.location.hash = 'signin';
     } else {
       const isSkipped = sessionStorage.getItem('sj_session_skipped_profile') === 'true';
       if (!currentUser.profileCompleted && !isSkipped && userScreen !== 'create-profile' && userScreen !== 'contact') {
@@ -146,16 +150,19 @@ function MainContent() {
   const [navSource, setNavSource] = useState({});
 
   const handleUserNavigate = (screen, options = {}) => {
-    // If not authenticated, only allow auth screens
+    // 1. Direct navigation to auth screens (Sign In, Sign Up, Forgot Username)
+    if (screen === 'signup' || screen === 'signin' || screen === 'forgot-username') {
+      setUserScreen(screen);
+      window.location.hash = screen;
+      setIsActionSheetOpen(false);
+      return;
+    }
+
+    // 2. If not authenticated, only allow auth screens
     const isAuth = !!(currentUser?.isAuthenticated || getAuthToken());
     if (!isAuth) {
-      if (screen === 'signup' || screen === 'signin') {
-        setUserScreen(screen);
-        window.location.hash = screen;
-      } else {
-        setUserScreen('signin');
-        window.location.hash = 'signin';
-      }
+      setUserScreen('signin');
+      window.location.hash = 'signin';
       setIsActionSheetOpen(false);
       return;
     }
