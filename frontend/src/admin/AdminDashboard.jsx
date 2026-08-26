@@ -722,27 +722,31 @@ export default function AdminDashboard({ onSelectTab }) {
         </p>
       </div>
 
-      {/* 2. Top Two Rate Cards (Side by Side, Reduced Size, Single Horizontal Line) */}
+      {/* 2. Top Two Rate Cards (Side by Side, Compact Reduced Size, Exact Single Horizontal Line) */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-        gap: '14px'
+        gap: '14px',
+        width: '100%',
+        boxSizing: 'border-box'
       }}>
         {/* Gold (24K) Card */}
         <div className="admin-holdings-card-gold" style={{
-          padding: '12px 18px',
+          padding: '14px 20px',
           borderLeft: '4px solid #D4A017',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '12px',
+          gap: '14px',
           borderRadius: '10px',
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
+          minHeight: 'auto',
+          flexWrap: 'nowrap'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
             <div style={{
-              width: '28px',
-              height: '28px',
+              width: '26px',
+              height: '26px',
               borderRadius: '50%',
               backgroundColor: '#fef3c7',
               color: '#D4A017',
@@ -755,18 +759,26 @@ export default function AdminDashboard({ onSelectTab }) {
             }}>
               ₹
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span className="admin-holdings-title-gold" style={{ fontSize: '15px', fontWeight: '800', letterSpacing: '-0.2px', whiteSpace: 'nowrap' }}>
-                Gold (24K)
-              </span>
-              <span style={{ fontSize: '11px', fontWeight: '500', color: 'var(--admin-text-secondary)', whiteSpace: 'nowrap' }}>
-                per gram · INR
-              </span>
-            </div>
+            <span className="admin-holdings-title-gold" style={{
+              fontSize: '15px',
+              fontWeight: '800',
+              letterSpacing: '-0.2px',
+              whiteSpace: 'nowrap',
+              color: 'var(--admin-gold-text)'
+            }}>
+              Gold (24K)
+            </span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-            <span className="admin-holdings-value-gold" style={{ fontSize: '20px', fontWeight: '800', margin: 0, whiteSpace: 'nowrap', lineHeight: '1' }}>
+            <span className="admin-holdings-value-gold" style={{
+              fontSize: '20px',
+              fontWeight: '800',
+              margin: 0,
+              whiteSpace: 'nowrap',
+              lineHeight: '1',
+              color: 'var(--admin-text-value)'
+            }}>
               ₹{goldRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
             <TrendingUp size={15} color="var(--admin-green-trend)" style={{ flexShrink: 0 }} />
@@ -775,19 +787,21 @@ export default function AdminDashboard({ onSelectTab }) {
 
         {/* Silver Card */}
         <div className="admin-holdings-card-silver" style={{
-          padding: '12px 18px',
+          padding: '14px 20px',
           borderLeft: '4px solid #94a3b8',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '12px',
+          gap: '14px',
           borderRadius: '10px',
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
+          minHeight: 'auto',
+          flexWrap: 'nowrap'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
             <div style={{
-              width: '28px',
-              height: '28px',
+              width: '26px',
+              height: '26px',
               borderRadius: '50%',
               backgroundColor: '#f1f5f9',
               color: '#64748b',
@@ -800,18 +814,26 @@ export default function AdminDashboard({ onSelectTab }) {
             }}>
               ₹
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span className="admin-holdings-title-silver" style={{ fontSize: '15px', fontWeight: '800', letterSpacing: '-0.2px', whiteSpace: 'nowrap' }}>
-                Silver
-              </span>
-              <span style={{ fontSize: '11px', fontWeight: '500', color: 'var(--admin-text-secondary)', whiteSpace: 'nowrap' }}>
-                per gram · INR
-              </span>
-            </div>
+            <span className="admin-holdings-title-silver" style={{
+              fontSize: '15px',
+              fontWeight: '800',
+              letterSpacing: '-0.2px',
+              whiteSpace: 'nowrap',
+              color: 'var(--admin-silver-text)'
+            }}>
+              Silver
+            </span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-            <span className="admin-holdings-value-silver" style={{ fontSize: '20px', fontWeight: '800', margin: 0, whiteSpace: 'nowrap', lineHeight: '1' }}>
+            <span className="admin-holdings-value-silver" style={{
+              fontSize: '20px',
+              fontWeight: '800',
+              margin: 0,
+              whiteSpace: 'nowrap',
+              lineHeight: '1',
+              color: 'var(--admin-text-value)'
+            }}>
               ₹{silverRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
             <TrendingUp size={15} color="var(--admin-green-trend)" style={{ flexShrink: 0 }} />

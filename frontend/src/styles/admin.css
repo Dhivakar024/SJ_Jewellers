@@ -1088,3 +1088,11 @@
     padding: 16px;
   }
 }
+
+@media (max-width: 540px) {
+  .admin-holdings-card-gold,
+  .admin-holdings-card-silver {
+    padding: 12px 14px !important;
+    gap: 8px !important;
+  }
+}

@@ -81,30 +81,49 @@ export default function AdminWithdrawal() {
       </div>
 
       {/* 3. Summary Box Card */}
-      <div className="admin-card" style={{ padding: '18px 22px', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <div className="admin-card" style={{
+        padding: '18px 24px',
+        textAlign: 'left',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '6px',
+        boxSizing: 'border-box'
+      }}>
+        {/* Top Row: Label on Left, Bold Red Amount on Right on Same Horizontal Line */}
         <div style={{
-          fontSize: '15px',
-          color: 'var(--admin-text-heading)',
-          fontWeight: '700',
-          letterSpacing: '-0.2px',
-          whiteSpace: 'nowrap',
-          lineHeight: '1.2'
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '16px',
+          flexWrap: 'nowrap',
+          width: '100%'
         }}>
-          Total Withdrawal Amount
+          <span style={{
+            fontSize: '16px',
+            color: 'var(--admin-text-heading)',
+            fontWeight: '700',
+            letterSpacing: '-0.2px',
+            whiteSpace: 'nowrap',
+            lineHeight: '1.2'
+          }}>
+            Total Withdrawal Amount
+          </span>
+          <span style={{
+            fontSize: '24px',
+            fontWeight: '900',
+            letterSpacing: '-0.5px',
+            color: '#ef4444',
+            whiteSpace: 'nowrap',
+            lineHeight: '1',
+            flexShrink: 0
+          }}>
+            ₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
         </div>
+
+        {/* Supporting Subtext Below */}
         <div style={{
-          fontSize: '32px',
-          fontWeight: '900',
-          letterSpacing: '-0.5px',
-          margin: '2px 0',
-          color: '#ef4444',
-          whiteSpace: 'nowrap',
-          lineHeight: '1.15'
-        }}>
-          ₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-        </div>
-        <div style={{
-          fontSize: '13.5px',
+          fontSize: '13px',
           color: 'var(--admin-text-secondary)',
           fontWeight: '600',
           lineHeight: '1.2',
