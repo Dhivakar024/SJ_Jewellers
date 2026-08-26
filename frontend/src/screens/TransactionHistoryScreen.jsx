@@ -1,16 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ArrowLeft, SlidersHorizontal, Smartphone, CreditCard, Building2, X, RotateCcw, AlertCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import BottomNav from '../components/BottomNav';
 
 export default function TransactionHistoryScreen({ onNavigate, fromScreen = 'home', onTogglePlus }) {
-  const { transactions, fetchTransactions, transactionsLoading } = useApp();
-
-  useEffect(() => {
-    if (typeof fetchTransactions === 'function') {
-      fetchTransactions();
-    }
-  }, [fetchTransactions]);
+  const { transactions } = useApp();
 
   // Active committed filters
   const [activeAsset, setActiveAsset] = useState('All');

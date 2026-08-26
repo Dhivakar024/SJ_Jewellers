@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { ArrowLeft, AlertTriangle, ShieldCheck, CheckCircle2, ArrowUp } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { withdrawalService, kycService } from '../services';
 import BottomNav from '../components/BottomNav';
 
 export default function WithdrawScreen({ onNavigate, fromScreen = 'home', onTogglePlus }) {
-  const { currentUser, setCurrentUser, holdings, goldRate, silverRate, fetchHoldings } = useApp();
+  const { currentUser, holdings, goldRate, silverRate, submitKycRequest, requestWithdrawal } = useApp();
   
   // Persistent KYC verification state check
   const isKycVerified =
@@ -28,7 +27,7 @@ export default function WithdrawScreen({ onNavigate, fromScreen = 'home', onTogg
   const [isSubmittingWithdrawal, setIsSubmittingWithdrawal] = useState(false);
   const [createdWithdrawal, setCreatedWithdrawal] = useState(null);
 
-  const handleSubmitKyc = async (e) => {
+  const handleSubmitKyc = (e) => {
     e.preventDefault();
     setKycError('');
 
@@ -55,25 +54,16 @@ export default function WithdrawScreen({ onNavigate, fromScreen = 'home', onTogg
     }
 
     setIsSubmittingKyc(true);
-    try {
-      await kycService.submitKyc({ pan: cleanPan, aadhar: cleanAadhar });
-      setCurrentUser((prev) => ({
-        ...prev,
-        pan: cleanPan,
-        aadhar: cleanAadhar,
-        kycStatus: 'Verified',
-      }));
+    setTimeout(() => {
+      submitKycRequest({ pan: cleanPan, aadhar: cleanAadhar });
       setKycSuccess(true);
       setTimeout(() => {
         setKycSuccess(false);
         setShowKycForm(false);
         setShowKycModal(false);
         setIsSubmittingKyc(false);
-      }, 1400);
-    } catch (err) {
-      setKycError(err.message || 'Failed to submit KYC. Please try again.');
-      setIsSubmittingKyc(false);
-    }
+      }, 1200);
+    }, 400);
   };
 
   const handleInitiateWithdraw = (asset) => {
@@ -88,7 +78,7 @@ export default function WithdrawScreen({ onNavigate, fromScreen = 'home', onTogg
     setShowWithdrawForm(true);
   };
 
-  const handleConfirmWithdrawal = async (e) => {
+  const handleConfirmWithdrawal = (e) => {
     e.preventDefault();
     if (isSubmittingWithdrawal) return;
     setWithdrawError('');
@@ -116,32 +106,28 @@ export default function WithdrawScreen({ onNavigate, fromScreen = 'home', onTogg
       return;
     }
 
+    const isGold = withdrawAsset === 'Gold';
+    const rate = isGold ? goldRate : silverRate;
+    const amountVal = g * rate;
+
     setIsSubmittingWithdrawal(true);
-    try {
-      const res = await withdrawalService.createWithdrawal({
-        metal: withdrawAsset.toLowerCase(),
-        quantityGrams: g,
-        withdrawalMode: 'physical',
+    setTimeout(() => {
+      const wData = requestWithdrawal({
+        asset: withdrawAsset,
+        quantity: g,
+        amount: amountVal,
       });
 
-      const wData = res?.data;
       setCreatedWithdrawal(wData);
       setWithdrawSuccess(true);
-
-      if (typeof fetchHoldings === 'function') {
-        fetchHoldings();
-      }
+      setIsSubmittingWithdrawal(false);
 
       setTimeout(() => {
         setWithdrawSuccess(false);
         setShowWithdrawForm(false);
         onNavigate('transactions');
-      }, 1600);
-    } catch (err) {
-      setWithdrawError(err.message || 'Withdrawal request failed. Please check your balance and try again.');
-    } finally {
-      setIsSubmittingWithdrawal(false);
-    }
+      }, 1400);
+    }, 500);
   };
 
   const goldGrams = Number(holdings?.goldGrams) || 0;

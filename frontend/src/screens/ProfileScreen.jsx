@@ -1,55 +1,11 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Pencil, UserPlus, LogOut, ShieldCheck, Hand, FileText, Phone, ChevronRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { profileService } from '../services';
 import BottomNav from '../components/BottomNav';
 
 export default function ProfileScreen({ onNavigate, onTogglePlus }) {
-  const { currentUser, setCurrentUser, logoutUser } = useApp();
+  const { currentUser, logoutUser } = useApp();
   const isProfileCompleted = currentUser.profileCompleted === true;
-
-  // Refresh profile from MongoDB on mount
-  useEffect(() => {
-    let isMounted = true;
-    const fetchLatestProfile = async () => {
-      try {
-        const res = await profileService.getProfile();
-        if (res?.data && isMounted) {
-          const uData = res.data;
-          const pData = uData.profile || {};
-          const isComplete = uData.profile_completed === true || !!(pData.address?.address_line && (pData.pan || pData.nominee_name || pData.account_number));
-
-          setCurrentUser((prev) => ({
-            ...prev,
-            id: uData.user_id || uData.id || prev.id,
-            name: pData.full_name || uData.name || prev.name,
-            mobile: uData.mobile || prev.mobile,
-            email: uData.email || prev.email,
-            kycStatus: uData.kyc_status || prev.kycStatus,
-            profileCompleted: isComplete,
-            address: pData.address?.address_line || prev.address,
-            pan: pData.pan || prev.pan,
-            aadhar: pData.aadhar || prev.aadhar,
-            accountNumber: pData.account_number || prev.accountNumber,
-            ifsc: pData.ifsc || prev.ifsc,
-            nomineeName: pData.nominee_name || prev.nomineeName,
-            nomineeMobile: pData.nominee_mobile || prev.nomineeMobile,
-            nomineeDob: pData.nominee_dob || prev.nomineeDob,
-            nomineeAddress: pData.nominee_address || prev.nomineeAddress,
-            relationship: pData.relationship || prev.relationship,
-            relationshipDetails: pData.relationship_other || prev.relationshipDetails,
-          }));
-        }
-      } catch {
-        // use existing user state
-      }
-    };
-
-    fetchLatestProfile();
-    return () => {
-      isMounted = false;
-    };
-  }, [setCurrentUser]);
 
   const getKycBadgeColor = () => {
     const st = (currentUser.kycStatus || 'pending').toLowerCase();

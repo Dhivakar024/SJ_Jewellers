@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle2, ShieldCheck, Smartphone } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { purchaseService } from '../services';
 import BottomNav from '../components/BottomNav';
 
 export default function BuyNowScreen({ assetType = 'gold', onNavigate, onTogglePlus }) {
@@ -153,47 +152,44 @@ export default function BuyNowScreen({ assetType = 'gold', onNavigate, onToggleP
     setIsProcessing(false);
   };
 
-  const handleConfirmPay = async () => {
+  const handleConfirmPay = () => {
     if (isProcessing) return;
     setIsProcessing(true);
     setPurchaseError('');
 
     const currentAsset = (selectedAsset || 'gold').toLowerCase() === 'gold' ? 'gold' : 'silver';
     const gramsNumber = parseFloat(gramsVal) || 0;
+    const metalVal = gramsNumber * ratePerGram;
+    const gstVal = parseFloat((metalVal * 0.03).toFixed(2));
+    const totalVal = parseFloat((metalVal + gstVal).toFixed(2));
 
-    try {
-      // Create purchase directly on FastAPI backend with server-authoritative rates and GST calculation
-      const res = await purchaseService.createPurchase({
-        metal: currentAsset,
-        quantityGrams: gramsNumber,
+    setTimeout(() => {
+      // Update local context for immediate display
+      const newTxn = addPurchaseTransaction({
+        assetType: currentAsset,
+        asset: currentAsset === 'gold' ? 'Gold' : 'Silver',
+        amount: totalVal,
+        grams: gramsNumber,
+        ratePerGram: ratePerGram,
+        paymentMethod: selectedMethod || 'UPI',
       });
 
-      const purchaseData = res?.data;
-      if (purchaseData) {
-        setPurchaseResponse(purchaseData);
-        setPaymentSuccess(true);
+      setPurchaseResponse({
+        transaction_id: newTxn.id,
+        quantity_grams: gramsNumber,
+        metal_value: metalVal,
+        gst_amount: gstVal,
+        total_amount: totalVal,
+      });
 
-        // Update local context for immediate display
-        addPurchaseTransaction({
-          id: purchaseData.transaction_id || purchaseData.purchase_id,
-          assetType: currentAsset,
-          asset: currentAsset === 'gold' ? 'Gold' : 'Silver',
-          amount: purchaseData.total_amount,
-          grams: purchaseData.quantity_grams,
-          ratePerGram: purchaseData.rate_per_gram,
-          paymentMethod: selectedMethod || 'UPI',
-        });
-
-        setTimeout(() => {
-          setShowConfirmModal(false);
-          onNavigate('transactions', { from: 'buy' });
-        }, 1500);
-      }
-    } catch (err) {
-      setPurchaseError(err.message || 'Purchase failed. Please check your connection and try again.');
-    } finally {
+      setPaymentSuccess(true);
       setIsProcessing(false);
-    }
+
+      setTimeout(() => {
+        setShowConfirmModal(false);
+        onNavigate('transactions', { from: 'buy' });
+      }, 1400);
+    }, 500);
   };
 
   return (

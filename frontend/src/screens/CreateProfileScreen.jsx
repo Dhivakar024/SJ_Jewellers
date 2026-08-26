@@ -1,7 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Calendar, ChevronDown, ArrowLeft } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { profileService } from '../services';
 import { cleanIndianMobileDigits, formatToE164, isValidIndianMobile, isValidFullName } from '../utils/phoneUtils';
 
 export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
@@ -29,47 +28,6 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Fetch real profile from MongoDB on mount to populate fields
-  useEffect(() => {
-    let isMounted = true;
-    const fetchLatestProfile = async () => {
-      try {
-        const res = await profileService.getProfile();
-        if (res?.data && isMounted) {
-          const u = res.data;
-          const p = u.profile || {};
-          const relCapitalized = p.relationship
-            ? p.relationship.charAt(0).toUpperCase() + p.relationship.slice(1).toLowerCase()
-            : '';
-
-          setFormData({
-            name: p.full_name || u.name || '',
-            email: u.email || '',
-            mobile: u.mobile || '',
-            address: p.address?.address_line || '',
-            pan: p.pan || '',
-            aadhar: p.aadhar || '',
-            accountNumber: p.account_number || '',
-            ifsc: p.ifsc || '',
-            nomineeName: p.nominee_name || '',
-            nomineeMobile: p.nominee_mobile || '',
-            nomineeDob: p.nominee_dob || '',
-            nomineeAddress: p.nominee_address || '',
-            relationship: relCapitalized,
-            relationshipDetails: p.relationship_other || '',
-          });
-        }
-      } catch {
-        // Fallback to context state
-      }
-    };
-
-    fetchLatestProfile();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   const handleChange = (field, value) => {
     setFormData((prev) => {
@@ -257,32 +215,8 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
     const relClean = (formData.relationship || '').trim();
     const relDetailsClean = (formData.relationshipDetails || '').trim();
 
-    // Build backend update payload
-    const payload = {
-      full_name: nameClean,
-      address: {
-        address_line: addressClean,
-        city: 'Salem',
-        state: 'Tamil Nadu',
-        pincode: '636001',
-      },
-      pan: panClean,
-      aadhar: aadharClean,
-      account_number: accountClean,
-      ifsc: ifscClean,
-      nominee_name: nomineeNameClean,
-      nominee_mobile: formatToE164(nomineeMobileClean),
-      nominee_dob: nomineeDobClean,
-      nominee_address: nomineeAddressClean,
-      relationship: relClean.toLowerCase(),
-      relationship_other: relClean === 'Other' ? relDetailsClean : null,
-    };
-
     setIsSubmitting(true);
-    try {
-      // Save directly to MongoDB via Profile PATCH API
-      await profileService.updateProfile(payload);
-      
+    setTimeout(() => {
       const updatedUserObj = {
         name: nameClean,
         email: emailClean,
@@ -304,6 +238,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
 
       completeUserProfile(updatedUserObj);
       sessionStorage.removeItem('sj_session_skipped_profile');
+      setIsSubmitting(false);
 
       if (isEditMode) {
         onNavigate('profile');
@@ -311,11 +246,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
         // Brand-new onboarding user: Navigate DIRECTLY to Home
         onNavigate('home');
       }
-    } catch (err) {
-      setErrorMessage(err.message || 'Failed to save profile. Please check your details and try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    }, 400);
   };
 
   return (

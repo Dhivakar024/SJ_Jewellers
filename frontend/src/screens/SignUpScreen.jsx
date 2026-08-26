@@ -3,7 +3,6 @@ import { ArrowLeft, Eye, EyeOff, Phone, RefreshCw } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { CUSTOMER_SUPPORT_PHONE, getTelephoneLink } from '../config/support';
 import { cleanIndianMobileDigits, formatToE164, isValidIndianMobile, isValidFullName } from '../utils/phoneUtils';
-import { authService } from '../services';
 
 export default function SignUpScreen({ onNavigate }) {
   const { registerUser } = useApp();
@@ -79,16 +78,11 @@ export default function SignUpScreen({ onNavigate }) {
     setErrors({});
 
     setIsLoading(true);
-    try {
-      const formattedMobile = formatToE164(cleanMobile);
-      await authService.sendOtp({ mobile: formattedMobile });
+    setTimeout(() => {
+      setIsLoading(false);
       setSuccessMessage('OTP has been sent to your mobile number.');
       setStep('otp');
-    } catch (err) {
-      setErrorMessage(err.message || 'Failed to send OTP. Please check your mobile number and try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    }, 400);
   };
 
   // 2. STEP 2: Verify OTP
@@ -110,16 +104,11 @@ export default function SignUpScreen({ onNavigate }) {
     setErrors({});
 
     setIsLoading(true);
-    try {
-      const formattedMobile = formatToE164(mobileDigits);
-      await authService.verifyOtp({ mobile: formattedMobile, otp: cleanOtp });
+    setTimeout(() => {
+      setIsLoading(false);
       setSuccessMessage('');
       setStep('details');
-    } catch (err) {
-      setErrorMessage(err.message || 'Invalid or expired OTP. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    }, 300);
   };
 
   // 3. STEP 3: Create Account
@@ -165,10 +154,10 @@ export default function SignUpScreen({ onNavigate }) {
         password: uPass,
       });
 
-      // Redirect new user directly to Create Profile (NOT Home, NOT Edit Profile)
+      // Redirect new user directly to Create Profile
       onNavigate('create-profile');
     } catch (err) {
-      setErrorMessage(err.message || 'Mobile number or email already registered. Please sign in.');
+      setErrorMessage(err.message || 'Error creating account. Please try again.');
     } finally {
       setIsLoading(false);
     }

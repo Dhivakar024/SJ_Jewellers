@@ -5,7 +5,6 @@ import {
   Moon, Sun, User, ChevronsLeft, ChevronsRight
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { authService } from '../services/authService';
 import '../styles/admin.css';
 
 export default function AdminLayout({ activeTab, onSelectTab, children }) {
@@ -24,9 +23,13 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
   const pendingVerificationsCount = (pendingVerifications || []).length;
   const totalNotifications = pendingWithdrawalsCount + pendingVerificationsCount;
 
-  const handleLogout = async () => {
-    await authService.logoutAdmin();
-    setAdminAuth({ isAuthenticated: false, email: '' });
+  const handleLogout = () => {
+    localStorage.setItem('sj_admin_logged_out', 'true');
+    localStorage.removeItem('sj_admin_session');
+    sessionStorage.removeItem('sj_admin_session');
+    if (typeof setAdminAuth === 'function') {
+      setAdminAuth({ isAuthenticated: false, email: '', role: null });
+    }
   };
 
   const navItems = [

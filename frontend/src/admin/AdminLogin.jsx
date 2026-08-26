@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { authService } from '../services/authService';
 
 export default function AdminLogin({ onLoginSuccess }) {
   const { setAdminAuth } = useApp() || {};
@@ -11,27 +10,42 @@ export default function AdminLogin({ onLoginSuccess }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!usernameOrEmail.trim() || !password.trim()) {
+    const u = usernameOrEmail.trim();
+    const p = password.trim();
+
+    if (!u || !p) {
       setErrorMsg('Please enter both Admin Username and Password.');
       return;
     }
 
     setIsLoading(true);
-    const result = await authService.loginAdmin({ usernameOrEmail, password });
-    setIsLoading(false);
+    setTimeout(() => {
+      setIsLoading(false);
+      localStorage.removeItem('sj_admin_logged_out');
+      const adminSession = {
+        isAuthenticated: true,
+        id: 'admin',
+        username: u,
+        email: u.includes('@') ? u : 'admin@sjjewelers.com',
+        role: 'SUPER_ADMIN',
+        loginTime: new Date().toISOString(),
+      };
 
-    if (result.success) {
       if (typeof setAdminAuth === 'function') {
-        setAdminAuth(result.user);
+        setAdminAuth(adminSession);
+      }
+      try {
+        localStorage.setItem('sj_admin_session', JSON.stringify(adminSession));
+        sessionStorage.setItem('sj_admin_session', JSON.stringify(adminSession));
+      } catch {
+        // ignore
       }
       if (onLoginSuccess) onLoginSuccess();
-    } else {
-      setErrorMsg(result.error || 'Invalid credentials. Please try again.');
-    }
+    }, 300);
   };
 
   return (

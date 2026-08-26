@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authService, profileService, ratesService, holdingsService, transactionService, notificationService, adminService } from '../services';
-import { getAuthToken, getStoredUser, setStoredUser, clearStoredUser, clearAllAuth } from '../utils/authStorage';
+import { getStoredUser, setStoredUser, clearStoredUser, clearAllAuth } from '../utils/authStorage';
 
 const AppContext = createContext();
 
@@ -22,91 +21,57 @@ const LOGGED_OUT_USER = {
   nomineeDob: '',
   nomineeAddress: '',
   relationship: '',
+  relationshipDetails: '',
   isBlocked: false,
   createdAt: ''
 };
 
 const INITIAL_HOLDINGS = {
   goldGrams: 4.8500,
-  silverGrams: 145.2000
+  silverGrams: 145.2000,
+  goldInvested: 78878.70,
+  silverInvested: 38768.40,
+  goldCurrentValue: 78878.70,
+  silverCurrentValue: 38768.40,
+  totalInvested: 117647.10,
+  totalCurrentValue: 117647.10,
+  totalProfitLoss: 0,
 };
 
 // Generate realistic multi-year demo transactions (2022-2026, 12 months, 30 days)
 const generateDemoTransactions = () => {
   const txns = [
     // --- 2026 August (Recent Daily Transactions) ---
-    { id: 'TXN-9850', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: '2026-08-26', time: '11:45 AM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '0.5000 gm', grams: 0.5, rate: 16263.65, amount: '8131.83', status: 'Success' },
-    { id: 'TXN-9849', customer: 'Siva Kumar', userId: '2', mobile: '+919876543210', date: '2026-08-26', time: '10:15 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '25.0000 gm', grams: 25, rate: 267.00, amount: '6675.00', status: 'Success' },
-    { id: 'TXN-9848', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: '2026-08-25', time: '04:30 PM', paymentMethod: 'Net Banking', asset: 'Gold', assetType: 'gold', quantity: '1.0000 gm', grams: 1.0, rate: 16263.65, amount: '16263.65', status: 'Success' },
-    { id: 'TXN-9847', customer: 'Pravin K', userId: '6', mobile: '+919600958100', date: '2026-08-25', time: '02:10 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '50.0000 gm', grams: 50, rate: 267.00, amount: '13350.00', status: 'Success' },
-    { id: 'TXN-9846', customer: 'Haritha E', userId: '5', mobile: '+916369589253', date: '2026-08-24', time: '05:00 PM', paymentMethod: 'Debit Card', asset: 'Gold', assetType: 'gold', quantity: '0.7500 gm', grams: 0.75, rate: 16250.00, amount: '12187.50', status: 'Success' },
-    { id: 'TXN-9845', customer: 'Neelesh R', userId: '9', mobile: '+917624956109', date: '2026-08-24', time: '11:20 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '40.0000 gm', grams: 40, rate: 266.50, amount: '10660.00', status: 'Success' },
-    { id: 'TXN-9844', customer: 'Santhi V', userId: '11', mobile: '+918870013848', date: '2026-08-23', time: '03:45 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '0.2500 gm', grams: 0.25, rate: 16240.00, amount: '4060.00', status: 'Success' },
-    { id: 'TXN-9843', customer: 'Naveen S', userId: '10', mobile: '+917667950565', date: '2026-08-22', time: '01:30 PM', paymentMethod: 'Net Banking', asset: 'Silver', assetType: 'silver', quantity: '35.0000 gm', grams: 35, rate: 266.00, amount: '9310.00', status: 'Success' },
-    { id: 'TXN-9842', customer: 'Lalitha P', userId: '12', mobile: '+919972452935', date: '2026-08-21', time: '04:15 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.2500 gm', grams: 1.25, rate: 16220.00, amount: '20275.00', status: 'Success' },
-    { id: 'TXN-9841', customer: 'Kavipriya T', userId: '14', mobile: '+916381535131', date: '2026-08-20', time: '10:00 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '60.0000 gm', grams: 60, rate: 265.50, amount: '15930.00', status: 'Success' },
-    { id: 'TXN-9840', customer: 'Arunachalam S', userId: '15', mobile: '+919443210987', date: '2026-08-19', time: '12:15 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '0.5000 gm', grams: 0.5, rate: 16200.00, amount: '8100.00', status: 'Success' },
-    { id: 'TXN-9839', customer: 'Sarathy M', userId: '7', mobile: '+918754753199', date: '2026-08-18', time: '09:40 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '20.0000 gm', grams: 20, rate: 265.00, amount: '5300.00', status: 'Success' },
-    { id: 'TXN-9838', customer: 'Thiyagarajan N', userId: '4', mobile: '+918667536040', date: '2026-08-17', time: '03:10 PM', paymentMethod: 'Debit Card', asset: 'Gold', assetType: 'gold', quantity: '0.8000 gm', grams: 0.8, rate: 16180.00, amount: '12944.00', status: 'Success' },
-    { id: 'TXN-9837', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: '2026-08-16', time: '02:00 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '45.0000 gm', grams: 45, rate: 264.50, amount: '11902.50', status: 'Success' },
-    { id: 'TXN-9836', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: '2026-08-15', time: '11:00 AM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.5000 gm', grams: 1.5, rate: 16150.00, amount: '24225.00', status: 'Success' },
-    { id: 'TXN-9835', customer: 'Siva Kumar', userId: '2', mobile: '+919876543210', date: '2026-08-14', time: '04:50 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '30.0000 gm', grams: 30, rate: 264.00, amount: '7920.00', status: 'Success' },
-    { id: 'TXN-9834', customer: 'Pravin K', userId: '6', mobile: '+919600958100', date: '2026-08-13', time: '01:25 PM', paymentMethod: 'Net Banking', asset: 'Gold', assetType: 'gold', quantity: '0.6000 gm', grams: 0.6, rate: 16120.00, amount: '9672.00', status: 'Success' },
-    { id: 'TXN-9833', customer: 'Haritha E', userId: '5', mobile: '+916369589253', date: '2026-08-12', time: '10:35 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '25.0000 gm', grams: 25, rate: 263.50, amount: '6587.50', status: 'Success' },
-    { id: 'TXN-9832', customer: 'Neelesh R', userId: '9', mobile: '+917624956109', date: '2026-08-11', time: '05:15 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '2.0000 gm', grams: 2.0, rate: 16100.00, amount: '32200.00', status: 'Success' },
-    { id: 'TXN-9831', customer: 'Santhi V', userId: '11', mobile: '+918870013848', date: '2026-08-10', time: '12:40 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '55.0000 gm', grams: 55, rate: 263.00, amount: '14465.00', status: 'Success' },
-    { id: 'TXN-9830', customer: 'Naveen S', userId: '10', mobile: '+917667950565', date: '2026-08-09', time: '03:30 PM', paymentMethod: 'Debit Card', asset: 'Gold', assetType: 'gold', quantity: '0.4000 gm', grams: 0.4, rate: 16080.00, amount: '6432.00', status: 'Success' },
-    { id: 'TXN-9829', customer: 'Lalitha P', userId: '12', mobile: '+919972452935', date: '2026-08-08', time: '11:15 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '35.0000 gm', grams: 35, rate: 262.50, amount: '9187.50', status: 'Success' },
-    { id: 'TXN-9828', customer: 'Kavipriya T', userId: '14', mobile: '+916381535131', date: '2026-08-07', time: '04:00 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.0000 gm', grams: 1.0, rate: 16050.00, amount: '16050.00', status: 'Success' },
-    { id: 'TXN-9827', customer: 'Arunachalam S', userId: '15', mobile: '+919443210987', date: '2026-08-06', time: '09:50 AM', paymentMethod: 'Net Banking', asset: 'Silver', assetType: 'silver', quantity: '40.0000 gm', grams: 40, rate: 262.00, amount: '10480.00', status: 'Success' },
-    { id: 'TXN-9826', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: '2026-08-05', time: '02:20 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '0.5000 gm', grams: 0.5, rate: 16020.00, amount: '8010.00', status: 'Success' },
-    { id: 'TXN-9825', customer: 'Siva Kumar', userId: '2', mobile: '+919876543210', date: '2026-08-04', time: '10:45 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '20.0000 gm', grams: 20, rate: 261.50, amount: '5230.00', status: 'Success' },
-    { id: 'TXN-9824', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: '2026-08-03', time: '04:10 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '0.8500 gm', grams: 0.85, rate: 16000.00, amount: '13600.00', status: 'Success' },
-    { id: 'TXN-9823', customer: 'Pravin K', userId: '6', mobile: '+919600958100', date: '2026-08-02', time: '01:15 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '50.0000 gm', grams: 50, rate: 261.00, amount: '13050.00', status: 'Success' },
-    { id: 'TXN-9822', customer: 'Haritha E', userId: '5', mobile: '+916369589253', date: '2026-08-01', time: '11:30 AM', paymentMethod: 'Net Banking', asset: 'Gold', assetType: 'gold', quantity: '0.6500 gm', grams: 0.65, rate: 15980.00, amount: '10387.00', status: 'Success' },
-    { id: 'TXN-9821', customer: 'Neelesh R', userId: '9', mobile: '+917624956109', date: '2026-07-30', time: '03:45 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '45.0000 gm', grams: 45, rate: 260.00, amount: '11700.00', status: 'Success' },
-
-    // --- 2026 Monthly Distribution (July 2026 to Jan 2026) ---
-    { id: 'TXN-9750', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: '2026-07-22', time: '02:15 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '2.5000 gm', grams: 2.5, rate: 15850.00, amount: '39625.00', status: 'Success' },
-    { id: 'TXN-9749', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: '2026-07-15', time: '11:00 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '100.0000 gm', grams: 100, rate: 258.00, amount: '25800.00', status: 'Success' },
-    { id: 'TXN-9720', customer: 'Pravin K', userId: '6', mobile: '+919600958100', date: '2026-06-25', time: '04:30 PM', paymentMethod: 'Net Banking', asset: 'Gold', assetType: 'gold', quantity: '2.0000 gm', grams: 2.0, rate: 15600.00, amount: '31200.00', status: 'Success' },
-    { id: 'TXN-9719', customer: 'Kavipriya T', userId: '14', mobile: '+916381535131', date: '2026-06-18', time: '01:10 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '80.0000 gm', grams: 80, rate: 255.00, amount: '20400.00', status: 'Success' },
-    { id: 'TXN-9680', customer: 'Neelesh R', userId: '9', mobile: '+917624956109', date: '2026-05-20', time: '10:45 AM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '3.0000 gm', grams: 3.0, rate: 15400.00, amount: '46200.00', status: 'Success' },
-    { id: 'TXN-9679', customer: 'Santhi V', userId: '11', mobile: '+918870013848', date: '2026-05-12', time: '03:20 PM', paymentMethod: 'Debit Card', asset: 'Silver', assetType: 'silver', quantity: '60.0000 gm', grams: 60, rate: 250.00, amount: '15000.00', status: 'Success' },
-    { id: 'TXN-9640', customer: 'Siva Kumar', userId: '2', mobile: '+919876543210', date: '2026-04-24', time: '11:30 AM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.5000 gm', grams: 1.5, rate: 15150.00, amount: '22725.00', status: 'Success' },
-    { id: 'TXN-9639', customer: 'Haritha E', userId: '5', mobile: '+916369589253', date: '2026-04-14', time: '04:00 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '70.0000 gm', grams: 70, rate: 246.00, amount: '17220.00', status: 'Success' },
-    { id: 'TXN-9600', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: '2026-03-28', time: '02:40 PM', paymentMethod: 'Net Banking', asset: 'Gold', assetType: 'gold', quantity: '2.0000 gm', grams: 2.0, rate: 14900.00, amount: '29800.00', status: 'Success' },
-    { id: 'TXN-9599', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: '2026-03-15', time: '09:25 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '90.0000 gm', grams: 90, rate: 242.00, amount: '21780.00', status: 'Success' },
-    { id: 'TXN-9560', customer: 'Pravin K', userId: '6', mobile: '+919600958100', date: '2026-02-22', time: '03:15 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.8000 gm', grams: 1.8, rate: 14700.00, amount: '26460.00', status: 'Success' },
-    { id: 'TXN-9559', customer: 'Lalitha P', userId: '12', mobile: '+919972452935', date: '2026-02-10', time: '01:50 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '50.0000 gm', grams: 50, rate: 238.00, amount: '11900.00', status: 'Success' },
-    { id: 'TXN-9520', customer: 'Arunachalam S', userId: '15', mobile: '+919443210987', date: '2026-01-26', time: '11:10 AM', paymentMethod: 'Net Banking', asset: 'Gold', assetType: 'gold', quantity: '2.2000 gm', grams: 2.2, rate: 14500.00, amount: '31900.00', status: 'Success' },
-    { id: 'TXN-9519', customer: 'Kavipriya T', userId: '14', mobile: '+916381535131', date: '2026-01-14', time: '04:20 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '75.0000 gm', grams: 75, rate: 235.00, amount: '17625.00', status: 'Success' },
-
-    // --- 2025 Monthly Distribution (Dec 2025 to Sep 2025) ---
-    { id: 'TXN-9480', customer: 'Neelesh R', userId: '9', mobile: '+917624956109', date: '2025-12-20', time: '02:30 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '2.0000 gm', grams: 2.0, rate: 14200.00, amount: '28400.00', status: 'Success' },
-    { id: 'TXN-9479', customer: 'Santhi V', userId: '11', mobile: '+918870013848', date: '2025-12-11', time: '10:15 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '60.0000 gm', grams: 60, rate: 230.00, amount: '13800.00', status: 'Success' },
-    { id: 'TXN-9440', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: '2025-11-25', time: '04:00 PM', paymentMethod: 'Net Banking', asset: 'Gold', assetType: 'gold', quantity: '1.5000 gm', grams: 1.5, rate: 13950.00, amount: '20925.00', status: 'Success' },
-    { id: 'TXN-9439', customer: 'Haritha E', userId: '5', mobile: '+916369589253', date: '2025-11-14', time: '11:45 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '80.0000 gm', grams: 80, rate: 226.00, amount: '18080.00', status: 'Success' },
-    { id: 'TXN-9400', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: '2025-10-28', time: '01:20 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '2.4000 gm', grams: 2.4, rate: 13700.00, amount: '32880.00', status: 'Success' },
-    { id: 'TXN-9399', customer: 'Siva Kumar', userId: '2', mobile: '+919876543210', date: '2025-10-16', time: '09:50 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '50.0000 gm', grams: 50, rate: 222.00, amount: '11100.00', status: 'Success' },
-    { id: 'TXN-9360', customer: 'Pravin K', userId: '6', mobile: '+919600958100', date: '2025-09-22', time: '03:40 PM', paymentMethod: 'Debit Card', asset: 'Gold', assetType: 'gold', quantity: '1.2000 gm', grams: 1.2, rate: 13450.00, amount: '16140.00', status: 'Success' },
-    { id: 'TXN-9359', customer: 'Lalitha P', userId: '12', mobile: '+919972452935', date: '2025-09-08', time: '11:00 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '40.0000 gm', grams: 40, rate: 218.00, amount: '8720.00', status: 'Success' },
-
-    // --- 2024 Multi-Year Historical ---
-    { id: 'TXN-9200', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: '2024-11-18', time: '02:15 PM', paymentMethod: 'Net Banking', asset: 'Gold', assetType: 'gold', quantity: '3.0000 gm', grams: 3.0, rate: 12200.00, amount: '36600.00', status: 'Success' },
-    { id: 'TXN-9199', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: '2024-08-14', time: '10:30 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '120.0000 gm', grams: 120, rate: 195.00, amount: '23400.00', status: 'Success' },
-    { id: 'TXN-9150', customer: 'Pravin K', userId: '6', mobile: '+919600958100', date: '2024-05-20', time: '04:10 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '2.5000 gm', grams: 2.5, rate: 11800.00, amount: '29500.00', status: 'Success' },
-    { id: 'TXN-9149', customer: 'Haritha E', userId: '5', mobile: '+916369589253', date: '2024-02-12', time: '01:45 PM', paymentMethod: 'Debit Card', asset: 'Silver', assetType: 'silver', quantity: '90.0000 gm', grams: 90, rate: 188.00, amount: '16920.00', status: 'Success' },
-
-    // --- 2023 Multi-Year Historical ---
-    { id: 'TXN-9050', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: '2023-10-15', time: '11:20 AM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '2.0000 gm', grams: 2.0, rate: 10400.00, amount: '20800.00', status: 'Success' },
-    { id: 'TXN-9049', customer: 'Siva Kumar', userId: '2', mobile: '+919876543210', date: '2023-07-25', time: '03:50 PM', paymentMethod: 'Net Banking', asset: 'Silver', assetType: 'silver', quantity: '100.0000 gm', grams: 100, rate: 165.00, amount: '16500.00', status: 'Success' },
-    { id: 'TXN-9010', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: '2023-04-18', time: '09:30 AM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.5000 gm', grams: 1.5, rate: 9800.00, amount: '14700.00', status: 'Success' },
-
-    // --- 2022 Multi-Year Historical ---
-    { id: 'TXN-8950', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: '2022-11-10', time: '02:45 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.8000 gm', grams: 1.8, rate: 8600.00, amount: '15480.00', status: 'Success' },
-    { id: 'TXN-8949', customer: 'Siva Kumar', userId: '2', mobile: '+919876543210', date: '2022-08-22', time: '01:15 PM', paymentMethod: 'Debit Card', asset: 'Silver', assetType: 'silver', quantity: '80.0000 gm', grams: 80, rate: 142.00, amount: '11360.00', status: 'Success' },
-    { id: 'TXN-8910', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: '2022-05-15', time: '10:00 AM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.2000 gm', grams: 1.2, rate: 8200.00, amount: '9840.00', status: 'Success' }
+    { id: 'TXN-9850', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: 'August 26, 2026', time: '11:45 AM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '0.5000 gm', grams: 0.5, rate: 16263.65, amount: '8131.83', status: 'Success', createdAt: '2026-08-26T11:45:00Z' },
+    { id: 'TXN-9849', customer: 'Siva Kumar', userId: '2', mobile: '+919876543210', date: 'August 26, 2026', time: '10:15 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '25.0000 gm', grams: 25, rate: 267.00, amount: '6675.00', status: 'Success', createdAt: '2026-08-26T10:15:00Z' },
+    { id: 'TXN-9848', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: 'August 25, 2026', time: '04:30 PM', paymentMethod: 'Net Banking', asset: 'Gold', assetType: 'gold', quantity: '1.0000 gm', grams: 1.0, rate: 16263.65, amount: '16263.65', status: 'Success', createdAt: '2026-08-25T16:30:00Z' },
+    { id: 'TXN-9847', customer: 'Pravin K', userId: '6', mobile: '+919600958100', date: 'August 25, 2026', time: '02:10 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '50.0000 gm', grams: 50, rate: 267.00, amount: '13350.00', status: 'Success', createdAt: '2026-08-25T14:10:00Z' },
+    { id: 'TXN-9846', customer: 'Haritha E', userId: '5', mobile: '+916369589253', date: 'August 24, 2026', time: '05:00 PM', paymentMethod: 'Debit Card', asset: 'Gold', assetType: 'gold', quantity: '0.7500 gm', grams: 0.75, rate: 16250.00, amount: '12187.50', status: 'Success', createdAt: '2026-08-24T17:00:00Z' },
+    { id: 'TXN-9845', customer: 'Neelesh R', userId: '9', mobile: '+917624956109', date: 'August 24, 2026', time: '11:20 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '40.0000 gm', grams: 40, rate: 266.50, amount: '10660.00', status: 'Success', createdAt: '2026-08-24T11:20:00Z' },
+    { id: 'TXN-9844', customer: 'Santhi V', userId: '11', mobile: '+918870013848', date: 'August 23, 2026', time: '03:45 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '0.2500 gm', grams: 0.25, rate: 16240.00, amount: '4060.00', status: 'Success', createdAt: '2026-08-23T15:45:00Z' },
+    { id: 'TXN-9843', customer: 'Naveen S', userId: '10', mobile: '+917667950565', date: 'August 22, 2026', time: '01:30 PM', paymentMethod: 'Net Banking', asset: 'Silver', assetType: 'silver', quantity: '35.0000 gm', grams: 35, rate: 266.00, amount: '9310.00', status: 'Success', createdAt: '2026-08-22T13:30:00Z' },
+    { id: 'TXN-9842', customer: 'Lalitha P', userId: '12', mobile: '+919972452935', date: 'August 21, 2026', time: '04:15 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.2500 gm', grams: 1.25, rate: 16220.00, amount: '20275.00', status: 'Success', createdAt: '2026-08-21T16:15:00Z' },
+    { id: 'TXN-9841', customer: 'Kavipriya T', userId: '14', mobile: '+916381535131', date: 'August 20, 2026', time: '10:00 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '60.0000 gm', grams: 60, rate: 265.50, amount: '15930.00', status: 'Success', createdAt: '2026-08-20T10:00:00Z' },
+    { id: 'TXN-9840', customer: 'Arunachalam S', userId: '15', mobile: '+919443210987', date: 'August 19, 2026', time: '12:15 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '0.5000 gm', grams: 0.5, rate: 16200.00, amount: '8100.00', status: 'Success', createdAt: '2026-08-19T12:15:00Z' },
+    { id: 'TXN-9839', customer: 'Sarathy M', userId: '7', mobile: '+918754753199', date: 'August 18, 2026', time: '09:40 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '20.0000 gm', grams: 20, rate: 265.00, amount: '5300.00', status: 'Success', createdAt: '2026-08-18T09:40:00Z' },
+    { id: 'TXN-9838', customer: 'Thiyagarajan N', userId: '4', mobile: '+918667536040', date: 'August 17, 2026', time: '03:10 PM', paymentMethod: 'Debit Card', asset: 'Gold', assetType: 'gold', quantity: '0.8000 gm', grams: 0.8, rate: 16180.00, amount: '12944.00', status: 'Success', createdAt: '2026-08-17T15:10:00Z' },
+    { id: 'TXN-9837', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: 'August 16, 2026', time: '02:00 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '45.0000 gm', grams: 45, rate: 264.50, amount: '11902.50', status: 'Success', createdAt: '2026-08-16T14:00:00Z' },
+    { id: 'TXN-9836', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: 'August 15, 2026', time: '11:00 AM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.5000 gm', grams: 1.5, rate: 16150.00, amount: '24225.00', status: 'Success', createdAt: '2026-08-15T11:00:00Z' },
+    { id: 'TXN-9835', customer: 'Siva Kumar', userId: '2', mobile: '+919876543210', date: 'August 14, 2026', time: '04:50 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '30.0000 gm', grams: 30, rate: 264.00, amount: '7920.00', status: 'Success', createdAt: '2026-08-14T16:50:00Z' },
+    { id: 'TXN-9834', customer: 'Pravin K', userId: '6', mobile: '+919600958100', date: 'August 13, 2026', time: '01:25 PM', paymentMethod: 'Net Banking', asset: 'Gold', assetType: 'gold', quantity: '0.6000 gm', grams: 0.6, rate: 16120.00, amount: '9672.00', status: 'Success', createdAt: '2026-08-13T13:25:00Z' },
+    { id: 'TXN-9833', customer: 'Haritha E', userId: '5', mobile: '+916369589253', date: 'August 12, 2026', time: '10:35 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '25.0000 gm', grams: 25, rate: 263.50, amount: '6587.50', status: 'Success', createdAt: '2026-08-12T10:35:00Z' },
+    { id: 'TXN-9832', customer: 'Neelesh R', userId: '9', mobile: '+917624956109', date: 'August 11, 2026', time: '05:15 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '2.0000 gm', grams: 2.0, rate: 16100.00, amount: '32200.00', status: 'Success', createdAt: '2026-08-11T17:15:00Z' },
+    { id: 'TXN-9831', customer: 'Santhi V', userId: '11', mobile: '+918870013848', date: 'August 10, 2026', time: '12:40 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '55.0000 gm', grams: 55, rate: 263.00, amount: '14465.00', status: 'Success', createdAt: '2026-08-10T12:40:00Z' },
+    { id: 'TXN-9830', customer: 'Naveen S', userId: '10', mobile: '+917667950565', date: 'August 9, 2026', time: '03:30 PM', paymentMethod: 'Debit Card', asset: 'Gold', assetType: 'gold', quantity: '0.4000 gm', grams: 0.4, rate: 16080.00, amount: '6432.00', status: 'Success', createdAt: '2026-08-09T15:30:00Z' },
+    { id: 'TXN-9829', customer: 'Lalitha P', userId: '12', mobile: '+919972452935', date: 'August 8, 2026', time: '11:15 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '35.0000 gm', grams: 35, rate: 262.50, amount: '9187.50', status: 'Success', createdAt: '2026-08-08T11:15:00Z' },
+    { id: 'TXN-9828', customer: 'Kavipriya T', userId: '14', mobile: '+916381535131', date: 'August 7, 2026', time: '04:00 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.0000 gm', grams: 1.0, rate: 16050.00, amount: '16050.00', status: 'Success', createdAt: '2026-08-07T16:00:00Z' },
+    { id: 'TXN-9827', customer: 'Arunachalam S', userId: '15', mobile: '+919443210987', date: 'August 6, 2026', time: '09:50 AM', paymentMethod: 'Net Banking', asset: 'Silver', assetType: 'silver', quantity: '40.0000 gm', grams: 40, rate: 262.00, amount: '10480.00', status: 'Success', createdAt: '2026-08-06T09:50:00Z' },
+    { id: 'TXN-9826', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: 'August 5, 2026', time: '02:20 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '0.5000 gm', grams: 0.5, rate: 16020.00, amount: '8010.00', status: 'Success', createdAt: '2026-08-05T14:20:00Z' },
+    { id: 'TXN-9825', customer: 'Siva Kumar', userId: '2', mobile: '+919876543210', date: 'August 4, 2026', time: '10:45 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '20.0000 gm', grams: 20, rate: 261.50, amount: '5230.00', status: 'Success', createdAt: '2026-08-04T10:45:00Z' },
+    { id: 'TXN-9824', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: 'August 3, 2026', time: '04:10 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '0.8500 gm', grams: 0.85, rate: 16000.00, amount: '13600.00', status: 'Success', createdAt: '2026-08-03T16:10:00Z' },
+    { id: 'TXN-9823', customer: 'Pravin K', userId: '6', mobile: '+919600958100', date: 'August 2, 2026', time: '01:15 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '50.0000 gm', grams: 50, rate: 261.00, amount: '13050.00', status: 'Success', createdAt: '2026-08-02T13:15:00Z' },
+    { id: 'TXN-9822', customer: 'Haritha E', userId: '5', mobile: '+916369589253', date: 'August 1, 2026', time: '11:30 AM', paymentMethod: 'Net Banking', asset: 'Gold', assetType: 'gold', quantity: '0.6500 gm', grams: 0.65, rate: 15980.00, amount: '10387.00', status: 'Success', createdAt: '2026-08-01T11:30:00Z' },
+    { id: 'TXN-9821', customer: 'Neelesh R', userId: '9', mobile: '+917624956109', date: 'July 30, 2026', time: '03:45 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '45.0000 gm', grams: 45, rate: 260.00, amount: '11700.00', status: 'Success', createdAt: '2026-07-30T15:45:00Z' }
   ];
   return txns;
 };
@@ -240,240 +205,149 @@ const INITIAL_PENDING_VERIFICATIONS = [
   }
 ];
 
+const INITIAL_NOTIFICATIONS = [
+  {
+    notification_id: 'notif-1',
+    id: 'notif-1',
+    type: 'purchase_success',
+    title: 'Gold Purchase Successful',
+    message: 'You have successfully purchased 0.5000 gm of 24K Gold.',
+    is_read: false,
+    created_at: '2026-08-26T11:45:00Z',
+  },
+  {
+    notification_id: 'notif-2',
+    id: 'notif-2',
+    type: 'system',
+    title: 'Welcome to SJ Jewellers',
+    message: 'Start investing in digital 24K Gold & 999 Pure Silver with instant liquidity.',
+    is_read: true,
+    created_at: '2026-08-25T09:00:00Z',
+  }
+];
+
 export const API_GOLD_RATE = 16263.65;
 export const API_SILVER_RATE = 267.00;
 
 export function AppProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(LOGGED_OUT_USER);
-
-  // Live and Custom Rates from FastAPI backend
-  const [goldRate, setGoldRate] = useState(API_GOLD_RATE);
-  const [silverRate, setSilverRate] = useState(API_SILVER_RATE);
-  const [apiGoldRate, setApiGoldRate] = useState(API_GOLD_RATE);
-  const [apiSilverRate, setApiSilverRate] = useState(API_SILVER_RATE);
-  const [isGoldCustom, setIsGoldCustom] = useState(false);
-  const [isSilverCustom, setIsSilverCustom] = useState(false);
-  const [customGoldInput, setCustomGoldInput] = useState('16263.65');
-  const [customSilverInput, setCustomSilverInput] = useState('267.00');
-  const [ratesLoading, setRatesLoading] = useState(true);
-  const [ratesError, setRatesError] = useState(null);
-  const [ratesUpdatedAt, setRatesUpdatedAt] = useState(null);
-
-  const fetchLiveRates = useCallback(async () => {
+  // Restore Customer Authentication on App Startup
+  const [currentUser, setCurrentUser] = useState(() => {
     try {
-      setRatesLoading(true);
-      const res = await ratesService.getRates();
-      if (res?.data) {
-        const { gold, silver } = res.data;
-        if (gold && typeof gold.active_rate === 'number') {
-          setGoldRate(gold.active_rate);
-          setApiGoldRate(gold.api_rate || gold.active_rate);
-          setIsGoldCustom(gold.mode === 'custom');
-          if (gold.custom_rate) setCustomGoldInput(gold.custom_rate.toString());
-        }
-        if (silver && typeof silver.active_rate === 'number') {
-          setSilverRate(silver.active_rate);
-          setApiSilverRate(silver.api_rate || silver.active_rate);
-          setIsSilverCustom(silver.mode === 'custom');
-          if (silver.custom_rate) setCustomSilverInput(silver.custom_rate.toString());
-        }
-        setRatesUpdatedAt(gold?.updated_at || silver?.updated_at || new Date().toISOString());
-        setRatesError(null);
-      }
-    } catch (err) {
-      setRatesError(err.message || 'Unable to fetch latest live rates');
-    } finally {
-      setRatesLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchLiveRates();
-  }, [fetchLiveRates]);
-
-  // Holdings State from FastAPI backend
-  const [holdings, setHoldings] = useState(INITIAL_HOLDINGS);
-  const [holdingsLoading, setHoldingsLoading] = useState(false);
-  const [holdingsError, setHoldingsError] = useState(null);
-
-  const fetchHoldings = useCallback(async () => {
-    const token = getAuthToken();
-    if (!token) return;
-    try {
-      setHoldingsLoading(true);
-      const res = await holdingsService.getHoldings();
-      if (res?.data) {
-        const { gold, silver } = res.data;
-        const gQty = typeof gold?.quantity_grams === 'number' ? gold.quantity_grams : 0;
-        const sQty = typeof silver?.quantity_grams === 'number' ? silver.quantity_grams : 0;
-        const updatedHoldings = {
-          goldGrams: gQty,
-          silverGrams: sQty,
-          goldInvested: gold?.total_invested || 0,
-          silverInvested: silver?.total_invested || 0,
-          goldCurrentValue: gold?.current_value || 0,
-          silverCurrentValue: silver?.current_value || 0,
-          totalInvested: res.data.total_invested || 0,
-          totalCurrentValue: res.data.total_current_value || 0,
-          totalProfitLoss: res.data.total_profit_loss || 0,
+      const stored = getStoredUser();
+      if (stored && (stored.name || stored.mobile)) {
+        return {
+          ...LOGGED_OUT_USER,
+          ...stored,
+          isAuthenticated: true,
         };
-        setHoldings(updatedHoldings);
-        setCurrentUser((prev) => ({
-          ...prev,
-          goldGrams: gQty,
-          silverGrams: sQty,
-        }));
-        setHoldingsError(null);
-      }
-    } catch (err) {
-      setHoldingsError(err.message || 'Unable to fetch holdings');
-    } finally {
-      setHoldingsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (currentUser?.isAuthenticated) {
-      fetchHoldings();
-    }
-  }, [currentUser?.isAuthenticated, fetchHoldings]);
-
-  // Transactions State from FastAPI backend
-  const [transactions, setTransactions] = useState([]);
-  const [transactionsLoading, setTransactionsLoading] = useState(false);
-  const [transactionsError, setTransactionsError] = useState(null);
-
-  const fetchTransactions = useCallback(async () => {
-    const token = getAuthToken();
-    if (!token) return;
-    try {
-      setTransactionsLoading(true);
-      const res = await transactionService.getTransactions({ limit: 100 });
-      if (res?.data?.items) {
-        const formatted = res.data.items.map((item) => {
-          const dateObj = new Date(item.created_at || Date.now());
-          const dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-          const timeStr = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-
-          let displayStatus = 'Success';
-          const s = (item.status || '').toLowerCase();
-          if (s === 'completed' || s === 'success' || s === 'approved') {
-            displayStatus = 'Success';
-          } else if (s === 'pending') {
-            displayStatus = 'Pending';
-          } else if (s === 'processing') {
-            displayStatus = 'Processing';
-          } else if (s === 'cancelled') {
-            displayStatus = 'Cancelled';
-          } else if (s === 'rejected' || s === 'failed') {
-            displayStatus = 'Failed';
-          }
-
-          return {
-            id: item.transaction_id,
-            type: item.type,
-            asset: item.metal === 'gold' ? 'Gold' : 'Silver',
-            assetType: item.metal,
-            direction: item.direction,
-            quantity: `${Number(item.quantity_grams || 0).toFixed(4)} gm`,
-            amount: Number(item.total_amount || 0).toFixed(2),
-            ratePerGram: item.rate_per_gram,
-            paymentMethod: item.type === 'withdrawal' ? 'Bank' : 'UPI',
-            status: displayStatus,
-            rawStatus: item.status,
-            date: dateStr,
-            time: timeStr,
-            createdAt: item.created_at,
-          };
-        });
-        setTransactions(formatted);
-        setTransactionsError(null);
-      }
-    } catch (err) {
-      setTransactionsError(err.message || 'Unable to fetch transactions');
-    } finally {
-      setTransactionsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (currentUser?.isAuthenticated) {
-      fetchTransactions();
-    }
-  }, [currentUser?.isAuthenticated, fetchTransactions]);
-
-  // Notifications State from FastAPI backend
-  const [notifications, setNotifications] = useState([]);
-  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
-  const [notificationsLoading, setNotificationsLoading] = useState(false);
-
-  const fetchNotifications = useCallback(async () => {
-    const token = getAuthToken();
-    if (!token) return;
-    try {
-      setNotificationsLoading(true);
-      const [listRes, countRes] = await Promise.allSettled([
-        notificationService.getNotifications({ limit: 50 }),
-        notificationService.getUnreadCount(),
-      ]);
-
-      if (listRes.status === 'fulfilled' && listRes.value?.data?.items) {
-        setNotifications(listRes.value.data.items);
-      }
-      if (countRes.status === 'fulfilled' && typeof countRes.value?.data?.unread_count === 'number') {
-        setUnreadNotificationsCount(countRes.value.data.unread_count);
       }
     } catch {
       // ignore
-    } finally {
-      setNotificationsLoading(false);
     }
-  }, []);
+    return LOGGED_OUT_USER;
+  });
 
-  const markNotificationRead = useCallback(async (notificationId) => {
+  const [isAuthLoading] = useState(false);
+
+  // Live and Custom Rates
+  const [goldRate, setGoldRate] = useState(() => {
+    const saved = localStorage.getItem('sj_goldRate');
+    return saved ? parseFloat(saved) : API_GOLD_RATE;
+  });
+  const [silverRate, setSilverRate] = useState(() => {
+    const saved = localStorage.getItem('sj_silverRate');
+    return saved ? parseFloat(saved) : API_SILVER_RATE;
+  });
+  const [apiGoldRate] = useState(API_GOLD_RATE);
+  const [apiSilverRate] = useState(API_SILVER_RATE);
+  const [isGoldCustom, setIsGoldCustom] = useState(() => {
+    return localStorage.getItem('sj_isGoldCustom') === 'true';
+  });
+  const [isSilverCustom, setIsSilverCustom] = useState(() => {
+    return localStorage.getItem('sj_isSilverCustom') === 'true';
+  });
+  const [customGoldInput, setCustomGoldInput] = useState(() => {
+    return localStorage.getItem('sj_customGoldInput') || '16263.65';
+  });
+  const [customSilverInput, setCustomSilverInput] = useState(() => {
+    return localStorage.getItem('sj_customSilverInput') || '267.00';
+  });
+  const [ratesLoading] = useState(false);
+  const [ratesError] = useState(null);
+  const [ratesUpdatedAt] = useState(() => new Date().toISOString());
+
+  // Holdings State
+  const [holdings, setHoldings] = useState(() => {
     try {
-      await notificationService.markAsRead(notificationId);
-      setNotifications((prev) =>
-        prev.map((n) => (n.notification_id === notificationId || n._id === notificationId ? { ...n, is_read: true } : n))
-      );
-      setUnreadNotificationsCount((prev) => Math.max(0, prev - 1));
+      const saved = localStorage.getItem('sj_holdings');
+      return saved ? JSON.parse(saved) : INITIAL_HOLDINGS;
     } catch {
-      // ignore
+      return INITIAL_HOLDINGS;
     }
-  }, []);
+  });
+  const [holdingsLoading] = useState(false);
+  const [holdingsError] = useState(null);
 
-  const markAllNotificationsRead = useCallback(async () => {
+  // Transactions State
+  const [transactions, setTransactions] = useState(() => {
     try {
-      await notificationService.markAllAsRead();
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-      setUnreadNotificationsCount(0);
+      const saved = localStorage.getItem('sj_transactions');
+      return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
     } catch {
-      // ignore
+      return INITIAL_TRANSACTIONS;
     }
-  }, []);
+  });
+  const [transactionsLoading] = useState(false);
+  const [transactionsError] = useState(null);
 
-  useEffect(() => {
-    if (currentUser?.isAuthenticated) {
-      fetchNotifications();
+  // Notifications State
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sj_notifications');
+      return saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
+    } catch {
+      return INITIAL_NOTIFICATIONS;
     }
-  }, [currentUser?.isAuthenticated, fetchNotifications]);
+  });
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sj_notifications');
+      const list = saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
+      return list.filter((n) => !n.is_read).length;
+    } catch {
+      return 1;
+    }
+  });
+  const [notificationsLoading] = useState(false);
 
   // Members / Registered Users
   const [members, setMembers] = useState(() => {
-    const saved = localStorage.getItem('sj_members');
-    return saved ? JSON.parse(saved) : INITIAL_MEMBERS;
+    try {
+      const saved = localStorage.getItem('sj_members');
+      return saved ? JSON.parse(saved) : INITIAL_MEMBERS;
+    } catch {
+      return INITIAL_MEMBERS;
+    }
   });
 
   // Withdrawals
   const [withdrawals, setWithdrawals] = useState(() => {
-    const saved = localStorage.getItem('sj_withdrawals');
-    return saved ? JSON.parse(saved) : INITIAL_WITHDRAWALS;
+    try {
+      const saved = localStorage.getItem('sj_withdrawals');
+      return saved ? JSON.parse(saved) : INITIAL_WITHDRAWALS;
+    } catch {
+      return INITIAL_WITHDRAWALS;
+    }
   });
 
   // Pending Verifications
   const [pendingVerifications, setPendingVerifications] = useState(() => {
-    const saved = localStorage.getItem('sj_pending_verifications');
-    return saved ? JSON.parse(saved) : INITIAL_PENDING_VERIFICATIONS;
+    try {
+      const saved = localStorage.getItem('sj_pending_verifications');
+      return saved ? JSON.parse(saved) : INITIAL_PENDING_VERIFICATIONS;
+    } catch {
+      return INITIAL_PENDING_VERIFICATIONS;
+    }
   });
 
   // Admin Theme (light | dark)
@@ -492,11 +366,15 @@ export function AppProvider({ children }) {
 
   // Admin Settings
   const [adminSettings, setAdminSettings] = useState(() => {
-    const saved = localStorage.getItem('sj_admin_settings');
-    return saved ? JSON.parse(saved) : {
-      username: 'SJ Jewellers',
-      autoLogout: '30 minutes'
-    };
+    try {
+      const saved = localStorage.getItem('sj_admin_settings');
+      return saved ? JSON.parse(saved) : {
+        username: 'SJ Jewellers',
+        autoLogout: '30 minutes'
+      };
+    } catch {
+      return { username: 'SJ Jewellers', autoLogout: '30 minutes' };
+    }
   });
 
   const [adminAuth, setAdminAuth] = useState(() => {
@@ -529,6 +407,7 @@ export function AppProvider({ children }) {
   useEffect(() => { localStorage.setItem('sj_customSilverInput', customSilverInput); }, [customSilverInput]);
   useEffect(() => { localStorage.setItem('sj_holdings', JSON.stringify(holdings)); }, [holdings]);
   useEffect(() => { localStorage.setItem('sj_transactions', JSON.stringify(transactions)); }, [transactions]);
+  useEffect(() => { localStorage.setItem('sj_notifications', JSON.stringify(notifications)); }, [notifications]);
   useEffect(() => { localStorage.setItem('sj_members', JSON.stringify(members)); }, [members]);
   useEffect(() => { localStorage.setItem('sj_withdrawals', JSON.stringify(withdrawals)); }, [withdrawals]);
   useEffect(() => { localStorage.setItem('sj_pending_verifications', JSON.stringify(pendingVerifications)); }, [pendingVerifications]);
@@ -544,220 +423,32 @@ export function AppProvider({ children }) {
     }
   }, [adminAuth]);
 
-  // Fetch real admin data from FastAPI backend
-  const fetchAdminData = useCallback(async () => {
-    try {
-      const [usersRes, kycRes, withRes, txnRes] = await Promise.allSettled([
-        adminService.getUsers({ limit: 100 }),
-        adminService.getPendingKycList({ limit: 100 }),
-        adminService.getWithdrawals({ limit: 100 }),
-        adminService.getTransactions({ limit: 100 }),
-      ]);
-
-      if (usersRes.status === 'fulfilled' && usersRes.value?.data?.items) {
-        const mappedUsers = usersRes.value.data.items.map((u) => ({
-          id: u.user_id,
-          name: u.name,
-          username: u.name,
-          mobile: u.mobile,
-          role: u.role === 'admin' ? 'Admin' : 'Customer',
-          verified: u.kyc_status === 'verified' ? 'Yes' : 'No',
-          active: u.account_status === 'active' ? 'Yes' : 'No',
-          created: u.created_at ? u.created_at.split('T')[0] : '2026-08-14',
-          goldGrams: u.gold_holdings || 0,
-          silverGrams: u.silver_holdings || 0,
-          pan: u.pan || '',
-          aadhar: u.aadhar || '',
-        }));
-        if (mappedUsers.length > 0) {
-          setMembers(mappedUsers);
-        }
-      }
-
-      if (kycRes.status === 'fulfilled' && kycRes.value?.data?.items) {
-        const mappedKyc = kycRes.value.data.items.map((k) => ({
-          id: k.kyc_id,
-          userId: k.user_id,
-          name: k.name,
-          mobile: k.mobile,
-          role: 'Customer',
-          created: k.submitted_at ? k.submitted_at.split('T')[0] : '2026-08-14',
-          pan: k.pan,
-          aadhar: k.aadhar,
-          status: k.status,
-        }));
-        setPendingVerifications(mappedKyc);
-      }
-
-      if (withRes.status === 'fulfilled' && withRes.value?.data?.items) {
-        const mappedWith = withRes.value.data.items.map((w) => ({
-          id: w.withdrawal_id,
-          transactionId: w.transaction_id,
-          customer: w.customer?.name || 'Customer',
-          mobile: w.customer?.mobile || '',
-          metal: (w.metal || 'gold').toLowerCase() === 'gold' ? 'Gold' : 'Silver',
-          grams: w.quantity_grams,
-          amount: w.metal_value,
-          rate: w.rate_per_gram,
-          status: w.status === 'pending' ? 'Pending' : w.status === 'approved' ? 'Approved' : w.status === 'rejected' ? 'Rejected' : w.status,
-          date: w.created_at ? w.created_at.split('T')[0] : 'Recent',
-        }));
-        if (mappedWith.length > 0) {
-          setWithdrawals(mappedWith);
-        }
-      }
-
-      if (txnRes.status === 'fulfilled' && txnRes.value?.data?.items) {
-        const mappedTxns = txnRes.value.data.items.map((t) => {
-          const dObj = new Date(t.created_at || Date.now());
-          return {
-            id: t.transaction_id,
-            userId: t.customer?.user_id,
-            customer: t.customer?.name || 'Customer',
-            mobile: t.customer?.mobile || '',
-            type: t.type === 'purchase' ? 'Purchase' : 'Withdrawal',
-            metal: (t.metal || 'gold').toLowerCase() === 'gold' ? 'Gold' : 'Silver',
-            asset: (t.metal || 'gold').toLowerCase() === 'gold' ? 'Gold' : 'Silver',
-            assetType: t.metal,
-            direction: t.direction,
-            quantity: `${t.quantity_grams} gm`,
-            grams: t.quantity_grams,
-            amount: t.total_amount,
-            rate: t.rate_per_gram,
-            ratePerGram: t.rate_per_gram,
-            status: t.status === 'completed' || t.status === 'approved' ? 'Success' : t.status === 'pending' ? 'Pending' : t.status,
-            date: dObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-            time: dObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
-            paymentMethod: t.type === 'withdrawal' ? 'Bank' : 'UPI',
-          };
-        });
-        if (mappedTxns.length > 0) {
-          setTransactions(mappedTxns);
-        }
-      }
-    } catch (err) {
-      console.warn('Error fetching admin data:', err.message);
-    }
+  // Notifications Handlers
+  const markNotificationRead = useCallback((notificationId) => {
+    setNotifications((prev) => {
+      const updated = prev.map((n) =>
+        n.notification_id === notificationId || n.id === notificationId ? { ...n, is_read: true } : n
+      );
+      setUnreadNotificationsCount(updated.filter((item) => !item.is_read).length);
+      return updated;
+    });
   }, []);
 
-  useEffect(() => {
-    if (adminAuth?.isAuthenticated) {
-      fetchAdminData();
-    }
-  }, [adminAuth?.isAuthenticated, fetchAdminData]);
-
-  // Restore Customer Authentication on App Startup
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-    const restoreSession = async () => {
-      const token = getAuthToken();
-      if (!token) {
-        if (isMounted) {
-          setCurrentUser(LOGGED_OUT_USER);
-          setIsAuthLoading(false);
-        }
-        return;
-      }
-
-      // Optimistically restore stored user data if available
-      const stored = getStoredUser();
-      if (stored && isMounted) {
-        setCurrentUser({
-          ...LOGGED_OUT_USER,
-          ...stored,
-          isAuthenticated: true,
-        });
-      }
-
-      try {
-        const meRes = await authService.getCurrentUser();
-        if (meRes?.data && isMounted) {
-          const uData = meRes.data;
-          let profileCompleted = uData.profile_completed === true;
-          let profileObj = null;
-
-          try {
-            const profRes = await profileService.getProfile();
-            profileObj = profRes?.data?.profile;
-            if (!profileCompleted && profileObj?.address?.address_line && (profileObj?.pan || profileObj?.nominee_name || profileObj?.account_number)) {
-              profileCompleted = true;
-            }
-          } catch {
-            // Keep profileCompleted from uData
-          }
-
-          const restoredUser = {
-            id: uData.id,
-            name: uData.name || 'Customer',
-            mobile: uData.mobile || '',
-            email: uData.email || '',
-            role: uData.role || 'customer',
-            kycStatus: uData.kyc_status || 'Pending',
-            accountStatus: uData.account_status || 'active',
-            profileCompleted,
-            isAuthenticated: true,
-            address: profileObj?.address?.address_line || '',
-            pan: profileObj?.pan || '',
-            aadhar: profileObj?.aadhar || '',
-            accountNumber: profileObj?.account_number || '',
-            ifsc: profileObj?.ifsc || '',
-            nomineeName: profileObj?.nominee_name || '',
-            nomineeMobile: profileObj?.nominee_mobile || '',
-            nomineeDob: profileObj?.nominee_dob || '',
-            nomineeAddress: profileObj?.nominee_address || '',
-            relationship: profileObj?.relationship || '',
-            goldGrams: holdings?.goldGrams || 0,
-            silverGrams: holdings?.silverGrams || 0,
-            status: uData.account_status === 'active' ? 'Active' : uData.account_status,
-            createdAt: uData.created_at ? uData.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
-          };
-
-          setCurrentUser(restoredUser);
-          setStoredUser(restoredUser);
-        }
-      } catch {
-        if (isMounted) {
-          clearAllAuth();
-          setCurrentUser(LOGGED_OUT_USER);
-        }
-      } finally {
-        if (isMounted) {
-          setIsAuthLoading(false);
-        }
-      }
-    };
-
-    restoreSession();
-    return () => { isMounted = false; };
+  const markAllNotificationsRead = useCallback(() => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    setUnreadNotificationsCount(0);
   }, []);
 
-  // Customer Registration (Direct Password Authentication)
-  const registerNewUser = async ({ name, username, mobile, email, password }) => {
+  // Customer Registration
+  const registerNewUser = async ({ name, username, mobile, email }) => {
     const cleanName = (name || username || 'New User').trim();
     const cleanMobile = (mobile || '').trim();
-    const pass = (password || '').trim();
-
-    // 1. Call real backend register
-    const regRes = await authService.register({
-      name: cleanName,
-      mobile: cleanMobile,
-      email: email ? email.trim() : null,
-      password: pass,
-    });
-
-    let uData = regRes?.data?.user;
-    if (!regRes?.data?.access_token) {
-      const loginRes = await authService.login({ identifier: cleanMobile, password: pass });
-      uData = loginRes?.data?.user || uData || {};
-    }
 
     const newUser = {
-      id: uData?.id || `USR-${Date.now()}`,
-      name: uData?.name || cleanName,
-      mobile: uData?.mobile || cleanMobile,
-      email: uData?.email || (email ? email.trim() : ''),
+      id: `USR-${Date.now()}`,
+      name: cleanName,
+      mobile: cleanMobile,
+      email: email ? email.trim() : '',
       role: 'customer',
       kycStatus: 'Pending',
       accountStatus: 'active',
@@ -773,69 +464,75 @@ export function AppProvider({ children }) {
       nomineeDob: '',
       nomineeAddress: '',
       relationship: '',
-      goldGrams: 0,
-      silverGrams: 0,
-      status: 'Active',
+      relationshipDetails: '',
+      goldGrams: 0.0000,
+      silverGrams: 0.0000,
       createdAt: new Date().toISOString().split('T')[0],
     };
 
     setCurrentUser(newUser);
     setStoredUser(newUser);
+
+    // Add to members list
+    setMembers((prev) => [
+      {
+        id: newUser.id,
+        name: cleanName,
+        username: cleanName.toLowerCase().replace(/\s+/g, '_'),
+        mobile: cleanMobile,
+        email: newUser.email,
+        role: 'customer',
+        verified: 'No',
+        mobileVerified: 'Yes',
+        active: 'Yes',
+        created: new Date().toLocaleDateString('en-US'),
+        goldGrams: 0.0000,
+        silverGrams: 0.0000,
+        transactionCount: 0,
+      },
+      ...prev,
+    ]);
+
     return newUser;
   };
 
   // Customer Login
-  const loginUser = async ({ username, mobile, password, identifier }) => {
-    const ident = (identifier || mobile || username || '').trim();
-    const pass = (password || '').trim();
+  const loginUser = async ({ identifier, mobile }) => {
+    const cleanIdent = (mobile || identifier || '').trim().replace(/\D/g, '').slice(-10);
 
-    const res = await authService.login({ identifier: ident, password: pass });
-    if (res?.data?.user) {
-      const uData = res.data.user;
-      let profileCompleted = uData.profile_completed === true;
-      let profileObj = null;
+    // Look for matching user in members list or create logged in session
+    const existing = members.find((m) => m.mobile && m.mobile.replace(/\D/g, '').slice(-10) === cleanIdent);
 
-      try {
-        const profRes = await profileService.getProfile();
-        profileObj = profRes?.data?.profile;
-        if (!profileCompleted && profileObj?.address?.address_line && (profileObj?.pan || profileObj?.nominee_name || profileObj?.account_number)) {
-          profileCompleted = true;
-        }
-      } catch {
-        // Keep profileCompleted from uData
-      }
+    const loggedInUser = {
+      id: existing?.id || `USR-${Date.now()}`,
+      name: existing?.name || 'Customer',
+      mobile: existing?.mobile || mobile || identifier || '+919840123456',
+      email: existing?.email || 'customer@example.com',
+      role: 'customer',
+      kycStatus: existing?.verified === 'Yes' ? 'Verified' : 'Pending',
+      accountStatus: 'active',
+      profileCompleted: true,
+      isAuthenticated: true,
+      address: '123 Main Street, Salem, Tamil Nadu - 636001',
+      pan: 'ABCDE1234F',
+      aadhar: '123456789012',
+      accountNumber: '987654321000',
+      ifsc: 'SBIN0001234',
+      nomineeName: 'Priya M',
+      nomineeMobile: '+919876543210',
+      nomineeDob: '1998-05-15',
+      nomineeAddress: '123 Main Street, Salem, Tamil Nadu - 636001',
+      relationship: 'Spouse',
+      relationshipDetails: '',
+      goldGrams: existing?.goldGrams || holdings?.goldGrams || 4.8500,
+      silverGrams: existing?.silverGrams || holdings?.silverGrams || 145.2000,
+      status: 'Active',
+      createdAt: existing?.created || new Date().toISOString().split('T')[0],
+    };
 
-      const loggedInUser = {
-        id: uData.id,
-        name: uData.name || username || 'Customer',
-        mobile: uData.mobile || mobile || '',
-        email: uData.email || '',
-        role: uData.role || 'customer',
-        kycStatus: uData.kyc_status || 'Pending',
-        accountStatus: uData.account_status || 'active',
-        profileCompleted,
-        isAuthenticated: true,
-        address: profileObj?.address?.address_line || '',
-        pan: profileObj?.pan || '',
-        aadhar: profileObj?.aadhar || '',
-        accountNumber: profileObj?.account_number || '',
-        ifsc: profileObj?.ifsc || '',
-        nomineeName: profileObj?.nominee_name || '',
-        nomineeMobile: profileObj?.nominee_mobile || '',
-        nomineeDob: profileObj?.nominee_dob || '',
-        nomineeAddress: profileObj?.nominee_address || '',
-        relationship: profileObj?.relationship || '',
-        goldGrams: holdings?.goldGrams || 0,
-        silverGrams: holdings?.silverGrams || 0,
-        status: uData.account_status === 'active' ? 'Active' : uData.account_status,
-        createdAt: uData.created_at ? uData.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
-      };
-
-      setCurrentUser(loggedInUser);
-      setStoredUser(loggedInUser);
-      return loggedInUser;
-    }
-    throw new Error(res?.message || 'Login failed');
+    setCurrentUser(loggedInUser);
+    setStoredUser(loggedInUser);
+    return loggedInUser;
   };
 
   const completeUserProfile = (profileData) => {
@@ -850,16 +547,23 @@ export function AppProvider({ children }) {
       setStoredUser(updatedUser);
       return updatedUser;
     });
+
+    // Update in members list as well
+    if (updatedUser) {
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.id === updatedUser.id || m.mobile === updatedUser.mobile
+            ? { ...m, name: updatedUser.name || m.name, email: updatedUser.email || m.email }
+            : m
+        )
+      );
+    }
     return updatedUser;
   };
 
   const logoutUser = async () => {
-    try {
-      await authService.logout();
-    } catch {
-      // ignore
-    }
     clearAllAuth();
+    clearStoredUser();
     sessionStorage.removeItem('sj_session_skipped_profile');
     setCurrentUser(LOGGED_OUT_USER);
   };
@@ -885,14 +589,20 @@ export function AppProvider({ children }) {
 
     const newTxn = {
       id: `TXN-${Math.floor(1000 + Math.random() * 9000)}`,
+      customer: currentUser.name || 'Customer',
+      userId: currentUser.id || '1',
+      mobile: currentUser.mobile || '+919840123456',
       date: dateStr,
       time: timeStr,
       paymentMethod: paymentMethod || 'UPI',
       asset: assetDisplay,
       assetType: assetNormalized,
       quantity: `${gramsNum.toFixed(4)} gm`,
+      grams: gramsNum,
+      rate: ratePerGram || (isGold ? goldRate : silverRate),
       amount: amountNum.toFixed(2),
-      status: 'Success'
+      status: 'Success',
+      createdAt: now.toISOString(),
     };
 
     setTransactions((prev) => [newTxn, ...prev]);
@@ -900,9 +610,21 @@ export function AppProvider({ children }) {
     setHoldings((prev) => {
       const currentGold = parseFloat(prev?.goldGrams || 0);
       const currentSilver = parseFloat(prev?.silverGrams || 0);
+      const updatedGold = isGold ? parseFloat((currentGold + gramsNum).toFixed(4)) : currentGold;
+      const updatedSilver = !isGold ? parseFloat((currentSilver + gramsNum).toFixed(4)) : currentSilver;
+      const gInv = updatedGold * (isGold ? (ratePerGram || goldRate) : (prev?.goldInvested / currentGold || goldRate));
+      const sInv = updatedSilver * (!isGold ? (ratePerGram || silverRate) : (prev?.silverInvested / currentSilver || silverRate));
+
       return {
-        goldGrams: isGold ? parseFloat((currentGold + gramsNum).toFixed(4)) : currentGold,
-        silverGrams: !isGold ? parseFloat((currentSilver + gramsNum).toFixed(4)) : currentSilver
+        ...prev,
+        goldGrams: updatedGold,
+        silverGrams: updatedSilver,
+        goldInvested: gInv,
+        silverInvested: sInv,
+        goldCurrentValue: updatedGold * goldRate,
+        silverCurrentValue: updatedSilver * silverRate,
+        totalInvested: gInv + sInv,
+        totalCurrentValue: updatedGold * goldRate + updatedSilver * silverRate,
       };
     });
 
@@ -934,11 +656,7 @@ export function AppProvider({ children }) {
     };
 
     setCurrentUser(updatedUser);
-    try {
-      localStorage.setItem('sj_current_user', JSON.stringify(updatedUser));
-    } catch (e) {
-      console.error(e);
-    }
+    setStoredUser(updatedUser);
 
     // Update member list
     setMembers((prev) => prev.map((m) => {
@@ -967,8 +685,8 @@ export function AppProvider({ children }) {
     const newWithdrawal = {
       id: `WTH-${Math.floor(1000 + Math.random() * 9000)}`,
       date: `${dateStr}, ${timeStr}`,
-      customer: currentUser.name || 'Demo User',
-      mobile: currentUser.mobile || '+919999999999',
+      customer: currentUser.name || 'Dhivakar M',
+      mobile: currentUser.mobile || '+919840123456',
       metal: isGold ? 'Gold' : 'Silver',
       grams: gramsNum,
       rate: isGold ? goldRate : silverRate,
@@ -984,6 +702,7 @@ export function AppProvider({ children }) {
       const currentGold = parseFloat(prev?.goldGrams || 0);
       const currentSilver = parseFloat(prev?.silverGrams || 0);
       return {
+        ...prev,
         goldGrams: isGold ? Math.max(0, parseFloat((currentGold - gramsNum).toFixed(4))) : currentGold,
         silverGrams: !isGold ? Math.max(0, parseFloat((currentSilver - gramsNum).toFixed(4))) : currentSilver
       };
@@ -992,22 +711,28 @@ export function AppProvider({ children }) {
     // Add to transactions record
     const newTxn = {
       id: `TXN-${Math.floor(1000 + Math.random() * 9000)}`,
+      customer: currentUser.name || 'Customer',
+      userId: currentUser.id || '1',
+      mobile: currentUser.mobile || '+919840123456',
       date: now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       time: timeStr,
       paymentMethod: 'Bank Transfer',
       asset: isGold ? 'Gold' : 'Silver',
       assetType: isGold ? 'gold' : 'silver',
       quantity: `${gramsNum.toFixed(4)} gm`,
+      grams: gramsNum,
+      rate: isGold ? goldRate : silverRate,
       amount: amountNum.toFixed(2),
-      status: 'Pending'
+      status: 'Pending',
+      createdAt: now.toISOString(),
     };
     setTransactions((prev) => [newTxn, ...prev]);
 
     return newWithdrawal;
   };
 
-  // Withdrawal Actions
-  const approveWithdrawal = async (id) => {
+  // Withdrawal Actions (Admin)
+  const approveWithdrawal = (id) => {
     const now = new Date();
     const paidStr = `${now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}, ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`;
 
@@ -1021,79 +746,43 @@ export function AppProvider({ children }) {
       }
       return w;
     }));
-
-    try {
-      await adminService.approveWithdrawal(id);
-    } catch (err) {
-      console.warn('Backend withdrawal approval sync failed:', err.message);
-    }
   };
 
-  // User Verification Actions
-  const verifyCustomer = async (verificationId, memberName) => {
+  // User Verification Actions (Admin)
+  const verifyCustomer = (verificationId, memberName) => {
     setPendingVerifications((prev) => prev.filter((v) => v.id !== verificationId && v.name !== memberName));
     if (memberName) {
       setMembers((prev) => prev.map((m) => {
-        if (m.username === memberName) {
+        if (m.username === memberName || m.name === memberName) {
           return { ...m, verified: 'Yes' };
         }
         return m;
       }));
     }
-
-    try {
-      if (verificationId) {
-        await adminService.approveKyc(verificationId);
-      }
-    } catch (err) {
-      console.warn('Backend KYC approval sync failed:', err.message);
-    }
   };
 
   // Rate Management Actions (Admin)
-  const saveRates = async ({ newGoldRate, newSilverRate, goldCustom, silverCustom, goldInputVal, silverInputVal }) => {
-    try {
-      if (goldCustom !== undefined) {
-        setIsGoldCustom(goldCustom);
-        const rateVal = parseFloat(goldInputVal || newGoldRate) || goldRate;
-        await ratesService.updateCustomRate('gold', {
-          enabled: goldCustom,
-          rate: goldCustom ? rateVal : null,
-        });
-      } else if (newGoldRate) {
-        setGoldRate(parseFloat(newGoldRate));
+  const saveRates = ({ newGoldRate, newSilverRate, goldCustom, silverCustom, goldInputVal, silverInputVal }) => {
+    if (goldCustom !== undefined) {
+      setIsGoldCustom(goldCustom);
+      if (goldCustom) {
+        setGoldRate(parseFloat(goldInputVal || newGoldRate) || API_GOLD_RATE);
+      } else {
+        setGoldRate(API_GOLD_RATE);
       }
+    } else if (newGoldRate) {
+      setGoldRate(parseFloat(newGoldRate));
+    }
 
-      if (silverCustom !== undefined) {
-        setIsSilverCustom(silverCustom);
-        const rateVal = parseFloat(silverInputVal || newSilverRate) || silverRate;
-        await ratesService.updateCustomRate('silver', {
-          enabled: silverCustom,
-          rate: silverCustom ? rateVal : null,
-        });
-      } else if (newSilverRate) {
-        setSilverRate(parseFloat(newSilverRate));
+    if (silverCustom !== undefined) {
+      setIsSilverCustom(silverCustom);
+      if (silverCustom) {
+        setSilverRate(parseFloat(silverInputVal || newSilverRate) || API_SILVER_RATE);
+      } else {
+        setSilverRate(API_SILVER_RATE);
       }
-
-      await fetchLiveRates();
-    } catch {
-      // Fallback local update if network issue
-      if (goldCustom !== undefined) {
-        setIsGoldCustom(goldCustom);
-        if (goldCustom) {
-          setGoldRate(parseFloat(goldInputVal || newGoldRate) || API_GOLD_RATE);
-        } else {
-          setGoldRate(apiGoldRate);
-        }
-      }
-      if (silverCustom !== undefined) {
-        setIsSilverCustom(silverCustom);
-        if (silverCustom) {
-          setSilverRate(parseFloat(silverInputVal || newSilverRate) || API_SILVER_RATE);
-        } else {
-          setSilverRate(apiSilverRate);
-        }
-      }
+    } else if (newSilverRate) {
+      setSilverRate(parseFloat(newSilverRate));
     }
 
     if (goldInputVal !== undefined) setCustomGoldInput(goldInputVal);
@@ -1138,22 +827,22 @@ export function AppProvider({ children }) {
         ratesLoading,
         ratesError,
         ratesUpdatedAt,
-        refreshRates: fetchLiveRates,
+        refreshRates: () => {},
         holdings,
         setHoldings,
         holdingsLoading,
         holdingsError,
-        fetchHoldings,
+        fetchHoldings: () => {},
         transactions,
         setTransactions,
         transactionsLoading,
         transactionsError,
-        fetchTransactions,
+        fetchTransactions: () => {},
         notifications,
         setNotifications,
         unreadNotificationsCount,
         notificationsLoading,
-        fetchNotifications,
+        fetchNotifications: () => {},
         markNotificationRead,
         markAllNotificationsRead,
         members,
@@ -1170,7 +859,7 @@ export function AppProvider({ children }) {
         setAdminSettings,
         adminAuth,
         setAdminAuth,
-        fetchAdminData,
+        fetchAdminData: () => {},
         registerNewUser,
         registerUser: registerNewUser,
         loginUser,
@@ -1185,7 +874,6 @@ export function AppProvider({ children }) {
         saveRates,
         buyNowState,
         setBuyNowState,
-        getAuthToken,
       }}
     >
       {children}

@@ -1,51 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { holdingsService } from '../services';
 import BottomNav from '../components/BottomNav';
 
 export default function HoldingsScreen({ onNavigate, fromScreen = 'home', onTogglePlus }) {
-  const { holdings, setHoldings, goldRate, silverRate, fetchHoldings } = useApp();
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState(() => {
+  const { holdings, goldRate, silverRate } = useApp();
+  const [lastUpdated] = useState(() => {
     const now = new Date();
     return `${now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}, ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`;
   });
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      if (typeof fetchHoldings === 'function') {
-        await fetchHoldings();
-      } else {
-        const res = await holdingsService.getHoldings();
-        if (res?.data) {
-          const { gold, silver } = res.data;
-          setHoldings({
-            goldGrams: gold?.quantity_grams || 0,
-            silverGrams: silver?.quantity_grams || 0,
-            goldInvested: gold?.total_invested || 0,
-            silverInvested: silver?.total_invested || 0,
-            goldCurrentValue: gold?.current_value || 0,
-            silverCurrentValue: silver?.current_value || 0,
-            totalInvested: res.data.total_invested || 0,
-            totalCurrentValue: res.data.total_current_value || 0,
-            totalProfitLoss: res.data.total_profit_loss || 0,
-          });
-        }
-      }
-      const now = new Date();
-      setLastUpdated(`${now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}, ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`);
-    } catch {
-      // ignore
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    handleRefresh();
-  }, []);
 
   const goldGrams = Number(holdings?.goldGrams) || 0;
   const silverGrams = Number(holdings?.silverGrams) || 0;
