@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AppProvider, useApp } from './context/AppContext';
+import { getAuthToken } from './utils/authStorage';
 import MobileContainer from './components/MobileContainer';
 import ActionSheet from './components/ActionSheet';
 

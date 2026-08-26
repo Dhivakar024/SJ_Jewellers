@@ -116,6 +116,10 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
     onNavigate('home');
   };
 
+  const handleCancel = () => {
+    onNavigate('profile');
+  };
+
   const handleHeaderBack = () => {
     if (isEditMode) {
       onNavigate('profile');
@@ -708,7 +712,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
           <div style={{ display: 'flex', gap: '14px', marginTop: '12px', marginBottom: '20px' }}>
             <button
               type="button"
-              onClick={handleSkip}
+              onClick={isEditMode ? handleCancel : handleSkip}
               disabled={isSubmitting}
               style={{
                 flex: 1,
@@ -722,7 +726,7 @@ export default function CreateProfileScreen({ mode = 'create', onNavigate }) {
                 cursor: isSubmitting ? 'default' : 'pointer',
               }}
             >
-              Skip
+              {isEditMode ? 'Cancel' : 'Skip'}
             </button>
             <button
               type="submit"

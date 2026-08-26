@@ -1145,7 +1145,8 @@ export function AppProvider({ children }) {
         deleteMember,
         saveRates,
         buyNowState,
-        setBuyNowState
+        setBuyNowState,
+        getAuthToken,
       }}
     >
       {children}
