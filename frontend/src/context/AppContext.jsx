@@ -71,7 +71,61 @@ const generateDemoTransactions = () => {
     { id: 'TXN-9824', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: 'August 3, 2026', time: '04:10 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '0.8500 gm', grams: 0.85, rate: 16000.00, amount: '13600.00', status: 'Success', createdAt: '2026-08-03T16:10:00Z' },
     { id: 'TXN-9823', customer: 'Pravin K', userId: '6', mobile: '+919600958100', date: 'August 2, 2026', time: '01:15 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '50.0000 gm', grams: 50, rate: 261.00, amount: '13050.00', status: 'Success', createdAt: '2026-08-02T13:15:00Z' },
     { id: 'TXN-9822', customer: 'Haritha E', userId: '5', mobile: '+916369589253', date: 'August 1, 2026', time: '11:30 AM', paymentMethod: 'Net Banking', asset: 'Gold', assetType: 'gold', quantity: '0.6500 gm', grams: 0.65, rate: 15980.00, amount: '10387.00', status: 'Success', createdAt: '2026-08-01T11:30:00Z' },
-    { id: 'TXN-9821', customer: 'Neelesh R', userId: '9', mobile: '+917624956109', date: 'July 30, 2026', time: '03:45 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '45.0000 gm', grams: 45, rate: 260.00, amount: '11700.00', status: 'Success', createdAt: '2026-07-30T15:45:00Z' }
+    { id: 'TXN-9821', customer: 'Neelesh R', userId: '9', mobile: '+917624956109', date: 'July 31, 2026', time: '03:45 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '35.0000 gm', grams: 35, rate: 260.00, amount: '9100.00', status: 'Success', createdAt: '2026-07-31T15:45:00Z' },
+    { id: 'TXN-9820', customer: 'Santhi V', userId: '11', mobile: '+918870013848', date: 'July 30, 2026', time: '04:15 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '0.5000 gm', grams: 0.5, rate: 15950.00, amount: '7975.00', status: 'Success', createdAt: '2026-07-30T16:15:00Z' },
+    { id: 'TXN-9819', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: 'July 29, 2026', time: '01:20 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '30.0000 gm', grams: 30, rate: 260.00, amount: '7800.00', status: 'Success', createdAt: '2026-07-29T13:20:00Z' },
+    { id: 'TXN-9818', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: 'July 28, 2026', time: '10:50 AM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.0000 gm', grams: 1.0, rate: 15900.00, amount: '15900.00', status: 'Success', createdAt: '2026-07-28T10:50:00Z' },
+
+    // --- 2026 Previous Months (Jan - Jul 2026) ---
+    { id: 'TXN-9815', customer: 'Kavipriya T', userId: '14', mobile: '+916381535131', date: 'July 15, 2026', time: '02:30 PM', paymentMethod: 'Net Banking', asset: 'Gold', assetType: 'gold', quantity: '2.5000 gm', grams: 2.5, rate: 15800.00, amount: '39500.00', status: 'Success', createdAt: '2026-07-15T14:30:00Z' },
+    { id: 'TXN-9814', customer: 'Siva Kumar', userId: '2', mobile: '+919876543210', date: 'July 10, 2026', time: '11:15 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '60.0000 gm', grams: 60, rate: 260.00, amount: '15600.00', status: 'Success', createdAt: '2026-07-10T11:15:00Z' },
+    { id: 'TXN-9810', customer: 'Pravin K', userId: '6', mobile: '+919600958100', date: 'June 22, 2026', time: '04:40 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.8000 gm', grams: 1.8, rate: 15600.00, amount: '28080.00', status: 'Success', createdAt: '2026-06-22T16:40:00Z' },
+    { id: 'TXN-9809', customer: 'Haritha E', userId: '5', mobile: '+916369589253', date: 'June 12, 2026', time: '01:00 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '40.0000 gm', grams: 40, rate: 255.00, amount: '10200.00', status: 'Success', createdAt: '2026-06-12T13:00:00Z' },
+    { id: 'TXN-9805', customer: 'Neelesh R', userId: '9', mobile: '+917624956109', date: 'May 20, 2026', time: '03:15 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '3.0000 gm', grams: 3.0, rate: 15400.00, amount: '46200.00', status: 'Success', createdAt: '2026-05-20T15:15:00Z' },
+    { id: 'TXN-9804', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: 'May 08, 2026', time: '10:45 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '50.0000 gm', grams: 50, rate: 250.00, amount: '12500.00', status: 'Success', createdAt: '2026-05-08T10:45:00Z' },
+    { id: 'TXN-9800', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: 'April 25, 2026', time: '05:20 PM', paymentMethod: 'Debit Card', asset: 'Gold', assetType: 'gold', quantity: '1.2000 gm', grams: 1.2, rate: 15200.00, amount: '18240.00', status: 'Success', createdAt: '2026-04-25T17:20:00Z' },
+    { id: 'TXN-9799', customer: 'Santhi V', userId: '11', mobile: '+918870013848', date: 'April 14, 2026', time: '09:30 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '45.0000 gm', grams: 45, rate: 245.00, amount: '11025.00', status: 'Success', createdAt: '2026-04-14T09:30:00Z' },
+    { id: 'TXN-9795', customer: 'Arunachalam S', userId: '15', mobile: '+919443210987', date: 'March 18, 2026', time: '02:10 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '2.0000 gm', grams: 2.0, rate: 14900.00, amount: '29800.00', status: 'Success', createdAt: '2026-03-18T14:10:00Z' },
+    { id: 'TXN-9794', customer: 'Naveen S', userId: '10', mobile: '+917667950565', date: 'March 05, 2026', time: '11:40 AM', paymentMethod: 'Net Banking', asset: 'Silver', assetType: 'silver', quantity: '30.0000 gm', grams: 30, rate: 240.00, amount: '7200.00', status: 'Success', createdAt: '2026-03-05T11:40:00Z' },
+    { id: 'TXN-9790', customer: 'Lalitha P', userId: '12', mobile: '+919972452935', date: 'February 22, 2026', time: '04:00 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.5000 gm', grams: 1.5, rate: 14700.00, amount: '22050.00', status: 'Success', createdAt: '2026-02-22T16:00:00Z' },
+    { id: 'TXN-9789', customer: 'Pravin K', userId: '6', mobile: '+919600958100', date: 'February 10, 2026', time: '10:20 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '70.0000 gm', grams: 70, rate: 235.00, amount: '16450.00', status: 'Success', createdAt: '2026-02-10T10:20:00Z' },
+    { id: 'TXN-9785', customer: 'Thiyagarajan N', userId: '4', mobile: '+918667536040', date: 'January 28, 2026', time: '03:30 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '0.4000 gm', grams: 0.4, rate: 14500.00, amount: '5800.00', status: 'Success', createdAt: '2026-01-28T15:30:00Z' },
+    { id: 'TXN-9784', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: 'January 15, 2026', time: '11:00 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '50.0000 gm', grams: 50, rate: 230.00, amount: '11500.00', status: 'Success', createdAt: '2026-01-15T11:00:00Z' },
+
+    // --- 2025 Historical Transactions ---
+    { id: 'TXN-9770', customer: 'Neelesh R', userId: '9', mobile: '+917624956109', date: 'December 20, 2025', time: '02:45 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '2.2000 gm', grams: 2.2, rate: 14200.00, amount: '31240.00', status: 'Success', createdAt: '2025-12-20T14:45:00Z' },
+    { id: 'TXN-9765', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: 'November 14, 2025', time: '11:15 AM', paymentMethod: 'Net Banking', asset: 'Silver', assetType: 'silver', quantity: '80.0000 gm', grams: 80, rate: 220.00, amount: '17600.00', status: 'Success', createdAt: '2025-11-14T11:15:00Z' },
+    { id: 'TXN-9760', customer: 'Kavipriya T', userId: '14', mobile: '+916381535131', date: 'October 22, 2025', time: '04:10 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '2.0000 gm', grams: 2.0, rate: 13900.00, amount: '27800.00', status: 'Success', createdAt: '2025-10-22T16:10:00Z' },
+    { id: 'TXN-9755', customer: 'Siva Kumar', userId: '2', mobile: '+919876543210', date: 'September 15, 2025', time: '01:30 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '50.0000 gm', grams: 50, rate: 215.00, amount: '10750.00', status: 'Success', createdAt: '2025-09-15T13:30:00Z' },
+    { id: 'TXN-9750', customer: 'Haritha E', userId: '5', mobile: '+916369589253', date: 'August 18, 2025', time: '10:00 AM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.5000 gm', grams: 1.5, rate: 13600.00, amount: '20400.00', status: 'Success', createdAt: '2025-08-18T10:00:00Z' },
+    { id: 'TXN-9745', customer: 'Santhi V', userId: '11', mobile: '+918870013848', date: 'July 12, 2025', time: '03:20 PM', paymentMethod: 'Debit Card', asset: 'Silver', assetType: 'silver', quantity: '60.0000 gm', grams: 60, rate: 210.00, amount: '12600.00', status: 'Success', createdAt: '2025-07-12T15:20:00Z' },
+    { id: 'TXN-9740', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: 'June 25, 2025', time: '11:45 AM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.8000 gm', grams: 1.8, rate: 13400.00, amount: '24120.00', status: 'Success', createdAt: '2025-06-25T11:45:00Z' },
+    { id: 'TXN-9735', customer: 'Lalitha P', userId: '12', mobile: '+919972452935', date: 'May 10, 2025', time: '02:00 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '40.0000 gm', grams: 40, rate: 205.00, amount: '8200.00', status: 'Success', createdAt: '2025-05-10T14:00:00Z' },
+    { id: 'TXN-9730', customer: 'Pravin K', userId: '6', mobile: '+919600958100', date: 'April 16, 2025', time: '04:30 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '2.0000 gm', grams: 2.0, rate: 13200.00, amount: '26400.00', status: 'Success', createdAt: '2025-04-16T16:30:00Z' },
+    { id: 'TXN-9725', customer: 'Naveen S', userId: '10', mobile: '+917667950565', date: 'March 20, 2025', time: '09:50 AM', paymentMethod: 'Net Banking', asset: 'Silver', assetType: 'silver', quantity: '35.0000 gm', grams: 35, rate: 200.00, amount: '7000.00', status: 'Success', createdAt: '2025-03-20T09:50:00Z' },
+    { id: 'TXN-9720', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: 'February 14, 2025', time: '01:15 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.0000 gm', grams: 1.0, rate: 13000.00, amount: '13000.00', status: 'Success', createdAt: '2025-02-14T13:15:00Z' },
+    { id: 'TXN-9715', customer: 'Neelesh R', userId: '9', mobile: '+917624956109', date: 'January 18, 2025', time: '10:30 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '50.0000 gm', grams: 50, rate: 195.00, amount: '9750.00', status: 'Success', createdAt: '2025-01-18T10:30:00Z' },
+
+    // --- 2024 Historical Transactions ---
+    { id: 'TXN-9700', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: 'November 28, 2024', time: '03:15 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.5000 gm', grams: 1.5, rate: 12500.00, amount: '18750.00', status: 'Success', createdAt: '2024-11-28T15:15:00Z' },
+    { id: 'TXN-9695', customer: 'Pravin K', userId: '6', mobile: '+919600958100', date: 'September 12, 2024', time: '11:00 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '65.0000 gm', grams: 65, rate: 185.00, amount: '12025.00', status: 'Success', createdAt: '2024-09-12T11:00:00Z' },
+    { id: 'TXN-9690', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: 'July 05, 2024', time: '04:45 PM', paymentMethod: 'Net Banking', asset: 'Gold', assetType: 'gold', quantity: '2.0000 gm', grams: 2.0, rate: 12200.00, amount: '24400.00', status: 'Success', createdAt: '2024-07-05T16:45:00Z' },
+    { id: 'TXN-9685', customer: 'Siva Kumar', userId: '2', mobile: '+919876543210', date: 'May 18, 2024', time: '01:20 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '50.0000 gm', grams: 50, rate: 180.00, amount: '9000.00', status: 'Success', createdAt: '2024-05-18T13:20:00Z' },
+    { id: 'TXN-9680', customer: 'Haritha E', userId: '5', mobile: '+916369589253', date: 'March 22, 2024', time: '10:30 AM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.2000 gm', grams: 1.2, rate: 11900.00, amount: '14280.00', status: 'Success', createdAt: '2024-03-22T10:30:00Z' },
+    { id: 'TXN-9675', customer: 'Sarathy M', userId: '7', mobile: '+918754753199', date: 'January 15, 2024', time: '02:00 PM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '40.0000 gm', grams: 40, rate: 175.00, amount: '7000.00', status: 'Success', createdAt: '2024-01-15T14:00:00Z' },
+
+    // --- 2023 Historical Transactions ---
+    { id: 'TXN-9650', customer: 'Neelesh R', userId: '9', mobile: '+917624956109', date: 'October 15, 2023', time: '04:10 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '2.0000 gm', grams: 2.0, rate: 11400.00, amount: '22800.00', status: 'Success', createdAt: '2023-10-15T16:10:00Z' },
+    { id: 'TXN-9645', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: 'August 20, 2023', time: '11:25 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '75.0000 gm', grams: 75, rate: 160.00, amount: '12000.00', status: 'Success', createdAt: '2023-08-20T11:25:00Z' },
+    { id: 'TXN-9640', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: 'June 10, 2023', time: '01:45 PM', paymentMethod: 'Net Banking', asset: 'Gold', assetType: 'gold', quantity: '1.2000 gm', grams: 1.2, rate: 11200.00, amount: '13440.00', status: 'Success', createdAt: '2023-06-10T13:45:00Z' },
+    { id: 'TXN-9635', customer: 'Siva Kumar', userId: '2', mobile: '+919876543210', date: 'March 15, 2023', time: '10:00 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '50.0000 gm', grams: 50, rate: 155.00, amount: '7750.00', status: 'Success', createdAt: '2023-03-15T10:00:00Z' },
+    { id: 'TXN-9630', customer: 'Thiyagarajan N', userId: '4', mobile: '+918667536040', date: 'January 25, 2023', time: '03:15 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '0.8000 gm', grams: 0.8, rate: 11000.00, amount: '8800.00', status: 'Success', createdAt: '2023-01-25T15:15:00Z' },
+
+    // --- 2022 Historical Transactions ---
+    { id: 'TXN-9610', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: 'November 18, 2022', time: '02:30 PM', paymentMethod: 'UPI', asset: 'Gold', assetType: 'gold', quantity: '1.0000 gm', grams: 1.0, rate: 10200.00, amount: '10200.00', status: 'Success', createdAt: '2022-11-18T14:30:00Z' },
+    { id: 'TXN-9605', customer: 'Siva Kumar', userId: '2', mobile: '+919876543210', date: 'August 14, 2022', time: '11:00 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '50.0000 gm', grams: 50, rate: 145.00, amount: '7250.00', status: 'Success', createdAt: '2022-08-14T11:00:00Z' },
+    { id: 'TXN-9600', customer: 'Priya R', userId: '3', mobile: '+919789012345', date: 'May 20, 2022', time: '04:15 PM', paymentMethod: 'Debit Card', asset: 'Gold', assetType: 'gold', quantity: '1.5000 gm', grams: 1.5, rate: 10000.00, amount: '15000.00', status: 'Success', createdAt: '2022-05-20T16:15:00Z' },
+    { id: 'TXN-9595', customer: 'Dhivakar M', userId: '1', mobile: '+919840123456', date: 'February 10, 2022', time: '09:45 AM', paymentMethod: 'UPI', asset: 'Silver', assetType: 'silver', quantity: '40.0000 gm', grams: 40, rate: 140.00, amount: '5600.00', status: 'Success', createdAt: '2022-02-10T09:45:00Z' }
   ];
   return txns;
 };
@@ -292,7 +346,13 @@ export function AppProvider({ children }) {
   const [transactions, setTransactions] = useState(() => {
     try {
       const saved = localStorage.getItem('sj_transactions');
-      return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length >= INITIAL_TRANSACTIONS.length) {
+          return parsed;
+        }
+      }
+      return INITIAL_TRANSACTIONS;
     } catch {
       return INITIAL_TRANSACTIONS;
     }
@@ -324,7 +384,13 @@ export function AppProvider({ children }) {
   const [members, setMembers] = useState(() => {
     try {
       const saved = localStorage.getItem('sj_members');
-      return saved ? JSON.parse(saved) : INITIAL_MEMBERS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length >= INITIAL_MEMBERS.length) {
+          return parsed;
+        }
+      }
+      return INITIAL_MEMBERS;
     } catch {
       return INITIAL_MEMBERS;
     }
@@ -334,7 +400,13 @@ export function AppProvider({ children }) {
   const [withdrawals, setWithdrawals] = useState(() => {
     try {
       const saved = localStorage.getItem('sj_withdrawals');
-      return saved ? JSON.parse(saved) : INITIAL_WITHDRAWALS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length >= INITIAL_WITHDRAWALS.length) {
+          return parsed;
+        }
+      }
+      return INITIAL_WITHDRAWALS;
     } catch {
       return INITIAL_WITHDRAWALS;
     }

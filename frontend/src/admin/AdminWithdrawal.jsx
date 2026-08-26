@@ -81,11 +81,11 @@ export default function AdminWithdrawal() {
       </div>
 
       {/* 3. Summary Box Card */}
-      <div className="admin-card" style={{ padding: '20px 24px', textAlign: 'left' }}>
+      <div className="admin-card" style={{ padding: '18px 22px', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '6px' }}>
         <div style={{
-          fontSize: '16px',
+          fontSize: '15px',
           color: 'var(--admin-text-heading)',
-          fontWeight: '800',
+          fontWeight: '700',
           letterSpacing: '-0.2px',
           whiteSpace: 'nowrap',
           lineHeight: '1.2'
@@ -93,10 +93,10 @@ export default function AdminWithdrawal() {
           Total Withdrawal Amount
         </div>
         <div style={{
-          fontSize: '34px',
-          fontWeight: '800',
+          fontSize: '32px',
+          fontWeight: '900',
           letterSpacing: '-0.5px',
-          margin: '8px 0 6px 0',
+          margin: '2px 0',
           color: '#ef4444',
           whiteSpace: 'nowrap',
           lineHeight: '1.15'
@@ -104,10 +104,11 @@ export default function AdminWithdrawal() {
           ₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
         <div style={{
-          fontSize: '14px',
-          color: 'var(--admin-text-value)',
-          fontWeight: '700',
-          lineHeight: '1.2'
+          fontSize: '13.5px',
+          color: 'var(--admin-text-secondary)',
+          fontWeight: '600',
+          lineHeight: '1.2',
+          whiteSpace: 'nowrap'
         }}>
           {filterMetal === 'All' ? 'All metals' : `${filterMetal} only`} · {filteredWithdrawals.length} withdrawal(s)
         </div>
