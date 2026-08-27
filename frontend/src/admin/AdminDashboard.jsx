@@ -731,22 +731,24 @@ export default function AdminDashboard({ onSelectTab }) {
         boxSizing: 'border-box'
       }}>
         {/* Gold (24K) Card */}
-        <div className="admin-holdings-card-gold" style={{
-          padding: '14px 20px',
+        <div className="admin-dashboard-rate-card-gold" style={{
+          padding: '12px 18px',
           borderLeft: '4px solid #D4A017',
           display: 'flex',
+          flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '14px',
+          gap: '12px',
           borderRadius: '10px',
           boxSizing: 'border-box',
           minHeight: 'auto',
-          flexWrap: 'nowrap'
+          flexWrap: 'nowrap',
+          width: '100%'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             <div style={{
-              width: '26px',
-              height: '26px',
+              width: '24px',
+              height: '24px',
               borderRadius: '50%',
               backgroundColor: '#fef3c7',
               color: '#D4A017',
@@ -754,25 +756,26 @@ export default function AdminDashboard({ onSelectTab }) {
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: '800',
-              fontSize: '13px',
+              fontSize: '12px',
               flexShrink: 0
             }}>
               ₹
             </div>
-            <span className="admin-holdings-title-gold" style={{
+            <span style={{
               fontSize: '15px',
               fontWeight: '800',
               letterSpacing: '-0.2px',
               whiteSpace: 'nowrap',
-              color: 'var(--admin-gold-text)'
+              color: 'var(--admin-gold-text)',
+              lineHeight: '1'
             }}>
               Gold (24K)
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-            <span className="admin-holdings-value-gold" style={{
-              fontSize: '20px',
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+            <span style={{
+              fontSize: '18px',
               fontWeight: '800',
               margin: 0,
               whiteSpace: 'nowrap',
@@ -786,22 +789,24 @@ export default function AdminDashboard({ onSelectTab }) {
         </div>
 
         {/* Silver Card */}
-        <div className="admin-holdings-card-silver" style={{
-          padding: '14px 20px',
+        <div className="admin-dashboard-rate-card-silver" style={{
+          padding: '12px 18px',
           borderLeft: '4px solid #94a3b8',
           display: 'flex',
+          flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '14px',
+          gap: '12px',
           borderRadius: '10px',
           boxSizing: 'border-box',
           minHeight: 'auto',
-          flexWrap: 'nowrap'
+          flexWrap: 'nowrap',
+          width: '100%'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             <div style={{
-              width: '26px',
-              height: '26px',
+              width: '24px',
+              height: '24px',
               borderRadius: '50%',
               backgroundColor: '#f1f5f9',
               color: '#64748b',
@@ -809,25 +814,26 @@ export default function AdminDashboard({ onSelectTab }) {
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: '800',
-              fontSize: '13px',
+              fontSize: '12px',
               flexShrink: 0
             }}>
               ₹
             </div>
-            <span className="admin-holdings-title-silver" style={{
+            <span style={{
               fontSize: '15px',
               fontWeight: '800',
               letterSpacing: '-0.2px',
               whiteSpace: 'nowrap',
-              color: 'var(--admin-silver-text)'
+              color: 'var(--admin-silver-text)',
+              lineHeight: '1'
             }}>
               Silver
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-            <span className="admin-holdings-value-silver" style={{
-              fontSize: '20px',
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+            <span style={{
+              fontSize: '18px',
               fontWeight: '800',
               margin: 0,
               whiteSpace: 'nowrap',
