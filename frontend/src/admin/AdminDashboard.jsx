@@ -443,13 +443,12 @@ function StockMarketLineGraph({
           return (
             <div
               key={p.key || idx}
+              className="admin-chart-xaxis-label"
               style={{
                 position: 'absolute',
                 left: `${(p.x / svgWidth) * 100}%`,
                 transform: isFirst ? 'translateX(0%)' : (isLast ? 'translateX(-100%)' : 'translateX(-50%)'),
                 textAlign: isFirst ? 'left' : (isLast ? 'right' : 'center'),
-                fontWeight: p.totalValue > 0 ? '700' : '500',
-                color: p.totalValue > 0 ? 'var(--admin-text-value)' : 'var(--admin-text-muted)',
                 whiteSpace: 'nowrap'
               }}
             >

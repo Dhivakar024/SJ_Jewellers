@@ -165,14 +165,14 @@ export default function AdminWithdrawal() {
               <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
-                    <th>Date</th>
-                    <th>Customer</th>
-                    <th>Metal</th>
-                    <th>Grams</th>
-                    <th>Rate (₹/gm)</th>
-                    <th>Amount (₹)</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th>DATE</th>
+                    <th>CUSTOMER</th>
+                    <th>METAL</th>
+                    <th>GRAMS</th>
+                    <th>RATE (₹/GM)</th>
+                    <th>AMOUNT (₹)</th>
+                    <th>STATUS</th>
+                    <th>ACTIONS</th>
                   </tr>
                 </thead>
                 <tbody>
