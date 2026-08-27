@@ -197,7 +197,6 @@ function StockMarketLineGraph({
   data = [],
   maxVal = 1000,
   lineColor = '#4f46e5',
-  areaColor = '#6366f1',
   isDaily = false
 }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
@@ -214,11 +213,11 @@ function StockMarketLineGraph({
     0
   ];
 
-  // SVG Coordinate calculations
+  // SVG Coordinate calculations with adequate right padding to keep Aug 27 cleanly inside
   const svgWidth = 800;
   const svgHeight = 220;
-  const paddingLeft = 10;
-  const paddingRight = 10;
+  const paddingLeft = 16;
+  const paddingRight = 24;
   const paddingTop = 15;
   const paddingBottom = 20;
 
@@ -245,19 +244,10 @@ function StockMarketLineGraph({
     }
   }
 
-  // Generate Area Fill Path closing at baseline
-  let areaPathString = '';
-  if (points.length > 0 && pathString) {
-    const baselineY = paddingTop + plotHeight;
-    const lastPoint = points[points.length - 1];
-    const firstPoint = points[0];
-    areaPathString = `${pathString} L ${lastPoint.x} ${baselineY} L ${firstPoint.x} ${baselineY} Z`;
-  }
-
   const activePoint = hoveredIndex !== null ? points[hoveredIndex] : null;
 
   return (
-    <div className="admin-card" style={{ textAlign: 'left', overflow: 'visible', position: 'relative' }}>
+    <div className="admin-card" style={{ textAlign: 'left', overflow: 'hidden', position: 'relative', boxSizing: 'border-box' }}>
       {/* Title Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -280,8 +270,8 @@ function StockMarketLineGraph({
         height: '260px',
         position: 'relative',
         display: 'flex',
-        paddingLeft: '60px',
-        paddingRight: '10px',
+        paddingLeft: '64px',
+        paddingRight: '20px',
         boxSizing: 'border-box'
       }}>
         {/* Y-axis Labels on Left */}
@@ -290,7 +280,7 @@ function StockMarketLineGraph({
           left: 0,
           top: `${paddingTop}px`,
           height: `${plotHeight}px`,
-          width: '54px',
+          width: '58px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
@@ -308,21 +298,12 @@ function StockMarketLineGraph({
         </div>
 
         {/* SVG Drawing Canvas */}
-        <div style={{ flex: 1, height: '100%', position: 'relative' }}>
+        <div style={{ flex: 1, height: '100%', position: 'relative', width: '100%', overflow: 'visible' }}>
           <svg
             viewBox={`0 0 ${svgWidth} ${svgHeight}`}
             style={{ width: '100%', height: '100%', overflow: 'visible', display: 'block' }}
             preserveAspectRatio="none"
           >
-            <defs>
-              {/* Stock Market Area Gradient Fill */}
-              <linearGradient id={`grad-${title.replace(/\s+/g, '-')}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={areaColor} stopOpacity="0.32" />
-                <stop offset="60%" stopColor={areaColor} stopOpacity="0.08" />
-                <stop offset="100%" stopColor={areaColor} stopOpacity="0.00" />
-              </linearGradient>
-            </defs>
-
             {/* Horizontal Dashed Grid Lines */}
             {[0, 0.25, 0.5, 0.75, 1].map((pct, idx) => {
               const y = paddingTop + plotHeight * (1 - pct);
@@ -340,15 +321,7 @@ function StockMarketLineGraph({
               );
             })}
 
-            {/* Gradient Area Fill */}
-            {areaPathString && (
-              <path
-                d={areaPathString}
-                fill={`url(#grad-${title.replace(/\s+/g, '-')})`}
-              />
-            )}
-
-            {/* Financial Trend Continuous Line */}
+            {/* Financial Trend Continuous Line (No black/shaded area underneath) */}
             {pathString && (
               <path
                 d={pathString}
@@ -379,7 +352,7 @@ function StockMarketLineGraph({
               const isHovered = hoveredIndex === idx;
               return (
                 <g key={idx}>
-                  {/* Invisible enlarged hit target for effortless hovering */}
+                  {/* Hit target for hovering */}
                   <circle
                     cx={p.x}
                     cy={p.y}
@@ -393,7 +366,7 @@ function StockMarketLineGraph({
                   <circle
                     cx={p.x}
                     cy={p.y}
-                    r={isHovered ? '6' : (isDaily ? '2.5' : '4')}
+                    r={isHovered ? '6' : (isDaily ? '3' : '4.5')}
                     fill={isHovered ? '#ffffff' : lineColor}
                     stroke={lineColor}
                     strokeWidth={isHovered ? '3' : '1.5'}
@@ -409,7 +382,7 @@ function StockMarketLineGraph({
             <div style={{
               position: 'absolute',
               top: '8px',
-              left: `${(activePoint.x / svgWidth) * 100}%`,
+              left: `${Math.min(Math.max((activePoint.x / svgWidth) * 100, 14), 86)}%`,
               transform: 'translateX(-50%)',
               backgroundColor: 'var(--admin-bg-card)',
               color: 'var(--admin-text-main)',
@@ -445,35 +418,42 @@ function StockMarketLineGraph({
         </div>
       </div>
 
-      {/* X-axis Labels */}
+      {/* X-axis Labels Aligned Directly with Data Point Coordinates */}
       <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        paddingLeft: '60px',
-        paddingRight: '10px',
-        marginTop: '6px',
+        position: 'relative',
+        height: '22px',
+        marginLeft: '64px',
+        marginRight: '20px',
+        marginTop: '8px',
         fontSize: '11.5px',
         color: 'var(--admin-text-muted)',
-        userSelect: 'none'
+        userSelect: 'none',
+        boxSizing: 'border-box'
       }}>
-        {safeData.map((item, idx) => {
+        {points.map((p, idx) => {
           let isVisible = true;
           if (isDaily) {
-            isVisible = idx === 0 || idx === 5 || idx === 10 || idx === 15 || idx === 20 || idx === 25 || idx === safeData.length - 1;
+            isVisible = idx === 0 || idx === 5 || idx === 10 || idx === 15 || idx === 20 || idx === 25 || idx === points.length - 1;
           }
+          if (!isVisible) return null;
+
+          const isFirst = idx === 0;
+          const isLast = idx === points.length - 1;
 
           return (
             <div
-              key={item.key || idx}
+              key={p.key || idx}
               style={{
-                textAlign: 'center',
-                visibility: isVisible ? 'visible' : 'hidden',
-                fontWeight: item.totalValue > 0 ? '700' : '500',
-                color: item.totalValue > 0 ? 'var(--admin-text-value)' : 'var(--admin-text-muted)',
+                position: 'absolute',
+                left: `${(p.x / svgWidth) * 100}%`,
+                transform: isFirst ? 'translateX(0%)' : (isLast ? 'translateX(-100%)' : 'translateX(-50%)'),
+                textAlign: isFirst ? 'left' : (isLast ? 'right' : 'center'),
+                fontWeight: p.totalValue > 0 ? '700' : '500',
+                color: p.totalValue > 0 ? 'var(--admin-text-value)' : 'var(--admin-text-muted)',
                 whiteSpace: 'nowrap'
               }}
             >
-              {item.label}
+              {p.label}
             </div>
           );
         })}
@@ -722,33 +702,33 @@ export default function AdminDashboard({ onSelectTab }) {
         </p>
       </div>
 
-      {/* 2. Top Two Rate Cards (Side by Side, Compact Reduced Size, Exact Single Horizontal Line) */}
+      {/* 2. Top Two Rate Cards (Side by Side, Increased Size & Typography, Single Horizontal Line) */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-        gap: '14px',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+        gap: '16px',
         width: '100%',
         boxSizing: 'border-box'
       }}>
         {/* Gold (24K) Card */}
         <div className="admin-dashboard-rate-card-gold" style={{
-          padding: '12px 18px',
-          borderLeft: '4px solid #D4A017',
+          padding: '16px 22px',
+          borderLeft: '5px solid #D4A017',
           display: 'flex',
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '12px',
-          borderRadius: '10px',
+          gap: '14px',
+          borderRadius: '12px',
           boxSizing: 'border-box',
-          minHeight: 'auto',
+          minHeight: '64px',
           flexWrap: 'nowrap',
           width: '100%'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
             <div style={{
-              width: '24px',
-              height: '24px',
+              width: '28px',
+              height: '28px',
               borderRadius: '50%',
               backgroundColor: '#fef3c7',
               color: '#D4A017',
@@ -756,13 +736,13 @@ export default function AdminDashboard({ onSelectTab }) {
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: '800',
-              fontSize: '12px',
+              fontSize: '13.5px',
               flexShrink: 0
             }}>
               ₹
             </div>
             <span style={{
-              fontSize: '15px',
+              fontSize: '17px',
               fontWeight: '800',
               letterSpacing: '-0.2px',
               whiteSpace: 'nowrap',
@@ -773,40 +753,41 @@ export default function AdminDashboard({ onSelectTab }) {
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             <span style={{
-              fontSize: '18px',
+              fontSize: '24px',
               fontWeight: '800',
               margin: 0,
               whiteSpace: 'nowrap',
               lineHeight: '1',
-              color: 'var(--admin-text-value)'
+              color: 'var(--admin-text-value)',
+              letterSpacing: '-0.4px'
             }}>
               ₹{goldRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
-            <TrendingUp size={15} color="var(--admin-green-trend)" style={{ flexShrink: 0 }} />
+            <TrendingUp size={17} color="var(--admin-green-trend)" style={{ flexShrink: 0 }} />
           </div>
         </div>
 
         {/* Silver Card */}
         <div className="admin-dashboard-rate-card-silver" style={{
-          padding: '12px 18px',
-          borderLeft: '4px solid #94a3b8',
+          padding: '16px 22px',
+          borderLeft: '5px solid #94a3b8',
           display: 'flex',
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '12px',
-          borderRadius: '10px',
+          gap: '14px',
+          borderRadius: '12px',
           boxSizing: 'border-box',
-          minHeight: 'auto',
+          minHeight: '64px',
           flexWrap: 'nowrap',
           width: '100%'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
             <div style={{
-              width: '24px',
-              height: '24px',
+              width: '28px',
+              height: '28px',
               borderRadius: '50%',
               backgroundColor: '#f1f5f9',
               color: '#64748b',
@@ -814,13 +795,13 @@ export default function AdminDashboard({ onSelectTab }) {
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: '800',
-              fontSize: '12px',
+              fontSize: '13.5px',
               flexShrink: 0
             }}>
               ₹
             </div>
             <span style={{
-              fontSize: '15px',
+              fontSize: '17px',
               fontWeight: '800',
               letterSpacing: '-0.2px',
               whiteSpace: 'nowrap',
@@ -831,18 +812,19 @@ export default function AdminDashboard({ onSelectTab }) {
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             <span style={{
-              fontSize: '18px',
+              fontSize: '24px',
               fontWeight: '800',
               margin: 0,
               whiteSpace: 'nowrap',
               lineHeight: '1',
-              color: 'var(--admin-text-value)'
+              color: 'var(--admin-text-value)',
+              letterSpacing: '-0.4px'
             }}>
               ₹{silverRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
-            <TrendingUp size={15} color="var(--admin-green-trend)" style={{ flexShrink: 0 }} />
+            <TrendingUp size={17} color="var(--admin-green-trend)" style={{ flexShrink: 0 }} />
           </div>
         </div>
       </div>

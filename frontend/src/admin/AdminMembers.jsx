@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Calendar, X, Trash2, AlertTriangle, CheckCircle, Phone } from 'lucide-react';
+import { ArrowLeft, Calendar, X, Trash2, AlertTriangle, CheckCircle, Phone, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export default function AdminMembers() {
@@ -26,6 +26,10 @@ export default function AdminMembers() {
   const [maxGrams, setMaxGrams] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  
+  // Pagination State for Members Table
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Selected Member Lookup
   const selectedMember = useMemo(() => {
@@ -811,119 +815,250 @@ export default function AdminMembers() {
         </p>
       </div>
 
-      {/* 2. Members Table Container (ONLY THIS AREA SCROLLS) */}
-      <div 
-        className="admin-table-container" 
-        style={{ 
-          flex: 1, 
-          minHeight: 0, 
-          overflowY: 'auto', 
-          overflowX: 'auto', 
-          boxSizing: 'border-box' 
-        }}
-      >
-        <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-            <tr>
-              <th>ID</th>
-              <th>CUSTOMER NAME</th>
-              <th>MOBILE</th>
-              <th>ROLE</th>
-              <th>KYC VERIFIED</th>
-              <th>MOBILE VERIFIED</th>
-              <th>ACTIVE</th>
-              <th>JOINED</th>
-              <th style={{ textAlign: 'right' }}>ACTION</th>
-            </tr>
-          </thead>
-          <tbody>
-            {members.map((m, idx) => {
-              if (!m) return null;
-              const isVerified = m.verified === 'Yes';
-              const isMobileVerified = m.mobileVerified === 'Yes';
-              const isActive = m.active === 'Yes';
+      {/* 2. Members Table Container */}
+      {(() => {
+        const totalItems = members.length;
+        const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+        const safePage = Math.min(Math.max(1, currentPage), totalPages);
+        const startIndex = (safePage - 1) * pageSize;
+        const endIndex = Math.min(startIndex + pageSize, totalItems);
+        const paginatedMembers = members.slice(startIndex, endIndex);
 
-              return (
-                <tr key={m.id || idx}>
-                  <td style={{ color: 'var(--admin-text-secondary)', fontWeight: '600' }}>#{m.id}</td>
-                  
-                  {/* Customer Name & Username */}
-                  <td>
-                    <div style={{ fontWeight: '700', color: 'var(--admin-orange)' }}>
-                      {m.name || m.username}
-                    </div>
-                    {m.name && m.username && m.name !== m.username && (
-                      <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '2px' }}>
-                        @{m.username}
-                      </div>
-                    )}
-                  </td>
+        return (
+          <div 
+            className="admin-table-container" 
+            style={{ 
+              display: 'flex',
+              flexDirection: 'column',
+              boxSizing: 'border-box' 
+            }}
+          >
+            <div style={{ overflowX: 'auto', width: '100%' }}>
+              <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+                  <tr>
+                    <th>ID</th>
+                    <th>CUSTOMER NAME</th>
+                    <th>MOBILE</th>
+                    <th>ROLE</th>
+                    <th>KYC VERIFIED</th>
+                    <th>MOBILE VERIFIED</th>
+                    <th>ACTIVE</th>
+                    <th>JOINED</th>
+                    <th style={{ textAlign: 'right' }}>ACTION</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedMembers.map((m, idx) => {
+                    if (!m) return null;
+                    const isVerified = m.verified === 'Yes';
+                    const isMobileVerified = m.mobileVerified === 'Yes';
+                    const isActive = m.active === 'Yes';
 
-                  <td style={{ fontWeight: '500', color: 'var(--admin-text-secondary)' }}>
-                    {m.mobile}
-                  </td>
+                    return (
+                      <tr key={m.id || idx}>
+                        <td style={{ color: 'var(--admin-text-secondary)', fontWeight: '600' }}>#{m.id}</td>
+                        
+                        {/* Customer Name & Username */}
+                        <td>
+                          <div style={{ fontWeight: '700', color: 'var(--admin-orange)' }}>
+                            {m.name || m.username}
+                          </div>
+                          {m.name && m.username && m.name !== m.username && (
+                            <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '2px' }}>
+                              @{m.username}
+                            </div>
+                          )}
+                        </td>
 
-                  <td>
-                    <span className="admin-badge-gray">
-                      {m.role || 'customer'}
-                    </span>
-                  </td>
+                        <td style={{ fontWeight: '500', color: 'var(--admin-text-secondary)' }}>
+                          {m.mobile}
+                        </td>
 
-                  <td>
-                    <span style={{ fontWeight: '700', color: isVerified ? '#10b981' : '#f59e0b' }}>
-                      {m.verified || 'No'}
-                    </span>
-                  </td>
+                        <td>
+                          <span className="admin-badge-gray">
+                            {m.role || 'customer'}
+                          </span>
+                        </td>
 
-                  <td>
-                    <span style={{ fontWeight: '700', color: isMobileVerified ? '#10b981' : '#f59e0b' }}>
-                      {m.mobileVerified || 'Yes'}
-                    </span>
-                  </td>
+                        <td>
+                          <span style={{ fontWeight: '700', color: isVerified ? '#10b981' : '#f59e0b' }}>
+                            {m.verified || 'No'}
+                          </span>
+                        </td>
 
-                  <td>
-                    <span style={{ fontWeight: '700', color: isActive ? '#10b981' : '#ef4444' }}>
-                      {m.active || 'Yes'}
-                    </span>
-                  </td>
+                        <td>
+                          <span style={{ fontWeight: '700', color: isMobileVerified ? '#10b981' : '#f59e0b' }}>
+                            {m.mobileVerified || 'Yes'}
+                          </span>
+                        </td>
 
-                  <td style={{ color: 'var(--admin-text-secondary)' }}>
-                    {m.created}
-                  </td>
+                        <td>
+                          <span style={{ fontWeight: '700', color: isActive ? '#10b981' : '#ef4444' }}>
+                            {m.active || 'Yes'}
+                          </span>
+                        </td>
 
-                  {/* View Action Button */}
-                  <td style={{ textAlign: 'right' }}>
+                        <td style={{ color: 'var(--admin-text-secondary)' }}>
+                          {m.created}
+                        </td>
+
+                        {/* View Action Button */}
+                        <td style={{ textAlign: 'right' }}>
+                          <button
+                            onClick={() => setSelectedMemberId(m.id)}
+                            style={{
+                              backgroundColor: 'var(--admin-border-subtle)',
+                              color: 'var(--admin-sidebar-active-text)',
+                              border: '1px solid var(--admin-border)',
+                              borderRadius: '6px',
+                              padding: '5px 14px',
+                              fontSize: '12.5px',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = 'var(--admin-sidebar-active-text)';
+                              e.currentTarget.style.color = '#ffffff';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'var(--admin-border-subtle)';
+                              e.currentTarget.style.color = 'var(--admin-sidebar-active-text)';
+                            }}
+                          >
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Footer */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '12px',
+              padding: '14px 20px',
+              borderTop: '1px solid var(--admin-border)',
+              backgroundColor: 'var(--admin-bg-card)',
+              fontSize: '13.5px',
+              color: 'var(--admin-text-secondary)',
+              boxSizing: 'border-box'
+            }}>
+              {/* Left: Showing X-Y of Z */}
+              <div style={{ fontWeight: '500' }}>
+                Showing <strong style={{ color: 'var(--admin-text-value)' }}>{totalItems === 0 ? 0 : startIndex + 1}–{endIndex}</strong> of <strong style={{ color: 'var(--admin-text-value)' }}>{totalItems}</strong>
+              </div>
+
+              {/* Center: Rows per page */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>Rows per page:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="admin-select"
+                  style={{
+                    height: '32px',
+                    padding: '0 24px 0 10px',
+                    fontSize: '13px',
+                    borderRadius: '6px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+
+              {/* Right: Page Navigation Buttons */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={safePage === 1}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--admin-border)',
+                    backgroundColor: 'var(--admin-bg-card)',
+                    color: safePage === 1 ? 'var(--admin-text-muted)' : 'var(--admin-text-main)',
+                    cursor: safePage === 1 ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: safePage === 1 ? 0.45 : 1,
+                    transition: 'all 0.15s ease'
+                  }}
+                  aria-label="Previous Page"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                  const isActive = pageNum === safePage;
+                  return (
                     <button
-                      onClick={() => setSelectedMemberId(m.id)}
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
                       style={{
-                        backgroundColor: 'var(--admin-border-subtle)',
-                        color: 'var(--admin-sidebar-active-text)',
-                        border: '1px solid var(--admin-border)',
+                        width: '32px',
+                        height: '32px',
                         borderRadius: '6px',
-                        padding: '5px 14px',
-                        fontSize: '12.5px',
-                        fontWeight: '700',
+                        border: isActive ? 'none' : '1px solid var(--admin-border)',
+                        backgroundColor: isActive ? 'var(--admin-orange)' : 'var(--admin-bg-card)',
+                        color: isActive ? '#ffffff' : 'var(--admin-text-secondary)',
+                        fontWeight: isActive ? '700' : '600',
+                        fontSize: '13px',
                         cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: isActive ? '0 2px 6px rgba(234, 88, 12, 0.3)' : 'none',
                         transition: 'all 0.15s ease'
                       }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'var(--admin-sidebar-active-text)';
-                        e.currentTarget.style.color = '#ffffff';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'var(--admin-border-subtle)';
-                        e.currentTarget.style.color = 'var(--admin-sidebar-active-text)';
-                      }}
                     >
-                      View
+                      {pageNum}
                     </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                  );
+                })}
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={safePage === totalPages || totalPages === 0}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--admin-border)',
+                    backgroundColor: 'var(--admin-bg-card)',
+                    color: safePage === totalPages || totalPages === 0 ? 'var(--admin-text-muted)' : 'var(--admin-text-main)',
+                    cursor: safePage === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: safePage === totalPages || totalPages === 0 ? 0.45 : 1,
+                    transition: 'all 0.15s ease'
+                  }}
+                  aria-label="Next Page"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );

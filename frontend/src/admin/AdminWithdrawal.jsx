@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export default function AdminWithdrawal() {
@@ -6,6 +7,10 @@ export default function AdminWithdrawal() {
 
   const [filterMetal, setFilterMetal] = useState('All');
   const [selectedWithdrawal, setSelectedWithdrawal] = useState(null);
+
+  // Pagination State for Withdrawal Table
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const filteredWithdrawals = withdrawals.filter((w) => {
     if (!w) return false;
@@ -20,6 +25,11 @@ export default function AdminWithdrawal() {
       approveWithdrawal(selectedWithdrawal.id);
       setSelectedWithdrawal(null);
     }
+  };
+
+  const handleFilterChange = (opt) => {
+    setFilterMetal(opt);
+    setCurrentPage(1);
   };
 
   return (
@@ -41,7 +51,7 @@ export default function AdminWithdrawal() {
           return (
             <button
               key={opt}
-              onClick={() => setFilterMetal(opt)}
+              onClick={() => handleFilterChange(opt)}
               style={{
                 height: '40px',
                 padding: '0 20px',
@@ -134,83 +144,223 @@ export default function AdminWithdrawal() {
       </div>
 
       {/* 4. Withdrawals Data Table */}
-      <div className="admin-table-container">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Customer</th>
-              <th>Metal</th>
-              <th>Grams</th>
-              <th>Rate (₹/gm)</th>
-              <th>Amount (₹)</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredWithdrawals.map((w) => {
-              const isApproved = w.status === 'Approved';
+      {(() => {
+        const totalItems = filteredWithdrawals.length;
+        const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+        const safePage = Math.min(Math.max(1, currentPage), totalPages);
+        const startIndex = (safePage - 1) * pageSize;
+        const endIndex = Math.min(startIndex + pageSize, totalItems);
+        const paginatedWithdrawals = filteredWithdrawals.slice(startIndex, endIndex);
 
-              return (
-                <tr key={w.id}>
-                  <td style={{ color: 'var(--admin-text-secondary)', whiteSpace: 'nowrap', fontWeight: '600' }}>
-                    {w.date}
-                  </td>
+        return (
+          <div 
+            className="admin-table-container"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              boxSizing: 'border-box'
+            }}
+          >
+            <div style={{ overflowX: 'auto', width: '100%' }}>
+              <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Metal</th>
+                    <th>Grams</th>
+                    <th>Rate (₹/gm)</th>
+                    <th>Amount (₹)</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedWithdrawals.map((w) => {
+                    const isApproved = w.status === 'Approved';
 
-                  <td>
-                    <div style={{ fontWeight: '700', color: 'var(--admin-text-value)' }}>{w.customer}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '2px' }}>{w.mobile}</div>
-                  </td>
+                    return (
+                      <tr key={w.id}>
+                        <td style={{ color: 'var(--admin-text-secondary)', whiteSpace: 'nowrap', fontWeight: '600' }}>
+                          {w.date}
+                        </td>
 
-                  <td style={{ fontWeight: '600', color: w.metal === 'Gold' ? 'var(--admin-gold-text)' : 'var(--admin-silver-text)' }}>
-                    {w.metal}
-                  </td>
+                        <td>
+                          <div style={{ fontWeight: '700', color: 'var(--admin-text-value)' }}>{w.customer}</div>
+                          <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '2px' }}>{w.mobile}</div>
+                        </td>
 
-                  <td style={{ fontWeight: '700', color: 'var(--admin-text-value)' }}>
-                    {w.grams}
-                  </td>
+                        <td style={{ fontWeight: '600', color: w.metal === 'Gold' ? 'var(--admin-gold-text)' : 'var(--admin-silver-text)' }}>
+                          {w.metal}
+                        </td>
 
-                  <td style={{ fontWeight: '600', color: 'var(--admin-text-secondary)' }}>
-                    ₹{parseFloat(w.rate || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                  </td>
+                        <td style={{ fontWeight: '700', color: 'var(--admin-text-value)' }}>
+                          {w.grams}
+                        </td>
 
-                  <td style={{ fontWeight: '800', color: 'var(--admin-text-value)' }}>
-                    ₹{parseFloat(w.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                  </td>
+                        <td style={{ fontWeight: '600', color: 'var(--admin-text-secondary)' }}>
+                          ₹{parseFloat(w.rate || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </td>
 
-                  <td>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <span className={isApproved ? 'admin-badge-green' : 'admin-badge-yellow'} style={{ width: 'fit-content' }}>
-                        {w.status}
-                      </span>
-                      {w.paidDate && (
-                        <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)' }}>
-                          Amount paid · {w.paidDate}
-                        </span>
-                      )}
-                    </div>
-                  </td>
+                        <td style={{ fontWeight: '800', color: 'var(--admin-text-value)' }}>
+                          ₹{parseFloat(w.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </td>
 
-                  <td>
-                    {!isApproved ? (
-                      <button
-                        className="admin-btn-green"
-                        onClick={() => setSelectedWithdrawal(w)}
-                        style={{ fontSize: '12px', padding: '6px 12px' }}
-                      >
-                        Approve & mark paid
-                      </button>
-                    ) : (
-                      <span style={{ color: 'var(--admin-text-muted)' }}>—</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                        <td>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span className={isApproved ? 'admin-badge-green' : 'admin-badge-yellow'} style={{ width: 'fit-content' }}>
+                              {w.status}
+                            </span>
+                            {w.paidDate && (
+                              <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)' }}>
+                                Amount paid · {w.paidDate}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        <td>
+                          {!isApproved ? (
+                            <button
+                              className="admin-btn-green"
+                              onClick={() => setSelectedWithdrawal(w)}
+                              style={{ fontSize: '12px', padding: '6px 12px' }}
+                            >
+                              Approve & mark paid
+                            </button>
+                          ) : (
+                            <span style={{ color: 'var(--admin-text-muted)' }}>—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Footer */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '12px',
+              padding: '14px 20px',
+              borderTop: '1px solid var(--admin-border)',
+              backgroundColor: 'var(--admin-bg-card)',
+              fontSize: '13.5px',
+              color: 'var(--admin-text-secondary)',
+              boxSizing: 'border-box'
+            }}>
+              {/* Left: Showing X-Y of Z */}
+              <div style={{ fontWeight: '500' }}>
+                Showing <strong style={{ color: 'var(--admin-text-value)' }}>{totalItems === 0 ? 0 : startIndex + 1}–{endIndex}</strong> of <strong style={{ color: 'var(--admin-text-value)' }}>{totalItems}</strong>
+              </div>
+
+              {/* Center: Rows per page */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>Rows per page:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="admin-select"
+                  style={{
+                    height: '32px',
+                    padding: '0 24px 0 10px',
+                    fontSize: '13px',
+                    borderRadius: '6px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+
+              {/* Right: Page Navigation Buttons */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={safePage === 1}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--admin-border)',
+                    backgroundColor: 'var(--admin-bg-card)',
+                    color: safePage === 1 ? 'var(--admin-text-muted)' : 'var(--admin-text-main)',
+                    cursor: safePage === 1 ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: safePage === 1 ? 0.45 : 1,
+                    transition: 'all 0.15s ease'
+                  }}
+                  aria-label="Previous Page"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                  const isActive = pageNum === safePage;
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '6px',
+                        border: isActive ? 'none' : '1px solid var(--admin-border)',
+                        backgroundColor: isActive ? 'var(--admin-orange)' : 'var(--admin-bg-card)',
+                        color: isActive ? '#ffffff' : 'var(--admin-text-secondary)',
+                        fontWeight: isActive ? '700' : '600',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: isActive ? '0 2px 6px rgba(234, 88, 12, 0.3)' : 'none',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={safePage === totalPages || totalPages === 0}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--admin-border)',
+                    backgroundColor: 'var(--admin-bg-card)',
+                    color: safePage === totalPages || totalPages === 0 ? 'var(--admin-text-muted)' : 'var(--admin-text-main)',
+                    cursor: safePage === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: safePage === totalPages || totalPages === 0 ? 0.45 : 1,
+                    transition: 'all 0.15s ease'
+                  }}
+                  aria-label="Next Page"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* 5. Modal: Confirm Approval */}
       {selectedWithdrawal && (
