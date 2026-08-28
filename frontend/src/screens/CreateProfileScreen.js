@@ -22,6 +22,10 @@ const RELATIONSHIP_OPTIONS = ['Spouse', 'Parent', 'Child', 'Sibling', 'Other'];
 export default function CreateProfileScreen({ route, navigation }) {
   const { currentUser, completeUserProfile, skipProfile } = useApp();
   const mode = route?.params?.mode || 'create';
+  const fromScreen = route?.params?.fromScreen || (mode === 'edit' ? 'profile' : 'signup');
+
+  // Flow B: If accessed from Profile page (whether creating profile for first time or editing)
+  const isFromProfile = fromScreen === 'profile' || mode === 'edit';
   const isEditMode = mode === 'edit';
 
   const [formData, setFormData] = useState({
@@ -60,18 +64,21 @@ export default function CreateProfileScreen({ route, navigation }) {
     setErrorMessage('');
   };
 
+  // Flow A: Skip post-signup onboarding -> navigates directly to Home
   const handleSkip = async () => {
     await skipProfile();
     navigation.replace('Home');
   };
 
+  // Flow B: Cancel when opened from Profile page -> returns strictly to Profile page
   const handleCancel = () => {
-    navigation.goBack();
+    navigation.navigate('Profile');
   };
 
+  // Top header back button
   const handleHeaderBack = () => {
-    if (isEditMode) {
-      navigation.goBack();
+    if (isFromProfile) {
+      navigation.navigate('Profile');
     } else {
       navigation.replace('SignIn');
     }
@@ -214,8 +221,8 @@ export default function CreateProfileScreen({ route, navigation }) {
       await completeUserProfile(updatedUserObj);
       setIsSubmitting(false);
 
-      if (isEditMode) {
-        navigation.goBack();
+      if (isFromProfile) {
+        navigation.navigate('Profile');
       } else {
         navigation.replace('Home');
       }
@@ -474,16 +481,19 @@ export default function CreateProfileScreen({ route, navigation }) {
           )}
         </View>
 
-        {/* Lower Action Buttons (Cancel/Skip alongside Submit/Save Changes) */}
+        {/* Lower Action Buttons:
+            Flow A (New Signup): Shows 'Skip' (-> Home) and 'Submit'
+            Flow B (From Profile): Shows 'Cancel' (-> Profile) and 'Submit' / 'Save Changes'
+        */}
         <View style={styles.bottomButtonsRow}>
           <TouchableOpacity
             style={styles.cancelSkipBtn}
-            onPress={isEditMode ? handleCancel : handleSkip}
+            onPress={isFromProfile ? handleCancel : handleSkip}
             disabled={isSubmitting}
             activeOpacity={0.7}
           >
             <Text style={styles.cancelSkipBtnText}>
-              {isEditMode ? 'Cancel' : 'Skip'}
+              {isFromProfile ? 'Cancel' : 'Skip'}
             </Text>
           </TouchableOpacity>
 

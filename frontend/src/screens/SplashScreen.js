@@ -12,7 +12,7 @@ export default function SplashScreen({ navigation }) {
     const timer = setTimeout(() => {
       if (currentUser && currentUser.isAuthenticated) {
         if (!currentUser.profileCompleted && !hasSkippedProfile) {
-          navigation.replace('CreateProfile', { mode: 'create' });
+          navigation.replace('CreateProfile', { mode: 'create', fromScreen: 'signup' });
         } else {
           navigation.replace('Home');
         }

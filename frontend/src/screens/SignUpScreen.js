@@ -84,7 +84,7 @@ export default function SignUpScreen({ navigation }) {
       setIsLoading(false);
 
       if (registered) {
-        navigation.replace('CreateProfile', { mode: 'create' });
+        navigation.replace('CreateProfile', { mode: 'create', fromScreen: 'signup' });
       } else {
         setError('An account with this mobile number already exists.');
       }
