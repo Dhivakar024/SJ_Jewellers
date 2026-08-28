@@ -19,6 +19,10 @@
         "foregroundImage": "./assets/hero.png",
         "backgroundColor": "#583cf5"
       }
-    }
+    },
+    "plugins": [
+      "expo-asset",
+      "expo-font"
+    ]
   }
 }
