@@ -316,22 +316,10 @@ function StockMarketLineGraph({
                   y2={y}
                   stroke="var(--admin-border-subtle)"
                   strokeWidth="1"
-                  strokeDasharray={pct === 0 ? 'none' : '4 4'}
+                  strokeDasharray={pct === 0 ? 'none' : '3 3'}
                 />
               );
             })}
-
-            {/* Financial Trend Continuous Line (No black/shaded area underneath) */}
-            {pathString && (
-              <path
-                d={pathString}
-                fill="none"
-                stroke={lineColor}
-                strokeWidth="2.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            )}
 
             {/* Hover Vertical Crosshair */}
             {activePoint && (
@@ -340,19 +328,32 @@ function StockMarketLineGraph({
                 y1={paddingTop}
                 x2={activePoint.x}
                 y2={paddingTop + plotHeight}
-                stroke="#6366f1"
-                strokeWidth="1.5"
+                stroke={lineColor}
+                strokeWidth="1"
                 strokeDasharray="3 3"
-                opacity="0.85"
+                opacity="0.65"
               />
             )}
 
-            {/* Data Nodes */}
+            {/* Professional XY Thin Line (Completely transparent below - No area fill) */}
+            {pathString && (
+              <path
+                d={pathString}
+                fill="none"
+                stroke={lineColor}
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
+
+            {/* XY Data Points */}
             {points.map((p, idx) => {
               const isHovered = hoveredIndex === idx;
+              const pointRadius = isHovered ? (isDaily ? 4.5 : 5.5) : (isDaily ? 2.5 : 3.5);
               return (
                 <g key={idx}>
-                  {/* Hit target for hovering */}
+                  {/* Invisible Hit target for easy hovering */}
                   <circle
                     cx={p.x}
                     cy={p.y}
@@ -362,15 +363,15 @@ function StockMarketLineGraph({
                     onMouseEnter={() => setHoveredIndex(idx)}
                     onMouseLeave={() => setHoveredIndex(null)}
                   />
-                  {/* Visible Data Dot */}
+                  {/* Visible XY Circular Node */}
                   <circle
                     cx={p.x}
                     cy={p.y}
-                    r={isHovered ? '6' : (isDaily ? '3' : '4.5')}
-                    fill={isHovered ? '#ffffff' : lineColor}
-                    stroke={lineColor}
-                    strokeWidth={isHovered ? '3' : '1.5'}
-                    style={{ pointerEvents: 'none', transition: 'all 0.15s ease' }}
+                    r={pointRadius}
+                    fill={isHovered ? lineColor : '#ffffff'}
+                    stroke={isHovered ? '#ffffff' : lineColor}
+                    strokeWidth={isHovered ? '2' : '1.8'}
+                    style={{ pointerEvents: 'none', transition: 'all 0.12s ease' }}
                   />
                 </g>
               );
@@ -855,7 +856,7 @@ export default function AdminDashboard({ onSelectTab }) {
         />
       </div>
 
-      {/* 4. Annual Transactions (Last 5 Years - Stock Market Line Graph) */}
+      {/* 4. Annual Transactions (Last 5 Years - Line Graph) */}
       <StockMarketLineGraph
         title="Annual Transactions (Last 5 Years)"
         subtitle="Annual transaction value trend (INR) across 5 years"
@@ -863,11 +864,10 @@ export default function AdminDashboard({ onSelectTab }) {
         data={annualChartData.items}
         maxVal={annualChartData.maxVal}
         lineColor="#4f46e5"
-        areaColor="#6366f1"
         isDaily={false}
       />
 
-      {/* 5. Monthly Transactions (Last 12 Months - Stock Market Line Graph) */}
+      {/* 5. Monthly Transactions (Last 12 Months - Line Graph) */}
       <StockMarketLineGraph
         title="Monthly Transactions (Last 12 Months)"
         subtitle="Monthly transaction value trend (INR) across 12 months"
@@ -875,11 +875,10 @@ export default function AdminDashboard({ onSelectTab }) {
         data={monthlyChartData.items}
         maxVal={monthlyChartData.maxVal}
         lineColor="#2563eb"
-        areaColor="#3b82f6"
         isDaily={false}
       />
 
-      {/* 6. Daily Transactions (Last 30 Days - Stock Market Line Graph) */}
+      {/* 6. Daily Transactions (Last 30 Days - Line Graph) */}
       <StockMarketLineGraph
         title="Daily Transactions (Last 30 Days)"
         subtitle="Daily transaction volume & revenue trend (INR) for past 30 days"
@@ -887,7 +886,6 @@ export default function AdminDashboard({ onSelectTab }) {
         data={dailyChartData.items}
         maxVal={dailyChartData.maxVal}
         lineColor="#059669"
-        areaColor="#10b981"
         isDaily={true}
       />
 
