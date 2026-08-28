@@ -67,8 +67,8 @@ export default function ProfileScreen({ navigation }) {
     else if (screen === 'withdraw') navigation.navigate('Withdraw', { fromScreen: 'profile', ...params });
     else if (screen === 'transactions') navigation.navigate('TransactionHistory', { fromScreen: 'profile', ...params });
     else if (screen === 'contact') navigation.navigate('ContactUs', { fromScreen: 'profile', ...params });
-    else if (screen === 'create-profile') navigation.navigate('CreateProfile', { mode: 'create', fromScreen: 'profile', ...params });
-    else if (screen === 'edit-profile') navigation.navigate('CreateProfile', { mode: 'edit', fromScreen: 'profile', ...params });
+    else if (screen === 'create-profile') navigation.navigate('CreateProfile', { mode: 'create', source: 'profile', fromScreen: 'profile', ...params });
+    else if (screen === 'edit-profile') navigation.navigate('CreateProfile', { mode: 'edit', source: 'profile', fromScreen: 'profile', ...params });
   };
 
   return (

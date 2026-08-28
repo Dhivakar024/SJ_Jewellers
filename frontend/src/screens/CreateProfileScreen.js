@@ -20,12 +20,30 @@ import { globalStyles } from '../styles/globalStyles';
 const RELATIONSHIP_OPTIONS = ['Spouse', 'Parent', 'Child', 'Sibling', 'Other'];
 
 export default function CreateProfileScreen({ route, navigation }) {
-  const { currentUser, completeUserProfile, skipProfile } = useApp();
-  const mode = route?.params?.mode || 'create';
-  const fromScreen = route?.params?.fromScreen || (mode === 'edit' ? 'profile' : 'signup');
+  const { currentUser, completeUserProfile, skipProfile, hasSkippedProfile } = useApp();
 
-  // Flow B: If accessed from Profile page (whether creating profile for first time or editing)
-  const isFromProfile = fromScreen === 'profile' || mode === 'edit';
+  const params = route?.params || {};
+  const mode = params.mode || (currentUser?.profileCompleted ? 'edit' : 'create');
+
+  // Check stack history if available
+  const navState = navigation.getState ? navigation.getState() : null;
+  const prevRouteName = navState?.routes && navState.routes.length > 1
+    ? navState.routes[navState.routes.length - 2]?.name
+    : '';
+
+  // Determine if opened from Profile page (Flow B) vs Initial Signup Onboarding (Flow A)
+  // Flow B is active if:
+  // 1. Explicit param: source === 'profile' OR fromScreen === 'profile'
+  // 2. Or mode === 'edit'
+  // 3. Or previous route in navigation stack was 'Profile'
+  // 4. Or user is already inside the main app (hasSkippedProfile is true) AND source is NOT explicitly 'signup'
+  const isFromProfile =
+    params.source === 'profile' ||
+    params.fromScreen === 'profile' ||
+    mode === 'edit' ||
+    prevRouteName === 'Profile' ||
+    (hasSkippedProfile && params.source !== 'signup' && params.fromScreen !== 'signup');
+
   const isEditMode = mode === 'edit';
 
   const [formData, setFormData] = useState({
@@ -72,13 +90,21 @@ export default function CreateProfileScreen({ route, navigation }) {
 
   // Flow B: Cancel when opened from Profile page -> returns strictly to Profile page
   const handleCancel = () => {
-    navigation.navigate('Profile');
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('Profile');
+    }
   };
 
   // Top header back button
   const handleHeaderBack = () => {
     if (isFromProfile) {
-      navigation.navigate('Profile');
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        navigation.navigate('Profile');
+      }
     } else {
       navigation.replace('SignIn');
     }
@@ -222,7 +248,11 @@ export default function CreateProfileScreen({ route, navigation }) {
       setIsSubmitting(false);
 
       if (isFromProfile) {
-        navigation.navigate('Profile');
+        if (navigation.canGoBack()) {
+          navigation.goBack();
+        } else {
+          navigation.navigate('Profile');
+        }
       } else {
         navigation.replace('Home');
       }
@@ -486,16 +516,25 @@ export default function CreateProfileScreen({ route, navigation }) {
             Flow B (From Profile): Shows 'Cancel' (-> Profile) and 'Submit' / 'Save Changes'
         */}
         <View style={styles.bottomButtonsRow}>
-          <TouchableOpacity
-            style={styles.cancelSkipBtn}
-            onPress={isFromProfile ? handleCancel : handleSkip}
-            disabled={isSubmitting}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.cancelSkipBtnText}>
-              {isFromProfile ? 'Cancel' : 'Skip'}
-            </Text>
-          </TouchableOpacity>
+          {isFromProfile ? (
+            <TouchableOpacity
+              style={styles.cancelSkipBtn}
+              onPress={handleCancel}
+              disabled={isSubmitting}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.cancelSkipBtnText}>Cancel</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.cancelSkipBtn}
+              onPress={handleSkip}
+              disabled={isSubmitting}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.cancelSkipBtnText}>Skip</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={[styles.saveSubmitBtn, isSubmitting && { opacity: 0.7 }]}

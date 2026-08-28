@@ -66,7 +66,7 @@ export default function SignInScreen({ navigation }) {
 
       if (user) {
         if (!user.profileCompleted) {
-          navigation.replace('CreateProfile', { mode: 'create', fromScreen: 'signup' });
+          navigation.replace('CreateProfile', { mode: 'create', source: 'signup', fromScreen: 'signup' });
         } else {
           navigation.replace('Home');
         }
