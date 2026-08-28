@@ -241,8 +241,12 @@ export default function TransactionHistoryScreen({ route, navigation }) {
         {/* Grouped Transaction List */}
         {groupedTransactions.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>No Transactions Found</Text>
-            <Text style={styles.emptySubtitle}>Try adjusting your filter options.</Text>
+            <Text style={styles.emptyTitle}>No Transactions Yet</Text>
+            <Text style={styles.emptySubtitle}>
+              {hasActiveFilters
+                ? 'No transactions match your active filters.'
+                : 'Your gold and silver purchase history will appear here.'}
+            </Text>
           </View>
         ) : (
           groupedTransactions.map((group) => (

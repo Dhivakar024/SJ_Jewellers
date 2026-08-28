@@ -108,7 +108,7 @@ export default function ProfileScreen({ navigation }) {
             </Text>
           </View>
           <Text style={styles.userName}>{currentUser.name || 'New User'}</Text>
-          <Text style={styles.userMobile}>{currentUser.mobile || '+91 9876543210'}</Text>
+          <Text style={styles.userMobile}>{currentUser.mobile || 'No mobile number'}</Text>
 
           <View style={[styles.kycBadge, { backgroundColor: kycColors.bg }]}>
             <ShieldCheck size={14} color={kycColors.text} />
