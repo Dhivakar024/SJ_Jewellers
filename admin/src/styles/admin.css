@@ -71,16 +71,34 @@
   background: #475569;
 }
 
+/* Reset & Global Viewport Containment */
+html, body, #root {
+  height: 100%;
+  max-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 /* 1. LIGHT MODE (PRESERVED EXACT ORIGINAL APPEARANCE) */
 .admin-portal {
-  min-height: 100vh;
-  width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  width: 100%;
+  max-width: 100%;
   font-family: var(--admin-font);
   display: flex;
   box-sizing: border-box;
   font-size: 14.5px;
   line-height: 1.45;
-  overflow-x: hidden;
+  overflow: hidden;
   color-scheme: light;
 
   --admin-bg-page: #f8fafc;
@@ -165,10 +183,10 @@
   flex-direction: column;
   border-right: 1px solid var(--admin-sidebar-border);
   background-color: var(--admin-sidebar-bg);
-  position: sticky;
-  top: 0;
   height: 100vh;
+  max-height: 100vh;
   overflow-y: auto;
+  overflow-x: hidden;
   z-index: 40;
   box-sizing: border-box;
 }
@@ -329,9 +347,10 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  max-width: 100%;
   height: 100vh;
-  overflow-y: auto;
-  overflow-x: hidden;
+  max-height: 100vh;
+  overflow: hidden;
   box-sizing: border-box;
 }
 
@@ -343,11 +362,11 @@
   justify-content: space-between;
   border-bottom: 1px solid var(--admin-border);
   background-color: var(--admin-bg-card);
-  position: sticky;
-  top: 0;
-  z-index: 30;
   flex-shrink: 0;
+  width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
+  z-index: 30;
 }
 
 .admin-header-title {
@@ -404,11 +423,18 @@
    3. GLOBAL CONTENT GRID & TYPOGRAPHY
    ========================================================================== */
 .admin-page-container {
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 24px 32px 56px 32px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  width: 100%;
   box-sizing: border-box;
   text-align: left;
 }
@@ -664,13 +690,16 @@
    7. DATA TABLE SYSTEM
    ========================================================================== */
 .admin-table-container {
+  max-width: 100%;
+  width: 100%;
   overflow-x: auto;
-  overflow-y: auto;
+  overflow-y: hidden;
   border-radius: 12px;
   border: 1px solid var(--admin-border);
   background-color: var(--admin-bg-card);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
 }
 
 .admin-table {
