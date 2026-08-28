@@ -3,9 +3,9 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
 import { COLORS, SHADOWS } from '../constants/theme';
 
-export default function HeaderBar({ title, subtitle, onBack, rightElement }) {
+export default function HeaderBar({ title, subtitle, onBack, rightAction }) {
   return (
-    <View style={styles.headerContainer}>
+    <View style={styles.header}>
       <View style={styles.leftRow}>
         {onBack && (
           <TouchableOpacity
@@ -17,18 +17,18 @@ export default function HeaderBar({ title, subtitle, onBack, rightElement }) {
             <ArrowLeft size={20} color="#1e1b2e" strokeWidth={2.5} />
           </TouchableOpacity>
         )}
-        <View style={styles.titleContainer}>
-          <Text style={styles.titleText}>{title}</Text>
-          {subtitle ? <Text style={styles.subtitleText}>{subtitle}</Text> : null}
+        <View>
+          <Text style={styles.headerTitle}>{title}</Text>
+          {subtitle ? <Text style={styles.headerSubtitle}>{subtitle}</Text> : null}
         </View>
       </View>
-      {rightElement && <View style={styles.rightContainer}>{rightElement}</View>}
+      {rightAction ? <View>{rightAction}</View> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  headerContainer: {
+  header: {
     backgroundColor: COLORS.primaryPurple,
     paddingHorizontal: 18,
     paddingTop: 16,
@@ -42,7 +42,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    flex: 1,
   },
   backBtn: {
     width: 42,
@@ -53,22 +52,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...SHADOWS.light,
   },
-  titleContainer: {
-    flex: 1,
-  },
-  titleText: {
-    fontSize: 22,
-    fontWeight: '800',
+  headerTitle: {
+    fontSize: 21,
+    fontWeight: '700',
     color: '#ffffff',
     letterSpacing: -0.3,
   },
-  subtitleText: {
+  headerSubtitle: {
     fontSize: 12.5,
     color: 'rgba(255, 255, 255, 0.9)',
     marginTop: 2,
-    fontWeight: '500',
-  },
-  rightContainer: {
-    marginLeft: 8,
+    fontWeight: '400',
   },
 });

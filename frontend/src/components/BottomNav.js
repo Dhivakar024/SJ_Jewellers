@@ -1,12 +1,12 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Home, Wallet, FolderClosed, User, Plus } from 'lucide-react-native';
-import { COLORS, SHADOWS } from '../constants/theme';
+import { COLORS } from '../constants/theme';
 
-export default function BottomNav({ activeTab, onSelectTab, onTogglePlus }) {
+export default function BottomNav({ activeTab = 'home', onSelectTab, onTogglePlus }) {
   return (
-    <View style={styles.navContainer}>
-      {/* Home Tab */}
+    <View style={styles.bottomNavContainer}>
+      {/* 1. Home Tab */}
       <TouchableOpacity
         style={styles.navItem}
         onPress={() => onSelectTab('home')}
@@ -17,12 +17,12 @@ export default function BottomNav({ activeTab, onSelectTab, onTogglePlus }) {
           color={activeTab === 'home' ? COLORS.yellowAccent : '#ffffff'}
           strokeWidth={activeTab === 'home' ? 2.5 : 2}
         />
-        <Text style={[styles.navText, activeTab === 'home' && styles.navTextActive]}>
+        <Text style={[styles.navLabel, activeTab === 'home' && styles.navLabelActive]}>
           Home
         </Text>
       </TouchableOpacity>
 
-      {/* Buy Tab */}
+      {/* 2. Buy Tab */}
       <TouchableOpacity
         style={styles.navItem}
         onPress={() => onSelectTab('buy')}
@@ -33,23 +33,24 @@ export default function BottomNav({ activeTab, onSelectTab, onTogglePlus }) {
           color={activeTab === 'buy' ? COLORS.yellowAccent : '#ffffff'}
           strokeWidth={activeTab === 'buy' ? 2.5 : 2}
         />
-        <Text style={[styles.navText, activeTab === 'buy' && styles.navTextActive]}>
+        <Text style={[styles.navLabel, activeTab === 'buy' && styles.navLabelActive]}>
           Buy
         </Text>
       </TouchableOpacity>
 
-      {/* Center Floating Plus Button */}
-      <View style={styles.plusButtonWrapper}>
+      {/* 3. Floating Center + Button (White background, purple border, purple plus) */}
+      <View style={styles.plusBtnWrapper}>
         <TouchableOpacity
           style={styles.floatingPlusBtn}
           onPress={onTogglePlus}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
+          accessibilityLabel="Quick Menu"
         >
-          <Plus size={28} color="#1c1829" strokeWidth={3} />
+          <Plus size={28} color={COLORS.primaryPurple} strokeWidth={3} />
         </TouchableOpacity>
       </View>
 
-      {/* Holdings Tab */}
+      {/* 4. Holdings Tab */}
       <TouchableOpacity
         style={styles.navItem}
         onPress={() => onSelectTab('holdings')}
@@ -60,12 +61,12 @@ export default function BottomNav({ activeTab, onSelectTab, onTogglePlus }) {
           color={activeTab === 'holdings' ? COLORS.yellowAccent : '#ffffff'}
           strokeWidth={activeTab === 'holdings' ? 2.5 : 2}
         />
-        <Text style={[styles.navText, activeTab === 'holdings' && styles.navTextActive]}>
+        <Text style={[styles.navLabel, activeTab === 'holdings' && styles.navLabelActive]}>
           Holdings
         </Text>
       </TouchableOpacity>
 
-      {/* Profile Tab */}
+      {/* 5. Profile Tab */}
       <TouchableOpacity
         style={styles.navItem}
         onPress={() => onSelectTab('profile')}
@@ -76,7 +77,7 @@ export default function BottomNav({ activeTab, onSelectTab, onTogglePlus }) {
           color={activeTab === 'profile' ? COLORS.yellowAccent : '#ffffff'}
           strokeWidth={activeTab === 'profile' ? 2.5 : 2}
         />
-        <Text style={[styles.navText, activeTab === 'profile' && styles.navTextActive]}>
+        <Text style={[styles.navLabel, activeTab === 'profile' && styles.navLabelActive]}>
           Profile
         </Text>
       </TouchableOpacity>
@@ -85,57 +86,54 @@ export default function BottomNav({ activeTab, onSelectTab, onTogglePlus }) {
 }
 
 const styles = StyleSheet.create({
-  navContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 72,
+  bottomNavContainer: {
+    height: 64,
     backgroundColor: COLORS.primaryPurple,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingHorizontal: 8,
-    paddingBottom: Platform.OS === 'ios' ? 12 : 6,
-    zIndex: 100,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.15)',
-    ...SHADOWS.medium,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 50,
+    borderTopWidth: 0,
+    paddingBottom: Platform.OS === 'ios' ? 12 : 0,
   },
   navItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 3,
     paddingVertical: 6,
   },
-  navText: {
-    color: 'rgba(255, 255, 255, 0.85)',
+  navLabel: {
+    color: '#b7a9ff',
     fontSize: 11,
-    fontWeight: '700',
-    marginTop: 4,
+    fontWeight: '500',
   },
-  navTextActive: {
-    color: COLORS.yellowAccent,
-    fontWeight: '900',
+  navLabelActive: {
+    color: '#ffffff',
+    fontWeight: '600',
   },
-  plusButtonWrapper: {
+  plusBtnWrapper: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 72,
+    position: 'relative',
+    top: -16,
+    zIndex: 60,
   },
   floatingPlusBtn: {
-    position: 'absolute',
-    top: -24,
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    backgroundColor: COLORS.yellowAccent,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#ffffff',
+    borderWidth: 4,
+    borderColor: COLORS.primaryPurple,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 4,
-    borderColor: '#ffffff',
-    shadowColor: '#000',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,

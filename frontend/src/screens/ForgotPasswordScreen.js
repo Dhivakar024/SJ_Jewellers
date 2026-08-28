@@ -10,362 +10,330 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
+import { ArrowLeft, CheckCircle2, Eye, EyeOff } from 'lucide-react-native';
+import { useApp } from '../context/AppContext';
 import { cleanIndianMobileDigits, isValidIndianMobile } from '../utils/phoneUtils';
 import { COLORS, RADIUS, SHADOWS } from '../constants/theme';
 import { globalStyles } from '../styles/globalStyles';
 
 export default function ForgotPasswordScreen({ navigation }) {
-  // Steps: 'mobile' -> 'otp' -> 'new-password'
-  const [step, setStep] = useState('mobile');
+  const { resetUserPassword } = useApp();
 
-  const [mobileDigits, setMobileDigits] = useState('');
+  const [step, setStep] = useState(1); // 1: Mobile -> 2: OTP -> 3: New Password
+  const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
-  const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const [errors, setErrors] = useState({});
-  const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  const handleMobileChange = (val) => {
-    const cleaned = cleanIndianMobileDigits(val);
-    setMobileDigits(cleaned);
-    if (errors.mobile) setErrors((prev) => ({ ...prev, mobile: '' }));
-    setErrorMessage('');
-  };
-
-  const handleOtpChange = (val) => {
-    const digits = val.replace(/\D/g, '').slice(0, 6);
-    setOtp(digits);
-    if (errors.otp) setErrors((prev) => ({ ...prev, otp: '' }));
-    setErrorMessage('');
-  };
-
-  const handleBack = () => {
-    if (step === 'new-password') {
-      setStep('otp');
-      setErrors({});
-      setErrorMessage('');
-    } else if (step === 'otp') {
-      setStep('mobile');
-      setErrors({});
-      setErrorMessage('');
-      setSuccessMessage('');
-    } else {
-      navigation.goBack();
-    }
-  };
-
-  // STEP 1: Get OTP
-  const handleGetOtp = () => {
-    if (isLoading) return;
-    setErrorMessage('');
-    setSuccessMessage('');
-
-    const cleanMobile = cleanIndianMobileDigits(mobileDigits);
+  const handleStep1SendOtp = () => {
+    setError('');
+    const cleanMobile = cleanIndianMobileDigits(mobile);
     if (!cleanMobile || cleanMobile.length !== 10 || !isValidIndianMobile(cleanMobile)) {
-      setErrors({ mobile: 'Enter a valid 10-digit mobile number' });
+      setError('Please enter a valid registered 10-digit mobile number.');
       return;
     }
-    setErrors({});
 
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      setSuccessMessage('OTP has been sent to your registered mobile number.');
-      setStep('otp');
+      setStep(2);
     }, 400);
   };
 
-  // STEP 2: Verify OTP
-  const handleVerifyOtp = () => {
-    if (isLoading) return;
-    setErrorMessage('');
-
+  const handleStep2VerifyOtp = () => {
+    setError('');
     const cleanOtp = otp.trim();
     if (!cleanOtp || cleanOtp.length < 4) {
-      setErrors({ otp: 'Please enter the complete OTP' });
+      setError('Please enter the verification code.');
       return;
     }
-    setErrors({});
 
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      setSuccessMessage('');
-      setStep('new-password');
-    }, 300);
+      setStep(3);
+    }, 400);
   };
 
-  // STEP 3: Reset Password
-  const handleResetPassword = () => {
-    if (isLoading) return;
-    setErrorMessage('');
-
-    const newErrors = {};
-    const uPass = password.trim();
-    const uConfirmPass = confirmPassword.trim();
-
-    if (!uPass) {
-      newErrors.password = 'Please enter a new password';
-    } else if (uPass.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters long';
-    }
-
-    if (!uConfirmPass) {
-      newErrors.confirmPassword = 'Please confirm your new password';
-    } else if (uPass !== uConfirmPass) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+  const handleStep3Reset = async () => {
+    setError('');
+    if (!newPassword || newPassword.length < 6) {
+      setError('Password must be at least 6 characters long.');
       return;
     }
-    setErrors({});
+
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
 
     setIsLoading(true);
-    setTimeout(() => {
+    setTimeout(async () => {
+      const reset = await resetUserPassword(mobile.trim(), newPassword);
       setIsLoading(false);
-      alert('Password reset successful! Please sign in with your new password.');
+
+      if (reset) {
+        setIsSuccess(true);
+        setTimeout(() => {
+          navigation.replace('SignIn');
+        }, 1200);
+      } else {
+        setError('No account found with this mobile number.');
+      }
+    }, 400);
+  };
+
+  const handleBack = () => {
+    if (step > 1 && !isSuccess) {
+      setStep(step - 1);
+      setError('');
+    } else {
       navigation.navigate('SignIn');
-    }, 500);
+    }
   };
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={globalStyles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={handleBack}
+          activeOpacity={0.7}
+        >
+          <ArrowLeft size={20} color="#1e1b2e" strokeWidth={2.5} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Reset Password</Text>
+      </View>
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Header with Back Button */}
-        <View style={styles.headerRow}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={handleBack}
-            activeOpacity={0.7}
-            accessibilityLabel="Back"
-          >
-            <ArrowLeft size={22} color="#1e1b2e" strokeWidth={2.5} />
-          </TouchableOpacity>
-          <View style={styles.headerTitleWrap}>
-            <Text style={styles.headerTitle}>Forgot Password?</Text>
-            <Text style={styles.headerSubtitle}>
-              Reset your password with mobile OTP
+        {isSuccess ? (
+          <View style={styles.successWrapper}>
+            <CheckCircle2 size={64} color="#059669" />
+            <Text style={styles.successTitle}>Password Reset Successful!</Text>
+            <Text style={styles.successSubtitle}>
+              You can now sign in to your SJ Jewelers account with your new password.
             </Text>
           </View>
-        </View>
-
-        {/* Messages */}
-        {errorMessage ? (
-          <View style={globalStyles.errorBox}>
-            <Text style={globalStyles.errorBoxText}>{errorMessage}</Text>
-          </View>
-        ) : null}
-
-        {successMessage ? (
-          <View style={globalStyles.successBox}>
-            <Text style={globalStyles.successBoxText}>{successMessage}</Text>
-          </View>
-        ) : null}
-
-        {/* STEP 1: Enter Mobile */}
-        {step === 'mobile' && (
-          <View style={styles.formContainer}>
-            <View style={globalStyles.inputGroup}>
-              <Text style={globalStyles.inputLabel}>Registered Mobile Number</Text>
-              <TextInput
-                style={globalStyles.inputField}
-                placeholder="Enter 10-digit Mobile Number"
-                placeholderTextColor={COLORS.textMuted}
-                value={mobileDigits}
-                onChangeText={handleMobileChange}
-                keyboardType="number-pad"
-                maxLength={10}
-                editable={!isLoading}
-              />
-              {errors.mobile ? <Text style={globalStyles.fieldErrorText}>{errors.mobile}</Text> : null}
+        ) : (
+          <View>
+            {/* Steps Indicator */}
+            <View style={styles.stepsIndicatorRow}>
+              <View style={[styles.stepDot, step >= 1 && styles.stepDotActive]}>
+                <Text style={[styles.stepDotNum, step >= 1 && styles.stepDotNumActive]}>1</Text>
+              </View>
+              <View style={[styles.stepLine, step >= 2 && styles.stepLineActive]} />
+              <View style={[styles.stepDot, step >= 2 && styles.stepDotActive]}>
+                <Text style={[styles.stepDotNum, step >= 2 && styles.stepDotNumActive]}>2</Text>
+              </View>
+              <View style={[styles.stepLine, step >= 3 && styles.stepLineActive]} />
+              <View style={[styles.stepDot, step >= 3 && styles.stepDotActive]}>
+                <Text style={[styles.stepDotNum, step >= 3 && styles.stepDotNumActive]}>3</Text>
+              </View>
             </View>
 
-            <TouchableOpacity
-              style={[globalStyles.primaryButton, { marginTop: 8 }, isLoading && { opacity: 0.7 }]}
-              onPress={handleGetOtp}
-              disabled={isLoading}
-              activeOpacity={0.8}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#ffffff" size="small" />
-              ) : (
-                <Text style={globalStyles.primaryButtonText}>Get OTP</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        )}
+            {/* Error Alert */}
+            {error ? (
+              <View style={globalStyles.errorBox}>
+                <Text style={globalStyles.errorBoxText}>{error}</Text>
+              </View>
+            ) : null}
 
-        {/* STEP 2: Verify OTP */}
-        {step === 'otp' && (
-          <View style={styles.formContainer}>
-            <Text style={styles.otpNotice}>
-              Enter the OTP sent to <Text style={styles.otpMobileText}>+91 {mobileDigits}</Text>
-            </Text>
+            {/* STEP 1: Enter Mobile */}
+            {step === 1 && (
+              <View>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Find Your Account</Text>
+                  <Text style={styles.sectionSubtitle}>
+                    Enter your registered mobile number to receive a verification OTP
+                  </Text>
+                </View>
 
-            <View style={globalStyles.inputGroup}>
-              <Text style={globalStyles.inputLabel}>OTP Code</Text>
-              <TextInput
-                style={[globalStyles.inputField, styles.otpInput]}
-                placeholder="Enter 6-digit OTP"
-                placeholderTextColor={COLORS.textMuted}
-                value={otp}
-                onChangeText={handleOtpChange}
-                keyboardType="number-pad"
-                maxLength={6}
-                editable={!isLoading}
-              />
-              {errors.otp ? <Text style={globalStyles.fieldErrorText}>{errors.otp}</Text> : null}
-            </View>
+                <View style={globalStyles.inputGroup}>
+                  <Text style={globalStyles.inputLabel}>Registered Mobile Number</Text>
+                  <View style={styles.phoneInputWrap}>
+                    <View style={styles.prefixBadge}>
+                      <Text style={styles.prefixText}>+91</Text>
+                    </View>
+                    <TextInput
+                      style={styles.phoneInput}
+                      placeholder="10-digit Mobile Number"
+                      placeholderTextColor={COLORS.textMuted}
+                      keyboardType="number-pad"
+                      maxLength={10}
+                      value={mobile}
+                      onChangeText={(val) => {
+                        setMobile(cleanIndianMobileDigits(val));
+                        if (error) setError('');
+                      }}
+                    />
+                  </View>
+                </View>
 
-            <TouchableOpacity
-              style={[globalStyles.primaryButton, { marginTop: 8 }, isLoading && { opacity: 0.7 }]}
-              onPress={handleVerifyOtp}
-              disabled={isLoading}
-              activeOpacity={0.8}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#ffffff" size="small" />
-              ) : (
-                <Text style={globalStyles.primaryButtonText}>Verify OTP</Text>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.resendBtn}
-              onPress={handleGetOtp}
-              disabled={isLoading}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.resendText}>Resend OTP</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* STEP 3: New Password */}
-        {step === 'new-password' && (
-          <View style={styles.formContainer}>
-            <View style={globalStyles.inputGroup}>
-              <Text style={globalStyles.inputLabel}>New Password</Text>
-              <View style={styles.passwordWrapper}>
-                <TextInput
-                  style={[globalStyles.inputField, styles.passwordInput]}
-                  placeholder="Min 8 characters"
-                  placeholderTextColor={COLORS.textMuted}
-                  value={password}
-                  onChangeText={(val) => {
-                    setPassword(val);
-                    if (errors.password) setErrors((prev) => ({ ...prev, password: '' }));
-                    setErrorMessage('');
-                  }}
-                  secureTextEntry={!showPassword}
-                  editable={!isLoading}
-                />
                 <TouchableOpacity
-                  style={styles.eyeBtn}
-                  onPress={() => setShowPassword(!showPassword)}
+                  style={[globalStyles.primaryButton, { marginTop: 12 }, isLoading && { opacity: 0.7 }]}
+                  onPress={handleStep1SendOtp}
+                  disabled={isLoading}
+                  activeOpacity={0.8}
                 >
-                  {showPassword ? (
-                    <EyeOff size={20} color="#8b849c" />
+                  {isLoading ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
                   ) : (
-                    <Eye size={20} color="#8b849c" />
+                    <Text style={globalStyles.primaryButtonText}>Send OTP</Text>
                   )}
                 </TouchableOpacity>
               </View>
-              {errors.password ? <Text style={globalStyles.fieldErrorText}>{errors.password}</Text> : null}
-            </View>
+            )}
 
-            <View style={globalStyles.inputGroup}>
-              <Text style={globalStyles.inputLabel}>Confirm New Password</Text>
-              <View style={styles.passwordWrapper}>
-                <TextInput
-                  style={[globalStyles.inputField, styles.passwordInput]}
-                  placeholder="Confirm New Password"
-                  placeholderTextColor={COLORS.textMuted}
-                  value={confirmPassword}
-                  onChangeText={(val) => {
-                    setConfirmPassword(val);
-                    if (errors.confirmPassword) setErrors((prev) => ({ ...prev, confirmPassword: '' }));
-                    setErrorMessage('');
-                  }}
-                  secureTextEntry={!showConfirmPassword}
-                  editable={!isLoading}
-                />
+            {/* STEP 2: Verify OTP */}
+            {step === 2 && (
+              <View>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Enter Verification Code</Text>
+                  <Text style={styles.sectionSubtitle}>
+                    Enter the 6-digit OTP code sent to +91 {mobile}
+                  </Text>
+                </View>
+
+                <View style={globalStyles.inputGroup}>
+                  <Text style={globalStyles.inputLabel}>6-Digit OTP</Text>
+                  <TextInput
+                    style={[globalStyles.inputField, styles.otpInput]}
+                    placeholder="123456"
+                    placeholderTextColor={COLORS.textMuted}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    value={otp}
+                    onChangeText={(val) => {
+                      setOtp(val.replace(/\D/g, ''));
+                      if (error) setError('');
+                    }}
+                  />
+                </View>
+
                 <TouchableOpacity
-                  style={styles.eyeBtn}
-                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={[globalStyles.primaryButton, { marginTop: 12 }, isLoading && { opacity: 0.7 }]}
+                  onPress={handleStep2VerifyOtp}
+                  disabled={isLoading}
+                  activeOpacity={0.8}
                 >
-                  {showConfirmPassword ? (
-                    <EyeOff size={20} color="#8b849c" />
+                  {isLoading ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
                   ) : (
-                    <Eye size={20} color="#8b849c" />
+                    <Text style={globalStyles.primaryButtonText}>Verify OTP</Text>
                   )}
                 </TouchableOpacity>
               </View>
-              {errors.confirmPassword ? <Text style={globalStyles.fieldErrorText}>{errors.confirmPassword}</Text> : null}
-            </View>
+            )}
 
-            <TouchableOpacity
-              style={[globalStyles.primaryButton, { marginTop: 8 }, isLoading && { opacity: 0.7 }]}
-              onPress={handleResetPassword}
-              disabled={isLoading}
-              activeOpacity={0.8}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#ffffff" size="small" />
-              ) : (
-                <Text style={globalStyles.primaryButtonText}>Reset Password</Text>
-              )}
-            </TouchableOpacity>
+            {/* STEP 3: Set New Password */}
+            {step === 3 && (
+              <View>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Set New Password</Text>
+                  <Text style={styles.sectionSubtitle}>
+                    Enter your new secure password for +91 {mobile}
+                  </Text>
+                </View>
+
+                <View style={globalStyles.inputGroup}>
+                  <Text style={globalStyles.inputLabel}>New Password</Text>
+                  <View style={styles.passwordInputWrap}>
+                    <TextInput
+                      style={styles.passwordInput}
+                      placeholder="At least 6 characters"
+                      placeholderTextColor={COLORS.textMuted}
+                      secureTextEntry={!showPassword}
+                      value={newPassword}
+                      onChangeText={(val) => {
+                        setNewPassword(val);
+                        if (error) setError('');
+                      }}
+                    />
+                    <TouchableOpacity
+                      style={styles.eyeBtn}
+                      onPress={() => setShowPassword(!showPassword)}
+                      activeOpacity={0.7}
+                    >
+                      {showPassword ? <EyeOff size={18} color={COLORS.textMuted} /> : <Eye size={18} color={COLORS.textMuted} />}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View style={globalStyles.inputGroup}>
+                  <Text style={globalStyles.inputLabel}>Confirm New Password</Text>
+                  <View style={styles.passwordInputWrap}>
+                    <TextInput
+                      style={styles.passwordInput}
+                      placeholder="Re-enter new password"
+                      placeholderTextColor={COLORS.textMuted}
+                      secureTextEntry={!showConfirmPassword}
+                      value={confirmPassword}
+                      onChangeText={(val) => {
+                        setConfirmPassword(val);
+                        if (error) setError('');
+                      }}
+                    />
+                    <TouchableOpacity
+                      style={styles.eyeBtn}
+                      onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                      activeOpacity={0.7}
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} color={COLORS.textMuted} /> : <Eye size={18} color={COLORS.textMuted} />}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  style={[globalStyles.primaryButton, { marginTop: 12 }, isLoading && { opacity: 0.7 }]}
+                  onPress={handleStep3Reset}
+                  disabled={isLoading}
+                  activeOpacity={0.8}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
+                  ) : (
+                    <Text style={globalStyles.primaryButtonText}>Update Password</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Back to Sign In Link */}
+            <View style={styles.footerWrap}>
+              <Text style={styles.footerText}>Remember your password? </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('SignIn')}>
+                <Text style={styles.signInLinkText}>Sign In</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
-
-        {/* Footer to Sign In */}
-        <View style={styles.footerRow}>
-          <Text style={styles.footerText}>Remember your password? </Text>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('SignIn')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.signInLink}>Sign In</Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.bgLavender,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 36,
-    paddingBottom: 40,
-    justifyContent: 'center',
-  },
-  headerRow: {
+  header: {
+    backgroundColor: COLORS.primaryPurple,
+    paddingHorizontal: 18,
+    paddingTop: 16,
+    paddingBottom: 18,
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 14,
-    marginBottom: 20,
+    zIndex: 20,
   },
   backBtn: {
     width: 42,
@@ -374,81 +342,154 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 2,
     ...SHADOWS.light,
   },
-  headerTitleWrap: {
-    flex: 1,
-  },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: COLORS.textDark,
-  },
-  headerSubtitle: {
-    fontSize: 13.5,
-    color: COLORS.primaryPurple,
+    fontSize: 21,
     fontWeight: '700',
-    marginTop: 4,
+    color: '#ffffff',
   },
-  formContainer: {
-    marginBottom: 16,
+  scrollContent: {
+    paddingHorizontal: 22,
+    paddingTop: 20,
+    paddingBottom: 36,
   },
-  otpNotice: {
-    fontSize: 14,
-    color: COLORS.textMuted,
-    lineHeight: 20,
-    marginBottom: 16,
-  },
-  otpMobileText: {
-    fontWeight: '800',
-    color: COLORS.textDark,
-  },
-  otpInput: {
-    textAlign: 'center',
-    letterSpacing: 6,
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  passwordWrapper: {
-    position: 'relative',
-    justifyContent: 'center',
-  },
-  passwordInput: {
-    paddingRight: 50,
-  },
-  eyeBtn: {
-    position: 'absolute',
-    right: 14,
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 4,
-  },
-  resendBtn: {
-    alignSelf: 'center',
-    marginTop: 16,
-    padding: 8,
-  },
-  resendText: {
-    color: COLORS.primaryPurple,
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  footerRow: {
+  stepsIndicatorRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,
+    marginBottom: 24,
   },
-  footerText: {
+  stepDot: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#e5deff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepDotActive: {
+    backgroundColor: COLORS.primaryPurple,
+  },
+  stepDotNum: {
     fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.primaryPurple,
+  },
+  stepDotNumActive: {
+    color: '#ffffff',
+  },
+  stepLine: {
+    width: 40,
+    height: 2,
+    backgroundColor: '#e5deff',
+  },
+  stepLineActive: {
+    backgroundColor: COLORS.primaryPurple,
+  },
+  sectionHeader: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: COLORS.textDark,
+  },
+  sectionSubtitle: {
+    fontSize: 13.5,
+    color: COLORS.textMuted,
+    marginTop: 4,
+    lineHeight: 18,
+    fontWeight: '400',
+  },
+  phoneInputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: COLORS.inputBorder,
+    height: 50,
+    overflow: 'hidden',
+  },
+  prefixBadge: {
+    backgroundColor: '#f7f4ff',
+    paddingHorizontal: 14,
+    height: '100%',
+    justifyContent: 'center',
+    borderRightWidth: 1.5,
+    borderRightColor: '#e0d8fa',
+  },
+  prefixText: {
+    fontSize: 14.5,
     fontWeight: '600',
     color: COLORS.textDark,
   },
-  signInLink: {
-    fontSize: 14.5,
-    fontWeight: '800',
+  phoneInput: {
+    flex: 1,
+    paddingHorizontal: 14,
+    fontSize: 15,
+    color: COLORS.textDark,
+    fontWeight: '500',
+    letterSpacing: 0.5,
+  },
+  otpInput: {
+    textAlign: 'center',
+    fontSize: 22,
+    letterSpacing: 8,
+    fontWeight: '700',
+  },
+  passwordInputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: COLORS.inputBorder,
+    height: 50,
+    paddingHorizontal: 14,
+  },
+  passwordInput: {
+    flex: 1,
+    fontSize: 15,
+    color: COLORS.textDark,
+    fontWeight: '500',
+  },
+  eyeBtn: {
+    padding: 6,
+  },
+  successWrapper: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  successTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#059669',
+    marginTop: 16,
+  },
+  successSubtitle: {
+    fontSize: 14,
+    color: COLORS.textMuted,
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 20,
+    fontWeight: '400',
+  },
+  footerWrap: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 24,
+  },
+  footerText: {
+    color: COLORS.textMuted,
+    fontSize: 14,
+    fontWeight: '400',
+  },
+  signInLinkText: {
     color: COLORS.primaryPurple,
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

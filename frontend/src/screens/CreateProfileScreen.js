@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
   Modal,
 } from 'react-native';
-import { ArrowLeft, ChevronDown, Calendar } from 'lucide-react-native';
+import { ArrowLeft, ChevronDown } from 'lucide-react-native';
 import { useApp } from '../context/AppContext';
 import { cleanIndianMobileDigits, formatToE164, isValidIndianMobile, isValidFullName } from '../utils/phoneUtils';
 import { COLORS, RADIUS, SHADOWS } from '../constants/theme';
@@ -227,7 +227,7 @@ export default function CreateProfileScreen({ route, navigation }) {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Top Header */}
+      {/* Clean Top Header (Title + Back Button) */}
       <View style={styles.topHeader}>
         <TouchableOpacity
           style={styles.headerBackBtn}
@@ -239,23 +239,7 @@ export default function CreateProfileScreen({ route, navigation }) {
         <Text style={styles.headerTitleText}>
           {isEditMode ? 'Edit Profile' : 'Create Profile'}
         </Text>
-        {isEditMode ? (
-          <TouchableOpacity
-            style={styles.skipCancelBtn}
-            onPress={handleCancel}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.skipCancelText}>Cancel</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={styles.skipCancelBtn}
-            onPress={handleSkip}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.skipCancelText}>Skip</Text>
-          </TouchableOpacity>
-        )}
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView
@@ -466,7 +450,7 @@ export default function CreateProfileScreen({ route, navigation }) {
               onPress={() => setShowRelModal(true)}
               activeOpacity={0.7}
             >
-              <Text style={{ color: formData.relationship ? COLORS.textDark : COLORS.textMuted, fontSize: 14.5, fontWeight: '600' }}>
+              <Text style={{ color: formData.relationship ? COLORS.textDark : COLORS.textMuted, fontSize: 14.5, fontWeight: '500' }}>
                 {formData.relationship || 'Select Relationship'}
               </Text>
               <ChevronDown size={20} color={COLORS.textMuted} />
@@ -490,21 +474,34 @@ export default function CreateProfileScreen({ route, navigation }) {
           )}
         </View>
 
-        {/* Submit CTA */}
-        <TouchableOpacity
-          style={[globalStyles.primaryButton, { marginTop: 10, marginBottom: 30 }, isSubmitting && { opacity: 0.7 }]}
-          onPress={handleSubmit}
-          disabled={isSubmitting}
-          activeOpacity={0.8}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator color="#ffffff" size="small" />
-          ) : (
-            <Text style={globalStyles.primaryButtonText}>
-              {isEditMode ? 'Save Changes' : 'Submit Profile'}
+        {/* Lower Action Buttons (Cancel/Skip alongside Submit/Save Changes) */}
+        <View style={styles.bottomButtonsRow}>
+          <TouchableOpacity
+            style={styles.cancelSkipBtn}
+            onPress={isEditMode ? handleCancel : handleSkip}
+            disabled={isSubmitting}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.cancelSkipBtnText}>
+              {isEditMode ? 'Cancel' : 'Skip'}
             </Text>
-          )}
-        </TouchableOpacity>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.saveSubmitBtn, isSubmitting && { opacity: 0.7 }]}
+            onPress={handleSubmit}
+            disabled={isSubmitting}
+            activeOpacity={0.8}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator color={COLORS.textDark} size="small" />
+            ) : (
+              <Text style={styles.saveSubmitBtnText}>
+                {isEditMode ? 'Save Changes' : 'Submit'}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
       {/* Relationship Selection Modal */}
@@ -573,19 +570,8 @@ const styles = StyleSheet.create({
   },
   headerTitleText: {
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#ffffff',
-  },
-  skipCancelBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: RADIUS.md,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  skipCancelText: {
-    color: '#ffffff',
-    fontWeight: '800',
-    fontSize: 13.5,
   },
   scrollContent: {
     paddingHorizontal: 16,
@@ -602,8 +588,8 @@ const styles = StyleSheet.create({
     ...SHADOWS.light,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '800',
+    fontSize: 15.5,
+    fontWeight: '700',
     color: COLORS.primaryPurple,
     marginBottom: 14,
     borderBottomWidth: 1,
@@ -615,6 +601,42 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  bottomButtonsRow: {
+    flexDirection: 'row',
+    gap: 14,
+    marginTop: 10,
+    marginBottom: 30,
+  },
+  cancelSkipBtn: {
+    flex: 1,
+    height: 50,
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: COLORS.primaryPurple,
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelSkipBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.textDark,
+  },
+  saveSubmitBtn: {
+    flex: 1,
+    height: 50,
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: COLORS.primaryPurple,
+    backgroundColor: '#ede7fc',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveSubmitBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.textDark,
+  },
   modalContent: {
     width: '85%',
     backgroundColor: '#ffffff',
@@ -623,14 +645,14 @@ const styles = StyleSheet.create({
     ...SHADOWS.medium,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 17,
+    fontWeight: '700',
     color: COLORS.textDark,
     marginBottom: 14,
     textAlign: 'center',
   },
   modalOption: {
-    paddingVertical: 13,
+    paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: RADIUS.md,
     marginBottom: 8,
@@ -640,8 +662,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primaryPurple,
   },
   modalOptionText: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 14.5,
+    fontWeight: '600',
     color: COLORS.textDark,
     textAlign: 'center',
   },

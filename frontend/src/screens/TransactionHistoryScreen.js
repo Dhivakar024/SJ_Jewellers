@@ -412,8 +412,8 @@ const styles = StyleSheet.create({
     ...SHADOWS.light,
   },
   headerTitle: {
-    fontSize: 21,
-    fontWeight: '800',
+    fontSize: 20,
+    fontWeight: '700',
     color: '#ffffff',
     letterSpacing: -0.3,
   },
@@ -421,11 +421,12 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     color: 'rgba(255, 255, 255, 0.9)',
     marginTop: 2,
+    fontWeight: '400',
   },
   filterBtn: {
     backgroundColor: '#ffffff',
     borderRadius: 20,
-    paddingVertical: 7,
+    paddingVertical: 6,
     paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
@@ -437,7 +438,7 @@ const styles = StyleSheet.create({
   },
   filterBtnText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: COLORS.primaryPurple,
   },
   filterBtnTextActive: {
@@ -468,7 +469,7 @@ const styles = StyleSheet.create({
   },
   chipsTitle: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
     color: COLORS.textDark,
   },
   chipPill: {
@@ -480,20 +481,20 @@ const styles = StyleSheet.create({
   chipPillText: {
     color: COLORS.primaryPurple,
     fontSize: 11.5,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   clearFiltersText: {
     color: COLORS.primaryPurple,
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
     paddingLeft: 8,
   },
   groupContainer: {
     marginBottom: 16,
   },
   groupHeaderLabel: {
-    fontSize: 12.5,
-    fontWeight: '800',
+    fontSize: 12,
+    fontWeight: '600',
     color: '#736d85',
     letterSpacing: 0.5,
     marginBottom: 8,
@@ -528,27 +529,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   txnAssetName: {
-    fontSize: 15.5,
-    fontWeight: '800',
+    fontSize: 15,
+    fontWeight: '600',
     color: COLORS.textDark,
   },
   txnTimeText: {
     fontSize: 11.5,
     color: COLORS.textMuted,
     marginTop: 2,
-    fontWeight: '600',
+    fontWeight: '400',
   },
   txnAmountCol: {
     alignItems: 'flex-end',
   },
   txnAmountText: {
-    fontSize: 16,
-    fontWeight: '900',
+    fontSize: 15.5,
+    fontWeight: '700',
     color: COLORS.textDark,
   },
   txnGramsText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
     color: COLORS.primaryPurple,
     marginTop: 2,
   },
@@ -562,7 +563,7 @@ const styles = StyleSheet.create({
   },
   txnRateText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '400',
     color: COLORS.textMuted,
   },
   statusBadge: {
@@ -572,21 +573,22 @@ const styles = StyleSheet.create({
   },
   statusBadgeText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   emptyState: {
     alignItems: 'center',
     paddingVertical: 40,
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 17,
+    fontWeight: '600',
     color: COLORS.textDark,
     marginBottom: 4,
   },
   emptySubtitle: {
     fontSize: 13,
     color: COLORS.textMuted,
+    fontWeight: '400',
   },
   filterSheet: {
     backgroundColor: '#ffffff',
@@ -604,12 +606,12 @@ const styles = StyleSheet.create({
   },
   filterSheetTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '700',
     color: COLORS.textDark,
   },
   filterSectionTitle: {
     fontSize: 13.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: COLORS.textDark,
     marginBottom: 8,
     marginTop: 10,
@@ -633,11 +635,12 @@ const styles = StyleSheet.create({
   },
   filterPillText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '500',
     color: COLORS.textDark,
   },
   filterPillTextActive: {
     color: '#ffffff',
+    fontWeight: '600',
   },
   filterActionButtons: {
     flexDirection: 'row',
@@ -657,7 +660,7 @@ const styles = StyleSheet.create({
   },
   resetFilterBtnText: {
     color: COLORS.primaryPurple,
-    fontWeight: '800',
+    fontWeight: '600',
     fontSize: 14,
   },
 });

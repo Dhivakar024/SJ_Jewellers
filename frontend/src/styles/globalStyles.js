@@ -31,14 +31,14 @@ export const globalStyles = StyleSheet.create({
   headerTitle: {
     color: '#ffffff',
     fontSize: 22,
-    fontWeight: '800',
+    fontWeight: '700',
     letterSpacing: -0.3,
   },
   headerSubtitle: {
     color: 'rgba(255, 255, 255, 0.9)',
     fontSize: 13,
     marginTop: 2,
-    fontWeight: '500',
+    fontWeight: '400',
   },
   backButton: {
     width: 42,
@@ -55,8 +55,8 @@ export const globalStyles = StyleSheet.create({
     marginBottom: 14,
   },
   inputLabel: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 13.5,
+    fontWeight: '600',
     color: COLORS.textDark,
     marginBottom: 6,
   },
@@ -69,10 +69,10 @@ export const globalStyles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 14.5,
     color: COLORS.textDark,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   inputFieldMultiline: {
-    height: 100,
+    height: 90,
     paddingTop: 12,
     paddingBottom: 12,
     textAlignVertical: 'top',
@@ -80,7 +80,7 @@ export const globalStyles = StyleSheet.create({
   fieldErrorText: {
     color: COLORS.redDangerText,
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
     marginTop: 4,
   },
 
@@ -98,7 +98,7 @@ export const globalStyles = StyleSheet.create({
   primaryButtonText: {
     color: '#ffffff',
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   dangerButton: {
     height: 50,
@@ -113,7 +113,7 @@ export const globalStyles = StyleSheet.create({
   dangerButtonText: {
     color: '#ffffff',
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
   },
 
   // Cards
@@ -145,7 +145,7 @@ export const globalStyles = StyleSheet.create({
   errorBoxText: {
     color: COLORS.redDangerText,
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '600',
     textAlign: 'center',
   },
   successBox: {
@@ -161,7 +161,7 @@ export const globalStyles = StyleSheet.create({
   successBoxText: {
     color: COLORS.greenBadgeText,
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '600',
     textAlign: 'center',
   },
 

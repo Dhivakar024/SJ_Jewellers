@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { ArrowLeft, CheckCircle2, ShieldCheck, Smartphone, CreditCard, Building2, X } from 'lucide-react-native';
 import { useApp } from '../context/AppContext';
+import BottomNav from '../components/BottomNav';
+import ActionSheet from '../components/ActionSheet';
 import { COLORS, RADIUS, SHADOWS } from '../constants/theme';
 import { globalStyles } from '../styles/globalStyles';
 
@@ -37,6 +39,7 @@ export default function BuyNowScreen({ route, navigation }) {
   const [selectedMethod, setSelectedMethod] = useState('UPI');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
 
   // Sync state back to context for preservation
   useEffect(() => {
@@ -152,6 +155,17 @@ export default function BuyNowScreen({ route, navigation }) {
         navigation.navigate('TransactionHistory', { fromScreen: 'buy' });
       }, 1200);
     }, 600);
+  };
+
+  const handleNavigate = (screen, params = {}) => {
+    setIsActionSheetOpen(false);
+    if (screen === 'home') navigation.navigate('Home');
+    else if (screen === 'buy') navigation.navigate('BuyNow', { assetType: 'gold', ...params });
+    else if (screen === 'holdings') navigation.navigate('Holdings', { fromScreen: 'buy', ...params });
+    else if (screen === 'profile') navigation.navigate('Profile', params);
+    else if (screen === 'withdraw') navigation.navigate('Withdraw', { fromScreen: 'buy', ...params });
+    else if (screen === 'transactions') navigation.navigate('TransactionHistory', { fromScreen: 'buy', ...params });
+    else if (screen === 'contact') navigation.navigate('ContactUs', { fromScreen: 'buy', ...params });
   };
 
   return (
@@ -346,6 +360,20 @@ export default function BuyNowScreen({ route, navigation }) {
         </View>
       </ScrollView>
 
+      {/* 3. Fixed Bottom Nav */}
+      <BottomNav
+        activeTab="buy"
+        onSelectTab={handleNavigate}
+        onTogglePlus={() => setIsActionSheetOpen(true)}
+      />
+
+      {/* Quick Menu Action Sheet Modal */}
+      <ActionSheet
+        isOpen={isActionSheetOpen}
+        onClose={() => setIsActionSheetOpen(false)}
+        onNavigate={handleNavigate}
+      />
+
       {/* Payment Confirmation Modal */}
       <Modal
         visible={showConfirmModal}
@@ -367,7 +395,7 @@ export default function BuyNowScreen({ route, navigation }) {
 
             {paymentSuccess ? (
               <View style={styles.successContainer}>
-                <CheckCircle2 size={64} color="#059669" />
+                <CheckCircle2 size={60} color="#059669" />
                 <Text style={styles.successTitle}>Payment Successful!</Text>
                 <Text style={styles.successSubtitle}>
                   {gramsVal} gm of {isGold ? 'Gold' : 'Silver'} has been added to your vault.
@@ -459,14 +487,14 @@ const styles = StyleSheet.create({
     ...SHADOWS.light,
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontSize: 21,
+    fontWeight: '700',
     color: '#ffffff',
   },
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 40,
+    paddingBottom: 95,
     gap: 16,
   },
   rateCard: {
@@ -481,7 +509,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   livePulseDot: {
     width: 8,
@@ -491,7 +519,7 @@ const styles = StyleSheet.create({
   },
   liveBadgeText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: COLORS.primaryPurple,
   },
   metalTogglePill: {
@@ -500,7 +528,7 @@ const styles = StyleSheet.create({
     padding: 3,
     flexDirection: 'row',
     width: 180,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   metalTabBtn: {
     flex: 1,
@@ -513,16 +541,16 @@ const styles = StyleSheet.create({
   },
   metalTabText: {
     fontSize: 13.5,
-    fontWeight: '700',
+    fontWeight: '500',
     color: COLORS.textDark,
   },
   metalTabTextActive: {
     color: '#ffffff',
-    fontWeight: '800',
+    fontWeight: '600',
   },
   liveRateText: {
-    fontSize: 26,
-    fontWeight: '900',
+    fontSize: 24,
+    fontWeight: '700',
     color: COLORS.textDark,
   },
   modeToggleContainer: {
@@ -535,7 +563,7 @@ const styles = StyleSheet.create({
   },
   modeBtn: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 9,
     borderRadius: RADIUS.md,
     alignItems: 'center',
   },
@@ -543,13 +571,13 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primaryPurple,
   },
   modeBtnText: {
-    fontSize: 13.5,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '500',
     color: COLORS.textMuted,
   },
   modeBtnTextActive: {
     color: '#ffffff',
-    fontWeight: '800',
+    fontWeight: '600',
   },
   calculatorCard: {
     backgroundColor: '#ffffff',
@@ -567,35 +595,35 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: COLORS.inputBorder,
     paddingHorizontal: 16,
-    height: 52,
+    height: 50,
   },
   currencyPrefix: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontSize: 20,
+    fontWeight: '600',
     color: COLORS.primaryPurple,
     marginRight: 6,
   },
   unitSuffix: {
-    fontSize: 16,
-    fontWeight: '800',
+    fontSize: 15,
+    fontWeight: '600',
     color: COLORS.textDark,
     marginLeft: 6,
   },
   amountInput: {
     flex: 1,
-    fontSize: 22,
-    fontWeight: '900',
+    fontSize: 20,
+    fontWeight: '700',
     color: COLORS.textDark,
   },
   approxGramsText: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 12.5,
+    fontWeight: '600',
     color: COLORS.primaryPurple,
     marginTop: 6,
   },
   presetsTitle: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '600',
     color: COLORS.textMuted,
     marginBottom: 8,
     marginTop: 4,
@@ -620,11 +648,12 @@ const styles = StyleSheet.create({
   },
   presetChipText: {
     fontSize: 12.5,
-    fontWeight: '700',
+    fontWeight: '500',
     color: COLORS.textDark,
   },
   presetChipTextActive: {
     color: '#ffffff',
+    fontWeight: '600',
   },
   breakdownCard: {
     backgroundColor: '#fbf9ff',
@@ -642,12 +671,12 @@ const styles = StyleSheet.create({
   breakdownLabel: {
     fontSize: 13,
     color: COLORS.textMuted,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   breakdownValue: {
     fontSize: 13,
     color: COLORS.textDark,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   breakdownDivider: {
     height: 1,
@@ -655,13 +684,13 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
   breakdownTotalLabel: {
-    fontSize: 15,
-    fontWeight: '800',
+    fontSize: 14.5,
+    fontWeight: '600',
     color: COLORS.textDark,
   },
   breakdownTotalValue: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
     color: COLORS.primaryPurple,
   },
   securityBadge: {
@@ -678,7 +707,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 11.5,
     color: COLORS.textDark,
-    fontWeight: '600',
+    fontWeight: '500',
     lineHeight: 16,
   },
   confirmSheet: {
@@ -695,8 +724,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   confirmTitle: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 18,
+    fontWeight: '700',
     color: COLORS.textDark,
   },
   summaryBox: {
@@ -707,24 +736,24 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   summaryAsset: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 13.5,
+    fontWeight: '600',
     color: COLORS.primaryPurple,
   },
   summaryGrams: {
-    fontSize: 24,
-    fontWeight: '900',
+    fontSize: 22,
+    fontWeight: '700',
     color: COLORS.textDark,
     marginVertical: 4,
   },
   summaryTotal: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 17,
+    fontWeight: '700',
     color: COLORS.textDark,
   },
   paymentMethodsTitle: {
-    fontSize: 14,
-    fontWeight: '800',
+    fontSize: 13.5,
+    fontWeight: '600',
     color: COLORS.textDark,
     marginBottom: 10,
   },
@@ -747,8 +776,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1ecfe',
   },
   methodText: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 13.5,
+    fontWeight: '600',
     color: COLORS.textDark,
   },
   successContainer: {
@@ -756,16 +785,16 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   successTitle: {
-    fontSize: 22,
-    fontWeight: '900',
+    fontSize: 20,
+    fontWeight: '700',
     color: '#059669',
     marginTop: 12,
   },
   successSubtitle: {
-    fontSize: 14,
+    fontSize: 13.5,
     color: COLORS.textMuted,
     textAlign: 'center',
     marginTop: 6,
-    lineHeight: 20,
+    lineHeight: 18,
   },
 });

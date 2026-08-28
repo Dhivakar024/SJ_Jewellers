@@ -1,130 +1,114 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  StyleSheet,
+  Pressable,
+} from 'react-native';
 import { Hand, FileText, Phone, X } from 'lucide-react-native';
 import { COLORS, RADIUS, SHADOWS } from '../constants/theme';
+import { globalStyles } from '../styles/globalStyles';
 
 export default function ActionSheet({ isOpen, onClose, onNavigate }) {
   if (!isOpen) return null;
 
   return (
     <Modal
-      visible={isOpen}
       transparent
-      animationType="fade"
+      visible={isOpen}
+      animationType="slide"
       onRequestClose={onClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.overlay}>
-          <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-            <View style={styles.sheetContainer}>
-              {/* Sheet Items */}
-              <TouchableOpacity
-                style={styles.sheetItem}
-                onPress={() => {
-                  onNavigate('withdraw', { from: 'home', source: 'plus-menu' });
-                  onClose();
-                }}
-                activeOpacity={0.7}
-              >
-                <View style={styles.iconCircle}>
-                  <Hand size={22} color={COLORS.primaryPurple} />
-                </View>
-                <Text style={styles.sheetItemText}>Mode of Withdraw</Text>
-              </TouchableOpacity>
+      <Pressable style={globalStyles.modalOverlay} onPress={onClose}>
+        <Pressable style={styles.sheetContent} onPress={(e) => e.stopPropagation()}>
+          {/* 1. Mode of Withdraw */}
+          <TouchableOpacity
+            style={styles.sheetItem}
+            onPress={() => {
+              onClose();
+              onNavigate('withdraw');
+            }}
+            activeOpacity={0.7}
+          >
+            <Hand size={22} color={COLORS.primaryPurple} />
+            <Text style={styles.sheetItemText}>Mode of Withdraw</Text>
+          </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.sheetItem}
-                onPress={() => {
-                  onNavigate('transactions', { from: 'home', source: 'plus-menu' });
-                  onClose();
-                }}
-                activeOpacity={0.7}
-              >
-                <View style={styles.iconCircle}>
-                  <FileText size={22} color={COLORS.primaryPurple} />
-                </View>
-                <Text style={styles.sheetItemText}>Transaction History</Text>
-              </TouchableOpacity>
+          {/* 2. Transaction History */}
+          <TouchableOpacity
+            style={styles.sheetItem}
+            onPress={() => {
+              onClose();
+              onNavigate('transactions');
+            }}
+            activeOpacity={0.7}
+          >
+            <FileText size={22} color={COLORS.primaryPurple} />
+            <Text style={styles.sheetItemText}>Transaction History</Text>
+          </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.sheetItem}
-                onPress={() => {
-                  onNavigate('contact', { from: 'home', source: 'plus-menu' });
-                  onClose();
-                }}
-                activeOpacity={0.7}
-              >
-                <View style={styles.iconCircle}>
-                  <Phone size={22} color={COLORS.primaryPurple} />
-                </View>
-                <Text style={styles.sheetItemText}>Contact Us</Text>
-              </TouchableOpacity>
+          {/* 3. Contact Us */}
+          <TouchableOpacity
+            style={styles.sheetItem}
+            onPress={() => {
+              onClose();
+              onNavigate('contact');
+            }}
+            activeOpacity={0.7}
+          >
+            <Phone size={22} color={COLORS.primaryPurple} />
+            <Text style={styles.sheetItemText}>Contact Us</Text>
+          </TouchableOpacity>
 
-              {/* Close Button */}
-              <TouchableOpacity
-                style={styles.closeBtn}
-                onPress={onClose}
-                activeOpacity={0.8}
-              >
-                <X size={24} color="#ffffff" strokeWidth={2.5} />
-              </TouchableOpacity>
-            </View>
-          </TouchableWithoutFeedback>
-        </View>
-      </TouchableWithoutFeedback>
+          {/* Close Action */}
+          <TouchableOpacity
+            style={styles.closeBtn}
+            onPress={onClose}
+            activeOpacity={0.8}
+          >
+            <X size={24} color={COLORS.primaryPurple} />
+          </TouchableOpacity>
+        </Pressable>
+      </Pressable>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 13, 25, 0.65)',
-    justifyContent: 'flex-end',
-  },
-  sheetContainer: {
+  sheetContent: {
     backgroundColor: '#ffffff',
-    borderTopLeftRadius: RADIUS.xl,
-    borderTopRightRadius: RADIUS.xl,
-    paddingTop: 24,
-    paddingBottom: 32,
-    paddingHorizontal: 20,
-    gap: 12,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 34,
+    gap: 16,
     ...SHADOWS.medium,
   },
   sheetItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 16,
     paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: RADIUS.md,
-    backgroundColor: COLORS.bgCardPurpleSoft,
-    borderWidth: 1,
-    borderColor: COLORS.borderSubtle,
-    gap: 14,
-  },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.bgCardPurpleLighter,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0ebfd',
   },
   sheetItemText: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     color: COLORS.textDark,
   },
   closeBtn: {
-    alignSelf: 'center',
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: COLORS.primaryPurple,
+    backgroundColor: COLORS.bgCardPurpleSoft,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
-    ...SHADOWS.primaryBtn,
+    alignSelf: 'center',
+    marginTop: 6,
   },
 });

@@ -173,7 +173,7 @@ export default function ContactUsScreen({ route, navigation }) {
           >
             {sentSuccess ? (
               <>
-                <CheckCircle2 size={20} color="#ffffff" />
+                <CheckCircle2 size={18} color="#ffffff" />
                 <Text style={globalStyles.primaryButtonText}>Message Sent!</Text>
               </>
             ) : (
@@ -224,8 +224,8 @@ const styles = StyleSheet.create({
     ...SHADOWS.light,
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontSize: 21,
+    fontWeight: '700',
     color: '#ffffff',
   },
   scrollContent: {
@@ -244,8 +244,8 @@ const styles = StyleSheet.create({
     ...SHADOWS.light,
   },
   infoCardTitle: {
-    fontSize: 17,
-    fontWeight: '800',
+    fontSize: 16.5,
+    fontWeight: '700',
     color: COLORS.textDark,
     marginBottom: 2,
   },
@@ -263,14 +263,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   contactLinkText: {
-    fontSize: 14.5,
-    fontWeight: '800',
+    fontSize: 14,
+    fontWeight: '600',
     color: COLORS.primaryPurple,
   },
   addressText: {
     flex: 1,
     fontSize: 13.5,
-    fontWeight: '600',
+    fontWeight: '400',
     color: COLORS.textDark,
     lineHeight: 18,
   },
@@ -283,8 +283,8 @@ const styles = StyleSheet.create({
     ...SHADOWS.light,
   },
   formTitle: {
-    fontSize: 17,
-    fontWeight: '800',
+    fontSize: 16.5,
+    fontWeight: '700',
     color: COLORS.textDark,
     marginBottom: 14,
   },

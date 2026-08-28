@@ -75,7 +75,7 @@ export default function HomeScreen({ navigation }) {
       >
         {/* Main Asset Card */}
         <View style={styles.mainAssetCard}>
-          {/* LOWEST PRICE Ribbon */}
+          {/* LOWEST PRICE Ribbon (Positioned Top-Left) */}
           <LowestPriceRibbon />
 
           {/* Gold / Silver Toggle Pills */}
@@ -200,23 +200,23 @@ const styles = StyleSheet.create({
     paddingRight: 10,
   },
   greetingHello: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 14.5,
+    fontWeight: '400',
     color: 'rgba(255, 255, 255, 0.9)',
   },
   greetingName: {
-    fontSize: 24,
-    fontWeight: '900',
+    fontSize: 22,
+    fontWeight: '700',
     color: '#ffffff',
     marginTop: 2,
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
   rateBadgeBox: {
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.4)',
     borderRadius: RADIUS.md,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 7,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     minWidth: 145,
   },
@@ -224,27 +224,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   karatBadge: {
     backgroundColor: COLORS.yellowAccent,
     paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
+    paddingVertical: 1.5,
+    borderRadius: 6,
   },
   karatBadgeText: {
     color: '#000000',
     fontSize: 9.5,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   rateLabelText: {
     fontSize: 11.5,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#ffb948',
   },
   rateValueText: {
-    fontSize: 13.5,
-    fontWeight: '800',
+    fontSize: 13,
+    fontWeight: '700',
     color: '#ffffff',
   },
   scrollContent: {
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
   },
   metalTabBtn: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 7,
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
@@ -281,13 +281,13 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primaryPurple,
   },
   metalTabText: {
-    fontSize: 14.5,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '500',
     color: '#736d85',
   },
   metalTabTextActive: {
     color: '#ffffff',
-    fontWeight: '800',
+    fontWeight: '600',
   },
   balanceInnerCard: {
     backgroundColor: '#f6f2ff',
@@ -300,47 +300,47 @@ const styles = StyleSheet.create({
   },
   balanceTitle: {
     color: COLORS.primaryPurple,
-    fontWeight: '700',
-    fontSize: 13.5,
-    marginBottom: 10,
+    fontWeight: '600',
+    fontSize: 13,
+    marginBottom: 8,
   },
   balanceContent: {
     alignItems: 'center',
   },
   goldCoinCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: '#fde9b8',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 6,
   },
   silverCoinCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: '#e2e6ea',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 6,
   },
   balanceAssetLabel: {
-    fontSize: 13.5,
+    fontSize: 13,
     color: '#736d85',
-    fontWeight: '700',
+    fontWeight: '500',
   },
   balanceAmountText: {
-    fontSize: 22,
-    fontWeight: '900',
+    fontSize: 20,
+    fontWeight: '700',
     color: '#1c1829',
     marginTop: 2,
   },
   promoText: {
     textAlign: 'center',
-    fontSize: 13.5,
+    fontSize: 13,
     color: '#3d3852',
-    fontWeight: '600',
+    fontWeight: '400',
     lineHeight: 18,
     marginBottom: 16,
   },
@@ -352,28 +352,28 @@ const styles = StyleSheet.create({
     ...SHADOWS.medium,
   },
   shopTitle: {
-    fontSize: 26,
-    fontWeight: '900',
+    fontSize: 24,
+    fontWeight: '700',
     color: '#ffffff',
     marginBottom: 12,
   },
   coinsBtn: {
     backgroundColor: '#ffffff',
     borderRadius: 20,
-    paddingVertical: 7,
+    paddingVertical: 6,
     paddingHorizontal: 16,
     alignSelf: 'flex-start',
     marginBottom: 12,
   },
   coinsBtnText: {
     color: COLORS.primaryPurple,
-    fontWeight: '800',
-    fontSize: 14,
+    fontWeight: '600',
+    fontSize: 13.5,
   },
   shopSubtext: {
     color: 'rgba(255, 255, 255, 0.85)',
     fontSize: 12.5,
     lineHeight: 18,
-    fontWeight: '500',
+    fontWeight: '400',
   },
 });

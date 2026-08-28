@@ -8,81 +8,77 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Linking,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
-import { Phone, Eye, EyeOff } from 'lucide-react-native';
+import { PhoneCall, Eye, EyeOff } from 'lucide-react-native';
 import { useApp } from '../context/AppContext';
+import { cleanIndianMobileDigits, isValidIndianMobile } from '../utils/phoneUtils';
 import { CUSTOMER_SUPPORT_PHONE } from '../constants/config';
-import { cleanIndianMobileDigits, formatToE164, isValidIndianMobile } from '../utils/phoneUtils';
 import { COLORS, RADIUS, SHADOWS } from '../constants/theme';
 import { globalStyles } from '../styles/globalStyles';
 
 export default function SignInScreen({ navigation }) {
   const { loginUser } = useApp();
-  const [mobileDigits, setMobileDigits] = useState('');
+
+  const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleMobileChange = (val) => {
-    const cleaned = cleanIndianMobileDigits(val);
-    setMobileDigits(cleaned);
-    setErrorMessage('');
+  const handleMobileChange = (text) => {
+    const digits = cleanIndianMobileDigits(text);
+    setMobile(digits);
+    if (error) setError('');
+  };
+
+  const handlePasswordChange = (text) => {
+    setPassword(text);
+    if (error) setError('');
+  };
+
+  const handleCallHelp = () => {
+    const digits = CUSTOMER_SUPPORT_PHONE.replace(/[^\d+]/g, '');
+    Linking.openURL(`tel:${digits}`).catch((err) => {
+      console.warn('Cannot open dialer:', err);
+    });
   };
 
   const handleSignIn = async () => {
-    if (isLoading) return;
-    setErrorMessage('');
+    setError('');
 
-    if (!mobileDigits) {
-      setErrorMessage('Mobile number is required');
+    const cleanMobile = cleanIndianMobileDigits(mobile);
+    if (!cleanMobile || cleanMobile.length !== 10 || !isValidIndianMobile(cleanMobile)) {
+      setError('Please enter a valid 10-digit mobile number.');
       return;
     }
 
-    if (mobileDigits.length !== 10 || !isValidIndianMobile(mobileDigits)) {
-      setErrorMessage('Enter a valid 10-digit mobile number');
-      return;
-    }
-
-    const pass = password.trim();
-    if (!pass) {
-      setErrorMessage('Password is required');
+    if (!password) {
+      setError('Please enter your password.');
       return;
     }
 
     setIsLoading(true);
-    try {
-      const formattedMobile = formatToE164(mobileDigits);
-      const user = await loginUser({
-        identifier: formattedMobile,
-        mobile: formattedMobile,
-        password: pass,
-      });
-
-      if (!user.profileCompleted) {
-        navigation.replace('CreateProfile', { mode: 'create' });
-      } else {
-        navigation.replace('Home');
-      }
-    } catch (err) {
-      setErrorMessage(err.message || 'Invalid mobile number or password.');
-    } finally {
+    setTimeout(async () => {
+      const user = await loginUser(cleanMobile, password);
       setIsLoading(false);
-    }
-  };
 
-  const handleCallSupport = () => {
-    const digits = CUSTOMER_SUPPORT_PHONE.replace(/[^\d+]/g, '');
-    Linking.openURL(`tel:${digits}`).catch((err) => {
-      console.warn('Cannot open phone dialer:', err);
-    });
+      if (user) {
+        if (!user.profileCompleted) {
+          navigation.replace('CreateProfile', { mode: 'create' });
+        } else {
+          navigation.replace('Home');
+        }
+      } else {
+        setError('Invalid mobile number or password.');
+      }
+    }, 400);
   };
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={globalStyles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
@@ -90,115 +86,110 @@ export default function SignInScreen({ navigation }) {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Centered Heading */}
-        <View style={styles.authHeader}>
-          <Text style={styles.headingTitle}>
-            Welcome !{'\n'}Glad to see you !
-          </Text>
+        {/* Help Card */}
+        <View style={styles.helpCard}>
+          <View style={styles.helpTextCol}>
+            <Text style={styles.helpTitle}>Need help signing in?</Text>
+            <Text style={styles.helpSubtitle}>Call our dedicated customer care team</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.callHelpBtn}
+            onPress={handleCallHelp}
+            activeOpacity={0.8}
+          >
+            <PhoneCall size={15} color="#ffffff" />
+            <Text style={styles.callHelpBtnText}>Call</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Main Sign In Header */}
+        <View style={styles.headerWrap}>
+          <Text style={styles.mainTitle}>Sign In</Text>
+          <Text style={styles.subtitle}>Enter your mobile number and password to access your account</Text>
         </View>
 
         {/* Error Alert */}
-        {errorMessage ? (
+        {error ? (
           <View style={globalStyles.errorBox}>
-            <Text style={globalStyles.errorBoxText}>{errorMessage}</Text>
+            <Text style={globalStyles.errorBoxText}>{error}</Text>
           </View>
         ) : null}
 
-        {/* Form Card */}
-        <View style={styles.formContainer}>
-          {/* Mobile Number */}
-          <View style={globalStyles.inputGroup}>
-            <Text style={globalStyles.inputLabel}>Mobile Number</Text>
+        {/* Mobile Input Group */}
+        <View style={globalStyles.inputGroup}>
+          <Text style={globalStyles.inputLabel}>Mobile Number</Text>
+          <View style={styles.phoneInputWrap}>
+            <View style={styles.prefixBadge}>
+              <Text style={styles.prefixText}>+91</Text>
+            </View>
             <TextInput
-              style={globalStyles.inputField}
-              placeholder="Enter 10-digit Mobile Number"
+              style={styles.phoneInput}
+              placeholder="10-digit Mobile Number"
               placeholderTextColor={COLORS.textMuted}
-              value={mobileDigits}
-              onChangeText={handleMobileChange}
               keyboardType="number-pad"
               maxLength={10}
+              value={mobile}
+              onChangeText={handleMobileChange}
               editable={!isLoading}
             />
           </View>
+        </View>
 
-          {/* Password */}
-          <View style={globalStyles.inputGroup}>
-            <Text style={globalStyles.inputLabel}>Password</Text>
-            <View style={styles.passwordWrapper}>
-              <TextInput
-                style={[globalStyles.inputField, styles.passwordInput]}
-                placeholder="Password"
-                placeholderTextColor={COLORS.textMuted}
-                value={password}
-                onChangeText={(val) => {
-                  setPassword(val);
-                  setErrorMessage('');
-                }}
-                secureTextEntry={!showPassword}
-                editable={!isLoading}
-              />
-              <TouchableOpacity
-                style={styles.eyeBtn}
-                onPress={() => setShowPassword(!showPassword)}
-                accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? (
-                  <EyeOff size={20} color="#8b849c" />
-                ) : (
-                  <Eye size={20} color="#8b849c" />
-                )}
-              </TouchableOpacity>
-            </View>
+        {/* Password Input Group */}
+        <View style={globalStyles.inputGroup}>
+          <Text style={globalStyles.inputLabel}>Password</Text>
+          <View style={styles.passwordInputWrap}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Enter Password"
+              placeholderTextColor={COLORS.textMuted}
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={handlePasswordChange}
+              editable={!isLoading}
+            />
+            <TouchableOpacity
+              style={styles.eyeBtn}
+              onPress={() => setShowPassword(!showPassword)}
+              activeOpacity={0.7}
+            >
+              {showPassword ? (
+                <EyeOff size={18} color={COLORS.textMuted} />
+              ) : (
+                <Eye size={18} color={COLORS.textMuted} />
+              )}
+            </TouchableOpacity>
           </View>
-
-          {/* Forgot Password Link */}
-          <TouchableOpacity
-            style={styles.forgotPassBtn}
-            onPress={() => navigation.navigate('ForgotPassword')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.forgotPassText}>Forgot Password?</Text>
-          </TouchableOpacity>
-
-          {/* Submit Sign In Button */}
-          <TouchableOpacity
-            style={[globalStyles.primaryButton, isLoading && { opacity: 0.7 }]}
-            onPress={handleSignIn}
-            disabled={isLoading}
-            activeOpacity={0.8}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#ffffff" size="small" />
-            ) : (
-              <Text style={globalStyles.primaryButtonText}>Sign in</Text>
-            )}
-          </TouchableOpacity>
         </View>
 
-        {/* Customer Support Card */}
-        <View style={styles.supportCard}>
-          <Text style={styles.supportTitle}>Need help signing in?</Text>
-          <Text style={styles.supportDesc}>
-            If you forgot your password or are unable to access your account, please contact Customer Support for account verification and assistance.
-          </Text>
-          <TouchableOpacity
-            style={styles.supportCallBtn}
-            onPress={handleCallSupport}
-            activeOpacity={0.8}
-          >
-            <Phone size={14} color={COLORS.primaryPurple} />
-            <Text style={styles.supportCallText}>{CUSTOMER_SUPPORT_PHONE}</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Forgot Password Link */}
+        <TouchableOpacity
+          style={styles.forgotLinkWrap}
+          onPress={() => navigation.navigate('ForgotPassword')}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.forgotLinkText}>Forgot Password?</Text>
+        </TouchableOpacity>
 
-        {/* Sign Up Navigation Footer */}
-        <View style={styles.footerRow}>
+        {/* Sign In CTA Button */}
+        <TouchableOpacity
+          style={[globalStyles.primaryButton, isLoading && { opacity: 0.7 }]}
+          onPress={handleSignIn}
+          disabled={isLoading}
+          activeOpacity={0.8}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#ffffff" size="small" />
+          ) : (
+            <Text style={globalStyles.primaryButtonText}>Sign In</Text>
+          )}
+        </TouchableOpacity>
+
+        {/* Sign Up Redirect Link */}
+        <View style={styles.footerWrap}>
           <Text style={styles.footerText}>Don't have an account? </Text>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('SignUp')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.signUpLink}>Sign Up</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+            <Text style={styles.signUpLinkText}>Sign Up</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -207,109 +198,142 @@ export default function SignInScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.bgLavender,
-  },
   scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 36,
-    paddingBottom: 40,
-    justifyContent: 'center',
+    paddingHorizontal: 22,
+    paddingTop: 24,
+    paddingBottom: 36,
   },
-  authHeader: {
-    marginBottom: 20,
-    marginTop: 10,
-  },
-  headingTitle: {
-    fontSize: 26,
-    fontWeight: '900',
-    color: COLORS.textDark,
-    lineHeight: 34,
-    letterSpacing: -0.5,
-  },
-  formContainer: {
-    marginBottom: 16,
-  },
-  passwordWrapper: {
-    position: 'relative',
-    justifyContent: 'center',
-  },
-  passwordInput: {
-    paddingRight: 50,
-  },
-  eyeBtn: {
-    position: 'absolute',
-    right: 14,
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 4,
-  },
-  forgotPassBtn: {
-    alignSelf: 'flex-end',
-    marginBottom: 16,
-    marginTop: -4,
-  },
-  forgotPassText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.primaryPurple,
-  },
-  supportCard: {
+  helpCard: {
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.lg,
-    padding: 16,
-    marginTop: 8,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 26,
     borderWidth: 1,
     borderColor: '#e8e2fa',
-    alignItems: 'center',
     ...SHADOWS.light,
   },
-  supportTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: COLORS.textDark,
-    marginBottom: 4,
+  helpTextCol: {
+    flex: 1,
+    paddingRight: 10,
   },
-  supportDesc: {
-    fontSize: 12,
-    color: COLORS.textMuted,
-    textAlign: 'center',
-    lineHeight: 16,
-    marginBottom: 10,
-  },
-  supportCallBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: COLORS.primaryPurpleLight,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: '#ded5fb',
-  },
-  supportCallText: {
+  helpTitle: {
     fontSize: 13.5,
-    fontWeight: '800',
-    color: COLORS.primaryPurple,
-  },
-  footerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  footerText: {
-    fontSize: 14,
     fontWeight: '600',
     color: COLORS.textDark,
   },
-  signUpLink: {
+  helpSubtitle: {
+    fontSize: 11.5,
+    color: COLORS.textMuted,
+    marginTop: 2,
+    fontWeight: '400',
+  },
+  callHelpBtn: {
+    backgroundColor: COLORS.primaryPurple,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+  },
+  callHelpBtnText: {
+    color: '#ffffff',
+    fontSize: 12.5,
+    fontWeight: '600',
+  },
+  headerWrap: {
+    marginBottom: 24,
+  },
+  mainTitle: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: COLORS.textDark,
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 13.5,
+    color: COLORS.textMuted,
+    marginTop: 4,
+    lineHeight: 18,
+    fontWeight: '400',
+  },
+  phoneInputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: COLORS.inputBorder,
+    height: 50,
+    overflow: 'hidden',
+  },
+  prefixBadge: {
+    backgroundColor: '#f7f4ff',
+    paddingHorizontal: 14,
+    height: '100%',
+    justifyContent: 'center',
+    borderRightWidth: 1.5,
+    borderRightColor: '#e0d8fa',
+  },
+  prefixText: {
     fontSize: 14.5,
-    fontWeight: '800',
+    fontWeight: '600',
+    color: COLORS.textDark,
+  },
+  phoneInput: {
+    flex: 1,
+    paddingHorizontal: 14,
+    fontSize: 15,
+    color: COLORS.textDark,
+    fontWeight: '500',
+    letterSpacing: 0.5,
+  },
+  passwordInputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: COLORS.inputBorder,
+    height: 50,
+    paddingHorizontal: 14,
+  },
+  passwordInput: {
+    flex: 1,
+    fontSize: 15,
+    color: COLORS.textDark,
+    fontWeight: '500',
+  },
+  eyeBtn: {
+    padding: 6,
+  },
+  forgotLinkWrap: {
+    alignSelf: 'flex-end',
+    marginBottom: 20,
+    marginTop: -4,
+  },
+  forgotLinkText: {
     color: COLORS.primaryPurple,
+    fontSize: 13.5,
+    fontWeight: '600',
+  },
+  footerWrap: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 24,
+  },
+  footerText: {
+    color: COLORS.textMuted,
+    fontSize: 14,
+    fontWeight: '400',
+  },
+  signUpLinkText: {
+    color: COLORS.primaryPurple,
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

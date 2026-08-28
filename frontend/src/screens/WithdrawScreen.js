@@ -436,8 +436,8 @@ const styles = StyleSheet.create({
     ...SHADOWS.light,
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontSize: 21,
+    fontWeight: '700',
     color: '#ffffff',
   },
   scrollContent: {
@@ -456,21 +456,21 @@ const styles = StyleSheet.create({
     ...SHADOWS.light,
   },
   assetNameTitle: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 17,
+    fontWeight: '600',
     color: COLORS.textDark,
     marginBottom: 6,
   },
   assetBalanceAmount: {
-    fontSize: 32,
-    fontWeight: '900',
+    fontSize: 28,
+    fontWeight: '700',
     color: COLORS.textDark,
     letterSpacing: -0.5,
     marginBottom: 4,
   },
   gramPill: {
-    paddingHorizontal: 16,
-    paddingVertical: 3,
+    paddingHorizontal: 14,
+    paddingVertical: 2,
     borderRadius: 14,
     backgroundColor: 'rgba(255, 255, 255, 0.6)',
     borderWidth: 1,
@@ -478,8 +478,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   gramPillText: {
-    fontSize: 13,
-    fontWeight: '800',
+    fontSize: 12.5,
+    fontWeight: '600',
     color: '#33295c',
   },
   withdrawActionBtn: {
@@ -501,8 +501,8 @@ const styles = StyleSheet.create({
     borderColor: '#b2a2e0',
   },
   withdrawActionBtnText: {
-    fontSize: 15.5,
-    fontWeight: '800',
+    fontSize: 15,
+    fontWeight: '600',
   },
   withdrawActionBtnTextVerified: {
     color: '#ffffff',
@@ -524,12 +524,12 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   modalSheetTitle: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 17,
+    fontWeight: '700',
     color: COLORS.textDark,
   },
   modalDesc: {
-    fontSize: 13.5,
+    fontSize: 13,
     color: COLORS.textMuted,
     lineHeight: 18,
     marginBottom: 14,
@@ -539,13 +539,13 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   modalSuccessTitle: {
-    fontSize: 20,
-    fontWeight: '900',
+    fontSize: 19,
+    fontWeight: '700',
     color: '#059669',
     marginTop: 10,
   },
   modalSuccessSub: {
-    fontSize: 13.5,
+    fontSize: 13,
     color: COLORS.textMuted,
     textAlign: 'center',
     marginTop: 6,
@@ -565,12 +565,12 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 12,
     color: '#92400e',
-    fontWeight: '600',
+    fontWeight: '500',
     lineHeight: 16,
   },
   balanceHint: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
     color: COLORS.primaryPurple,
     marginTop: 4,
   },

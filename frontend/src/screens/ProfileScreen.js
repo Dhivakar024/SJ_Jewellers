@@ -47,7 +47,11 @@ export default function ProfileScreen({ navigation }) {
           style: 'destructive',
           onPress: async () => {
             await logoutUser();
-            navigation.replace('SignIn');
+            // Reset navigation stack so back button cannot navigate to Home/Profile
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'SignIn' }],
+            });
           },
         },
       ]
@@ -193,8 +197,8 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: '700',
     color: '#ffffff',
   },
   profileActionBtn: {
@@ -203,7 +207,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primaryPurple,
     borderRadius: 16,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 5,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -212,7 +216,7 @@ const styles = StyleSheet.create({
   profileActionText: {
     color: COLORS.primaryPurple,
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   scrollContent: {
     paddingHorizontal: 16,
@@ -225,9 +229,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   avatarCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     backgroundColor: COLORS.primaryPurple,
     alignItems: 'center',
     justifyContent: 'center',
@@ -235,19 +239,19 @@ const styles = StyleSheet.create({
     ...SHADOWS.medium,
   },
   avatarLetter: {
-    fontSize: 34,
-    fontWeight: '900',
+    fontSize: 32,
+    fontWeight: '700',
     color: '#ffffff',
   },
   userName: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontSize: 20,
+    fontWeight: '700',
     color: COLORS.textDark,
   },
   userMobile: {
-    fontSize: 14.5,
+    fontSize: 14,
     color: COLORS.textMuted,
-    fontWeight: '600',
+    fontWeight: '500',
     marginTop: 2,
   },
   kycBadge: {
@@ -261,7 +265,7 @@ const styles = StyleSheet.create({
   },
   kycBadgeText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   menuCard: {
     backgroundColor: '#ffffff',
@@ -288,7 +292,7 @@ const styles = StyleSheet.create({
   },
   menuItemText: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '600',
     color: COLORS.textDark,
   },
 });
