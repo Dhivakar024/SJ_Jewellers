@@ -70,4 +70,3 @@ export const isValidFullName = (name) => {
   const letters = (trimmed.match(/[a-zA-Z]/g) || []).length;
   return letters >= 2;
 };
-

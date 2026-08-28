@@ -1,45 +1,43 @@
 /**
- * Centralized Authentication & Token Storage Utility
- * Manages JWT tokens and customer authentication state safely.
+ * Centralized Authentication & Token Storage Utility for React Native
+ * Manages JWT tokens and customer authentication state via AsyncStorage safely.
  */
 
-const TOKEN_KEY = 'sj_auth_token';
-const USER_KEY = 'sj_auth_user';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const getAuthToken = () => {
+const TOKEN_KEY = '@sj_auth_token';
+const USER_KEY = '@sj_auth_user';
+const SKIPPED_PROFILE_KEY = '@sj_session_skipped_profile';
+
+export const getAuthToken = async () => {
   try {
-    return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY) || null;
+    return await AsyncStorage.getItem(TOKEN_KEY);
   } catch (e) {
     console.error('Error accessing token storage:', e);
     return null;
   }
 };
 
-export const setAuthToken = (token, rememberMe = true) => {
+export const setAuthToken = async (token) => {
   try {
     if (!token) return;
-    if (rememberMe) {
-      localStorage.setItem(TOKEN_KEY, token);
-    } else {
-      sessionStorage.setItem(TOKEN_KEY, token);
-    }
+    await AsyncStorage.setItem(TOKEN_KEY, token);
   } catch (e) {
     console.error('Error saving auth token:', e);
   }
 };
 
-export const clearAuthToken = () => {
+export const clearAuthToken = async () => {
   try {
-    localStorage.removeItem(TOKEN_KEY);
-    sessionStorage.removeItem(TOKEN_KEY);
+    await AsyncStorage.removeItem(TOKEN_KEY);
   } catch (e) {
     console.error('Error clearing auth token:', e);
   }
 };
 
-export const getStoredUser = () => {
+export const getStoredUser = async () => {
   try {
-    const userStr = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY);
+    const userStr = await AsyncStorage.getItem(USER_KEY);
     return userStr ? JSON.parse(userStr) : null;
   } catch (e) {
     console.error('Error reading stored user:', e);
@@ -47,30 +45,46 @@ export const getStoredUser = () => {
   }
 };
 
-export const setStoredUser = (user, rememberMe = true) => {
+export const setStoredUser = async (user) => {
   try {
     if (!user) return;
-    const userStr = JSON.stringify(user);
-    if (rememberMe) {
-      localStorage.setItem(USER_KEY, userStr);
-    } else {
-      sessionStorage.setItem(USER_KEY, userStr);
-    }
+    await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
   } catch (e) {
     console.error('Error saving stored user:', e);
   }
 };
 
-export const clearStoredUser = () => {
+export const clearStoredUser = async () => {
   try {
-    localStorage.removeItem(USER_KEY);
-    sessionStorage.removeItem(USER_KEY);
+    await AsyncStorage.removeItem(USER_KEY);
   } catch (e) {
     console.error('Error clearing stored user:', e);
   }
 };
 
-export const clearAllAuth = () => {
-  clearAuthToken();
-  clearStoredUser();
+export const getSkippedProfile = async () => {
+  try {
+    const val = await AsyncStorage.getItem(SKIPPED_PROFILE_KEY);
+    return val === 'true';
+  } catch (e) {
+    return false;
+  }
+};
+
+export const setSkippedProfile = async (skipped = true) => {
+  try {
+    if (skipped) {
+      await AsyncStorage.setItem(SKIPPED_PROFILE_KEY, 'true');
+    } else {
+      await AsyncStorage.removeItem(SKIPPED_PROFILE_KEY);
+    }
+  } catch (e) {
+    console.error('Error setting skipped profile:', e);
+  }
+};
+
+export const clearAllAuth = async () => {
+  await clearAuthToken();
+  await clearStoredUser();
+  await setSkippedProfile(false);
 };
