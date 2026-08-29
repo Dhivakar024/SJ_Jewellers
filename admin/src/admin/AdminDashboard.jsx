@@ -232,15 +232,12 @@ function StockMarketLineGraph({
     return { ...item, x, y, idx };
   });
 
-  // Generate smooth cubic bezier spline path
+  // Generate clean, mild XY line path connecting data points naturally
   let pathString = '';
   if (points.length > 0) {
     pathString = `M ${points[0].x} ${points[0].y}`;
-    for (let i = 0; i < points.length - 1; i++) {
-      const p0 = points[i];
-      const p1 = points[i + 1];
-      const cpX = (p0.x + p1.x) / 2;
-      pathString += ` C ${cpX} ${p0.y}, ${cpX} ${p1.y}, ${p1.x} ${p1.y}`;
+    for (let i = 1; i < points.length; i++) {
+      pathString += ` L ${points[i].x} ${points[i].y}`;
     }
   }
 
@@ -331,17 +328,17 @@ function StockMarketLineGraph({
                 stroke={lineColor}
                 strokeWidth="1"
                 strokeDasharray="3 3"
-                opacity="0.65"
+                opacity="0.6"
               />
             )}
 
-            {/* Professional XY Thin Line (Completely transparent below - No area fill) */}
+            {/* Professional Mild XY Thin Line (Completely transparent below - No area fill) */}
             {pathString && (
               <path
                 d={pathString}
                 fill="none"
                 stroke={lineColor}
-                strokeWidth="1.8"
+                strokeWidth="1.6"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
@@ -350,10 +347,10 @@ function StockMarketLineGraph({
             {/* XY Data Points */}
             {points.map((p, idx) => {
               const isHovered = hoveredIndex === idx;
-              const pointRadius = isHovered ? (isDaily ? 4.5 : 5.5) : (isDaily ? 2.5 : 3.5);
+              const pointRadius = isHovered ? (isDaily ? 4 : 5) : (isDaily ? 2.2 : 3.2);
               return (
                 <g key={idx}>
-                  {/* Invisible Hit target for easy hovering */}
+                  {/* Invisible Hit target for smooth hovering */}
                   <circle
                     cx={p.x}
                     cy={p.y}
@@ -368,9 +365,9 @@ function StockMarketLineGraph({
                     cx={p.x}
                     cy={p.y}
                     r={pointRadius}
-                    fill={isHovered ? lineColor : '#ffffff'}
-                    stroke={isHovered ? '#ffffff' : lineColor}
-                    strokeWidth={isHovered ? '2' : '1.8'}
+                    fill={lineColor}
+                    stroke="#ffffff"
+                    strokeWidth={isHovered ? '2' : '1.2'}
                     style={{ pointerEvents: 'none', transition: 'all 0.12s ease' }}
                   />
                 </g>
