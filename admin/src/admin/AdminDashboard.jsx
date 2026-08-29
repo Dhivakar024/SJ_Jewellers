@@ -196,7 +196,7 @@ function StockMarketLineGraph({
   icon,
   data = [],
   maxVal = 1000,
-  lineColor = '#1e40af',
+  lineColor = '#252525',
   isDaily = false
 }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
@@ -232,12 +232,15 @@ function StockMarketLineGraph({
     return { ...item, x, y, idx };
   });
 
-  // Generate clean, mild XY line path connecting data points naturally
+  // Generate smooth cubic bezier spline path
   let pathString = '';
   if (points.length > 0) {
     pathString = `M ${points[0].x} ${points[0].y}`;
-    for (let i = 1; i < points.length; i++) {
-      pathString += ` L ${points[i].x} ${points[i].y}`;
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[i];
+      const p1 = points[i + 1];
+      const cpX = (p0.x + p1.x) / 2;
+      pathString += ` C ${cpX} ${p0.y}, ${cpX} ${p1.y}, ${p1.x} ${p1.y}`;
     }
   }
 
@@ -328,17 +331,17 @@ function StockMarketLineGraph({
                 stroke={lineColor}
                 strokeWidth="1"
                 strokeDasharray="3 3"
-                opacity="0.6"
+                opacity="0.65"
               />
             )}
 
-            {/* Professional Mild XY Thin Line (Completely transparent below - No area fill) */}
+            {/* Professional XY Thin Line (Completely transparent below - No area fill) */}
             {pathString && (
               <path
                 d={pathString}
                 fill="none"
                 stroke={lineColor}
-                strokeWidth="1.6"
+                strokeWidth="1.8"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
@@ -347,10 +350,10 @@ function StockMarketLineGraph({
             {/* XY Data Points */}
             {points.map((p, idx) => {
               const isHovered = hoveredIndex === idx;
-              const pointRadius = isHovered ? (isDaily ? 4 : 5) : (isDaily ? 2.2 : 3.2);
+              const pointRadius = isHovered ? (isDaily ? 4.5 : 5.5) : (isDaily ? 2.5 : 3.5);
               return (
                 <g key={idx}>
-                  {/* Invisible Hit target for smooth hovering */}
+                  {/* Invisible Hit target for easy hovering */}
                   <circle
                     cx={p.x}
                     cy={p.y}
@@ -365,9 +368,9 @@ function StockMarketLineGraph({
                     cx={p.x}
                     cy={p.y}
                     r={pointRadius}
-                    fill={lineColor}
-                    stroke="#ffffff"
-                    strokeWidth={isHovered ? '2' : '1.2'}
+                    fill={isHovered ? lineColor : '#ffffff'}
+                    stroke={isHovered ? '#ffffff' : lineColor}
+                    strokeWidth={isHovered ? '2' : '1.8'}
                     style={{ pointerEvents: 'none', transition: 'all 0.12s ease' }}
                   />
                 </g>
@@ -397,7 +400,7 @@ function StockMarketLineGraph({
               <div style={{ fontWeight: '800', color: 'var(--admin-text-value)', marginBottom: '2px' }}>
                 {activePoint.fullLabel || activePoint.label}
               </div>
-              <div style={{ color: lineColor, fontWeight: '800', fontSize: '13px' }}>
+              <div style={{ color: 'var(--admin-text-value)', fontWeight: '800', fontSize: '13px' }}>
                 ₹{activePoint.totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
               <div style={{ fontSize: '11px', color: 'var(--admin-text-secondary)', marginTop: '4px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
@@ -860,7 +863,7 @@ export default function AdminDashboard({ onSelectTab }) {
         icon={<Activity size={16} color="var(--admin-text-muted)" />}
         data={annualChartData.items}
         maxVal={annualChartData.maxVal}
-        lineColor="#1e40af"
+        lineColor="#252525"
         isDaily={false}
       />
 
@@ -871,7 +874,7 @@ export default function AdminDashboard({ onSelectTab }) {
         icon={<Calendar size={16} color="var(--admin-text-muted)" />}
         data={monthlyChartData.items}
         maxVal={monthlyChartData.maxVal}
-        lineColor="#1e40af"
+        lineColor="#252525"
         isDaily={false}
       />
 
@@ -882,7 +885,7 @@ export default function AdminDashboard({ onSelectTab }) {
         icon={<BarChart2 size={16} color="var(--admin-text-muted)" />}
         data={dailyChartData.items}
         maxVal={dailyChartData.maxVal}
-        lineColor="#1e40af"
+        lineColor="#252525"
         isDaily={true}
       />
 
