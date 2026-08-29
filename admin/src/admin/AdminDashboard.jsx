@@ -196,7 +196,7 @@ function StockMarketLineGraph({
   icon,
   data = [],
   maxVal = 1000,
-  lineColor = '#4f46e5',
+  lineColor = '#1e40af',
   isDaily = false
 }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
@@ -397,7 +397,7 @@ function StockMarketLineGraph({
               <div style={{ fontWeight: '800', color: 'var(--admin-text-value)', marginBottom: '2px' }}>
                 {activePoint.fullLabel || activePoint.label}
               </div>
-              <div style={{ color: '#4f46e5', fontWeight: '800', fontSize: '13px' }}>
+              <div style={{ color: lineColor, fontWeight: '800', fontSize: '13px' }}>
                 ₹{activePoint.totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
               <div style={{ fontSize: '11px', color: 'var(--admin-text-secondary)', marginTop: '4px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
@@ -860,7 +860,7 @@ export default function AdminDashboard({ onSelectTab }) {
         icon={<Activity size={16} color="var(--admin-text-muted)" />}
         data={annualChartData.items}
         maxVal={annualChartData.maxVal}
-        lineColor="#4f46e5"
+        lineColor="#1e40af"
         isDaily={false}
       />
 
@@ -871,7 +871,7 @@ export default function AdminDashboard({ onSelectTab }) {
         icon={<Calendar size={16} color="var(--admin-text-muted)" />}
         data={monthlyChartData.items}
         maxVal={monthlyChartData.maxVal}
-        lineColor="#2563eb"
+        lineColor="#1e40af"
         isDaily={false}
       />
 
@@ -882,7 +882,7 @@ export default function AdminDashboard({ onSelectTab }) {
         icon={<BarChart2 size={16} color="var(--admin-text-muted)" />}
         data={dailyChartData.items}
         maxVal={dailyChartData.maxVal}
-        lineColor="#059669"
+        lineColor="#1e40af"
         isDaily={true}
       />
 
