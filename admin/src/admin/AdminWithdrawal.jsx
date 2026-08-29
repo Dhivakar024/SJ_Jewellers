@@ -243,9 +243,9 @@ export default function AdminWithdrawal() {
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
+              justifyContent: 'flex-end',
               flexWrap: 'wrap',
-              gap: '16px',
+              gap: '24px',
               padding: '14px 20px',
               borderTop: '1px solid var(--admin-border)',
               backgroundColor: 'var(--admin-bg-card)',
@@ -253,117 +253,81 @@ export default function AdminWithdrawal() {
               color: 'var(--admin-text-secondary)',
               boxSizing: 'border-box'
             }}>
-              {/* Left: Showing X-Y of Z */}
-              <div style={{ fontWeight: '500' }}>
-                Showing <strong style={{ color: 'var(--admin-text-value)' }}>{totalItems === 0 ? 0 : startIndex + 1}–{endIndex}</strong> of <strong style={{ color: 'var(--admin-text-value)' }}>{totalItems}</strong>
+              {/* 1. Rows per page */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>Rows per page:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="admin-select"
+                  style={{
+                    height: '32px',
+                    padding: '0 24px 0 10px',
+                    fontSize: '13px',
+                    borderRadius: '6px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
               </div>
 
-              {/* Right Section: Rows per page + Pagination Controls */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '24px',
-                flexWrap: 'wrap'
-              }}>
-                {/* Rows per page */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>Rows per page:</span>
-                  <select
-                    value={pageSize}
-                    onChange={(e) => {
-                      setPageSize(Number(e.target.value));
-                      setCurrentPage(1);
-                    }}
-                    className="admin-select"
-                    style={{
-                      height: '32px',
-                      padding: '0 24px 0 10px',
-                      fontSize: '13px',
-                      borderRadius: '6px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <option value={5}>5</option>
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                  </select>
-                </div>
+              {/* 2. Visible Range (e.g. 1–10 of 28) */}
+              <div style={{ fontWeight: '500' }}>
+                <span style={{ color: 'var(--admin-text-main)' }}>{totalItems === 0 ? 0 : startIndex + 1}–{endIndex}</span> of <span style={{ color: 'var(--admin-text-main)' }}>{totalItems}</span>
+              </div>
 
-                {/* Page Navigation Buttons */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={safePage === 1}
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '6px',
-                      border: '1px solid var(--admin-border)',
-                      backgroundColor: 'var(--admin-bg-card)',
-                      color: safePage === 1 ? 'var(--admin-text-muted)' : 'var(--admin-text-main)',
-                      cursor: safePage === 1 ? 'not-allowed' : 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      opacity: safePage === 1 ? 0.45 : 1,
-                      transition: 'all 0.15s ease'
-                    }}
-                    aria-label="Previous Page"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
+              {/* 3. Navigation Controls (< >) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={safePage === 1}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--admin-border)',
+                    backgroundColor: 'var(--admin-bg-card)',
+                    color: safePage === 1 ? 'var(--admin-text-muted)' : 'var(--admin-text-main)',
+                    cursor: safePage === 1 ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: safePage === 1 ? 0.45 : 1,
+                    transition: 'all 0.15s ease'
+                  }}
+                  aria-label="Previous Page"
+                >
+                  <ChevronLeft size={16} />
+                </button>
 
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
-                    const isActive = pageNum === safePage;
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setCurrentPage(pageNum)}
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '6px',
-                          border: isActive ? 'none' : '1px solid var(--admin-border)',
-                          backgroundColor: isActive ? 'var(--admin-orange)' : 'var(--admin-bg-card)',
-                          color: isActive ? '#ffffff' : 'var(--admin-text-secondary)',
-                          fontWeight: isActive ? '700' : '600',
-                          fontSize: '13px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          boxShadow: isActive ? '0 2px 6px rgba(234, 88, 12, 0.3)' : 'none',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={safePage === totalPages || totalPages === 0}
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '6px',
-                      border: '1px solid var(--admin-border)',
-                      backgroundColor: 'var(--admin-bg-card)',
-                      color: safePage === totalPages || totalPages === 0 ? 'var(--admin-text-muted)' : 'var(--admin-text-main)',
-                      cursor: safePage === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      opacity: safePage === totalPages || totalPages === 0 ? 0.45 : 1,
-                      transition: 'all 0.15s ease'
-                    }}
-                    aria-label="Next Page"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                </div>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={safePage === totalPages || totalPages === 0}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--admin-border)',
+                    backgroundColor: 'var(--admin-bg-card)',
+                    color: safePage === totalPages || totalPages === 0 ? 'var(--admin-text-muted)' : 'var(--admin-text-main)',
+                    cursor: safePage === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: safePage === totalPages || totalPages === 0 ? 0.45 : 1,
+                    transition: 'all 0.15s ease'
+                  }}
+                  aria-label="Next Page"
+                >
+                  <ChevronRight size={16} />
+                </button>
               </div>
             </div>
           </div>
