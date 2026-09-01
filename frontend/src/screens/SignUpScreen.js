@@ -167,23 +167,18 @@ export default function SignUpScreen({ navigation }) {
 
             <View style={globalStyles.inputGroup}>
               <Text style={globalStyles.inputLabel}>Mobile Number</Text>
-              <View style={styles.phoneInputWrap}>
-                <View style={styles.prefixBadge}>
-                  <Text style={styles.prefixText}>+91</Text>
-                </View>
-                <TextInput
-                  style={styles.phoneInput}
-                  placeholder="10-digit Mobile Number"
-                  placeholderTextColor={COLORS.textMuted}
-                  keyboardType="number-pad"
-                  maxLength={10}
-                  value={mobile}
-                  onChangeText={(val) => {
-                    setMobile(cleanIndianMobileDigits(val));
-                    if (error) setError('');
-                  }}
-                />
-              </View>
+              <TextInput
+                style={globalStyles.inputField}
+                placeholder="Enter Mobile Number"
+                placeholderTextColor={COLORS.textMuted}
+                keyboardType="number-pad"
+                maxLength={10}
+                value={mobile}
+                onChangeText={(val) => {
+                  setMobile(cleanIndianMobileDigits(val));
+                  if (error) setError('');
+                }}
+              />
             </View>
 
             <TouchableOpacity
@@ -402,37 +397,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     lineHeight: 18,
     fontWeight: '400',
-  },
-  phoneInputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: RADIUS.md,
-    borderWidth: 1.5,
-    borderColor: COLORS.inputBorder,
-    height: 50,
-    overflow: 'hidden',
-  },
-  prefixBadge: {
-    backgroundColor: '#f7f4ff',
-    paddingHorizontal: 14,
-    height: '100%',
-    justifyContent: 'center',
-    borderRightWidth: 1.5,
-    borderRightColor: '#e0d8fa',
-  },
-  prefixText: {
-    fontSize: 14.5,
-    fontWeight: '600',
-    color: COLORS.textDark,
-  },
-  phoneInput: {
-    flex: 1,
-    paddingHorizontal: 14,
-    fontSize: 15,
-    color: COLORS.textDark,
-    fontWeight: '500',
-    letterSpacing: 0.5,
   },
   otpInput: {
     textAlign: 'center',

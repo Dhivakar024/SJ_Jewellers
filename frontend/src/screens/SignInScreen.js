@@ -86,22 +86,6 @@ export default function SignInScreen({ navigation }) {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Help Card */}
-        <View style={styles.helpCard}>
-          <View style={styles.helpTextCol}>
-            <Text style={styles.helpTitle}>Need help signing in?</Text>
-            <Text style={styles.helpSubtitle}>Call our dedicated customer care team</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.callHelpBtn}
-            onPress={handleCallHelp}
-            activeOpacity={0.8}
-          >
-            <PhoneCall size={15} color="#ffffff" />
-            <Text style={styles.callHelpBtnText}>Call</Text>
-          </TouchableOpacity>
-        </View>
-
         {/* Main Sign In Header */}
         <View style={styles.headerWrap}>
           <Text style={styles.mainTitle}>Sign In</Text>
@@ -115,24 +99,19 @@ export default function SignInScreen({ navigation }) {
           </View>
         ) : null}
 
-        {/* Mobile Input Group */}
+        {/* Mobile Input Group (No +91 prefix) */}
         <View style={globalStyles.inputGroup}>
           <Text style={globalStyles.inputLabel}>Mobile Number</Text>
-          <View style={styles.phoneInputWrap}>
-            <View style={styles.prefixBadge}>
-              <Text style={styles.prefixText}>+91</Text>
-            </View>
-            <TextInput
-              style={styles.phoneInput}
-              placeholder="10-digit Mobile Number"
-              placeholderTextColor={COLORS.textMuted}
-              keyboardType="number-pad"
-              maxLength={10}
-              value={mobile}
-              onChangeText={handleMobileChange}
-              editable={!isLoading}
-            />
-          </View>
+          <TextInput
+            style={globalStyles.inputField}
+            placeholder="Enter Mobile Number"
+            placeholderTextColor={COLORS.textMuted}
+            keyboardType="number-pad"
+            maxLength={10}
+            value={mobile}
+            onChangeText={handleMobileChange}
+            editable={!isLoading}
+          />
         </View>
 
         {/* Password Input Group */}
@@ -192,6 +171,22 @@ export default function SignInScreen({ navigation }) {
             <Text style={styles.signUpLinkText}>Sign Up</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Help Card (Positioned naturally below form content) */}
+        <View style={styles.helpCard}>
+          <View style={styles.helpTextCol}>
+            <Text style={styles.helpTitle}>Need help signing in?</Text>
+            <Text style={styles.helpSubtitle}>Call our dedicated customer care team</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.callHelpBtn}
+            onPress={handleCallHelp}
+            activeOpacity={0.8}
+          >
+            <PhoneCall size={15} color="#ffffff" />
+            <Text style={styles.callHelpBtnText}>Call</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -199,50 +194,11 @@ export default function SignInScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
     paddingHorizontal: 22,
     paddingTop: 24,
-    paddingBottom: 36,
-  },
-  helpCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: RADIUS.lg,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 26,
-    borderWidth: 1,
-    borderColor: '#e8e2fa',
-    ...SHADOWS.light,
-  },
-  helpTextCol: {
-    flex: 1,
-    paddingRight: 10,
-  },
-  helpTitle: {
-    fontSize: 13.5,
-    fontWeight: '600',
-    color: COLORS.textDark,
-  },
-  helpSubtitle: {
-    fontSize: 11.5,
-    color: COLORS.textMuted,
-    marginTop: 2,
-    fontWeight: '400',
-  },
-  callHelpBtn: {
-    backgroundColor: COLORS.primaryPurple,
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 7,
-    paddingHorizontal: 14,
-  },
-  callHelpBtnText: {
-    color: '#ffffff',
-    fontSize: 12.5,
-    fontWeight: '600',
+    paddingBottom: 28,
   },
   headerWrap: {
     marginBottom: 24,
@@ -259,37 +215,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     lineHeight: 18,
     fontWeight: '400',
-  },
-  phoneInputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: RADIUS.md,
-    borderWidth: 1.5,
-    borderColor: COLORS.inputBorder,
-    height: 50,
-    overflow: 'hidden',
-  },
-  prefixBadge: {
-    backgroundColor: '#f7f4ff',
-    paddingHorizontal: 14,
-    height: '100%',
-    justifyContent: 'center',
-    borderRightWidth: 1.5,
-    borderRightColor: '#e0d8fa',
-  },
-  prefixText: {
-    fontSize: 14.5,
-    fontWeight: '600',
-    color: COLORS.textDark,
-  },
-  phoneInput: {
-    flex: 1,
-    paddingHorizontal: 14,
-    fontSize: 15,
-    color: COLORS.textDark,
-    fontWeight: '500',
-    letterSpacing: 0.5,
   },
   passwordInputWrap: {
     flexDirection: 'row',
@@ -324,7 +249,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 24,
+    marginTop: 22,
   },
   footerText: {
     color: COLORS.textMuted,
@@ -335,5 +260,46 @@ const styles = StyleSheet.create({
     color: COLORS.primaryPurple,
     fontSize: 14,
     fontWeight: '700',
+  },
+  helpCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 26,
+    borderWidth: 1,
+    borderColor: '#e8e2fa',
+    ...SHADOWS.light,
+  },
+  helpTextCol: {
+    flex: 1,
+    paddingRight: 10,
+  },
+  helpTitle: {
+    fontSize: 13.5,
+    fontWeight: '600',
+    color: COLORS.textDark,
+  },
+  helpSubtitle: {
+    fontSize: 11.5,
+    color: COLORS.textMuted,
+    marginTop: 2,
+    fontWeight: '400',
+  },
+  callHelpBtn: {
+    backgroundColor: COLORS.primaryPurple,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+  },
+  callHelpBtnText: {
+    color: '#ffffff',
+    fontSize: 12.5,
+    fontWeight: '600',
   },
 });
