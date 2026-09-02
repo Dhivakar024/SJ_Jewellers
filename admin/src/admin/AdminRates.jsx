@@ -39,24 +39,28 @@ export default function AdminRates() {
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     const gVal = goldCustom ? (parseFloat(goldInput) || liveGoldRate) : liveGoldRate;
     const sVal = silverCustom ? (parseFloat(silverInput) || liveSilverRate) : liveSilverRate;
 
-    if (typeof saveRates === 'function') {
-      saveRates({
-        newGoldRate: gVal,
-        newSilverRate: sVal,
-        goldCustom,
-        silverCustom,
-        goldInputVal: goldInput,
-        silverInputVal: silverInput
-      });
-    }
+    try {
+      if (typeof saveRates === 'function') {
+        await saveRates({
+          newGoldRate: gVal,
+          newSilverRate: sVal,
+          goldCustom,
+          silverCustom,
+          goldInputVal: goldInput,
+          silverInputVal: silverInput
+        });
+      }
 
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 2500);
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 2500);
+    } catch (err) {
+      alert(err.message || 'Failed to update rates.');
+    }
   };
 
   return (

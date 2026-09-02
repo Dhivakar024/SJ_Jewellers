@@ -1,51 +1,61 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { setAuthToken, setStoredUser } from '../utils/authStorage';
+import authService from '../services/authService';
 
 export default function AdminLogin({ onLoginSuccess }) {
   const { setAdminAuth } = useApp() || {};
-  const [usernameOrEmail, setUsernameOrEmail] = useState('');
+  const [usernameOrMobile, setUsernameOrMobile] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
-    const u = usernameOrEmail.trim();
+    const u = usernameOrMobile.trim();
     const p = password.trim();
 
     if (!u || !p) {
-      setErrorMsg('Please enter both Admin Username and Password.');
+      setErrorMsg('Please enter both Admin Mobile/Username and Password.');
       return;
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      localStorage.removeItem('sj_admin_logged_out');
-      const adminSession = {
-        isAuthenticated: true,
-        id: 'admin',
-        username: u,
-        email: u.includes('@') ? u : 'admin@sjjewelers.com',
-        role: 'SUPER_ADMIN',
-        loginTime: new Date().toISOString(),
-      };
+    try {
+      const res = await authService.login({
+        mobile: u,
+        password: p,
+      });
+
+      if (!res || !res.access_token || !res.user) {
+        throw new Error('Invalid login response from server.');
+      }
+
+      if (res.user.role !== 'admin') {
+        throw new Error('Access denied. Administrator privileges required.');
+      }
+
+      setAuthToken(res.access_token, true);
+      setStoredUser(res.user, true);
 
       if (typeof setAdminAuth === 'function') {
-        setAdminAuth(adminSession);
+        setAdminAuth({
+          isAuthenticated: true,
+          user: res.user,
+          token: res.access_token,
+        });
       }
-      try {
-        localStorage.setItem('sj_admin_session', JSON.stringify(adminSession));
-        sessionStorage.setItem('sj_admin_session', JSON.stringify(adminSession));
-      } catch {
-        // ignore
-      }
+
       if (onLoginSuccess) onLoginSuccess();
-    }, 300);
+    } catch (err) {
+      setErrorMsg(err.message || 'Authentication failed. Please verify credentials.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -121,7 +131,7 @@ export default function AdminLogin({ onLoginSuccess }) {
         {/* Login Form */}
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           
-          {/* Username Input */}
+          {/* Mobile / Username Input */}
           <div>
             <label style={{
               display: 'block',
@@ -130,13 +140,13 @@ export default function AdminLogin({ onLoginSuccess }) {
               color: '#d1d9e6',
               marginBottom: '6px'
             }}>
-              Username
+              Mobile / Username
             </label>
             <input
               type="text"
-              placeholder="Username"
-              value={usernameOrEmail}
-              onChange={(e) => setUsernameOrEmail(e.target.value)}
+              placeholder="Mobile Number"
+              value={usernameOrMobile}
+              onChange={(e) => setUsernameOrMobile(e.target.value)}
               style={{
                 width: '100%',
                 height: '50px',

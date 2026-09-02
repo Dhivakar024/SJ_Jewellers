@@ -3,10 +3,17 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export default function AdminWithdrawal() {
-  const { withdrawals = [], approveWithdrawal } = useApp() || {};
+  const { withdrawals = [], approveWithdrawal, refreshAllData } = useApp() || {};
+
+  React.useEffect(() => {
+    if (typeof refreshAllData === 'function') {
+      refreshAllData();
+    }
+  }, [refreshAllData]);
 
   const [filterMetal, setFilterMetal] = useState('All');
   const [selectedWithdrawal, setSelectedWithdrawal] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Pagination State for Withdrawal Table
   const [currentPage, setCurrentPage] = useState(1);
@@ -20,10 +27,18 @@ export default function AdminWithdrawal() {
 
   const totalAmount = filteredWithdrawals.reduce((sum, w) => sum + (parseFloat(w?.amount) || 0), 0);
 
-  const handleConfirmApproval = () => {
-    if (selectedWithdrawal && typeof approveWithdrawal === 'function') {
-      approveWithdrawal(selectedWithdrawal.id);
+  const handleConfirmApproval = async () => {
+    if (!selectedWithdrawal || isProcessing) return;
+    setIsProcessing(true);
+    try {
+      if (typeof approveWithdrawal === 'function') {
+        await approveWithdrawal(selectedWithdrawal.id);
+      }
       setSelectedWithdrawal(null);
+    } catch (err) {
+      alert(err.message || 'Failed to approve withdrawal.');
+    } finally {
+      setIsProcessing(false);
     }
   };
 

@@ -10,6 +10,13 @@ export default function AdminMembers() {
   const rawGoldRate = context.goldRate;
   const rawSilverRate = context.silverRate;
   const deleteMember = context.deleteMember;
+  const refreshAllData = context.refreshAllData;
+
+  React.useEffect(() => {
+    if (typeof refreshAllData === 'function') {
+      refreshAllData();
+    }
+  }, [refreshAllData]);
 
   const members = Array.isArray(rawMembers) ? rawMembers : [];
   const transactions = Array.isArray(rawTransactions) ? rawTransactions : [];

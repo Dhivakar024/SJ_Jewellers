@@ -2,24 +2,47 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 
 export default function AdminNotifications() {
-  const { withdrawals = [], pendingVerifications = [], approveWithdrawal, verifyCustomer } = useApp() || {};
+  const { withdrawals = [], pendingVerifications = [], approveWithdrawal, verifyCustomer, refreshAllData } = useApp() || {};
+
+  React.useEffect(() => {
+    if (typeof refreshAllData === 'function') {
+      refreshAllData();
+    }
+  }, [refreshAllData]);
 
   const [selectedWithdrawal, setSelectedWithdrawal] = useState(null);
   const [selectedVerification, setSelectedVerification] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const pendingWithdrawals = withdrawals.filter((w) => w && w.status === 'Pending');
 
-  const handleConfirmPaid = () => {
-    if (selectedWithdrawal && typeof approveWithdrawal === 'function') {
-      approveWithdrawal(selectedWithdrawal.id);
+  const handleConfirmPaid = async () => {
+    if (!selectedWithdrawal || isProcessing) return;
+    setIsProcessing(true);
+    try {
+      if (typeof approveWithdrawal === 'function') {
+        await approveWithdrawal(selectedWithdrawal.id);
+      }
       setSelectedWithdrawal(null);
+    } catch (err) {
+      alert(err.message || 'Failed to approve withdrawal.');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const handleVerifyAccount = () => {
-    if (selectedVerification && typeof verifyCustomer === 'function') {
-      verifyCustomer(selectedVerification.id, selectedVerification.name);
+  const handleVerifyAccount = async () => {
+    if (!selectedVerification || isProcessing) return;
+    setIsProcessing(true);
+    try {
+      if (typeof verifyCustomer === 'function') {
+        await verifyCustomer(selectedVerification.id || selectedVerification.kycId);
+      }
       setSelectedVerification(null);
+    } catch (err) {
+      alert(err.message || 'Failed to verify account.');
+    } finally {
+      setIsProcessing(false);
     }
   };
 

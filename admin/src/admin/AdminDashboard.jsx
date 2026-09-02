@@ -470,6 +470,13 @@ export default function AdminDashboard({ onSelectTab }) {
   const rawGoldRate = appContext?.goldRate;
   const rawSilverRate = appContext?.silverRate;
   const rawTransactions = appContext?.transactions;
+  const refreshAllData = appContext?.refreshAllData;
+
+  React.useEffect(() => {
+    if (typeof refreshAllData === 'function') {
+      refreshAllData();
+    }
+  }, [refreshAllData]);
 
   const goldRate = typeof rawGoldRate === 'number' && !isNaN(rawGoldRate) ? rawGoldRate : (parseFloat(rawGoldRate) || 16263.65);
   const silverRate = typeof rawSilverRate === 'number' && !isNaN(rawSilverRate) ? rawSilverRate : (parseFloat(rawSilverRate) || 267.00);

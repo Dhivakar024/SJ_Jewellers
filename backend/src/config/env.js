@@ -26,6 +26,11 @@ export const config = {
   jwtExpiresInMinutes: parseInt(process.env.JWT_ACCESS_TOKEN_EXPIRE_MINUTES || '60', 10),
   devOtp: process.env.DEV_OTP || '123456',
 
+  // Initial Administrator Configuration
+  adminMobile: process.env.ADMIN_MOBILE || '9999999999',
+  adminEmail: process.env.ADMIN_EMAIL || 'admin@sjjewelers.com',
+  adminPassword: process.env.ADMIN_PASSWORD || 'Admin@SJJewelers#2026',
+
   // External Rates API
   metalRatesApiUrl: process.env.METAL_RATES_API_URL || null,
   metalRatesApiKey: process.env.METAL_RATES_API_KEY || null,

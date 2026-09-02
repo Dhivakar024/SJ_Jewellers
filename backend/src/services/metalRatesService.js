@@ -94,9 +94,24 @@ export async function getRatesAdmin() {
   };
 }
 
-export async function setCustomRates(adminUser, data) {
+export async function setCustomRates(adminUser, rawData = {}) {
   await checkAndExpireRates();
   const expiryUtc = getEndOfDayExpiryUTC();
+
+  // Normalize payload to handle { gold: { enabled, rate } } or { gold_rate, silver_rate } or { gold: number }
+  const data = { ...rawData };
+  if (data.gold_rate !== undefined && data.gold === undefined) {
+    data.gold = data.gold_rate !== null ? { enabled: true, rate: data.gold_rate } : { enabled: false };
+  }
+  if (data.silver_rate !== undefined && data.silver === undefined) {
+    data.silver = data.silver_rate !== null ? { enabled: true, rate: data.silver_rate } : { enabled: false };
+  }
+  if (typeof data.gold === 'number') {
+    data.gold = { enabled: true, rate: data.gold };
+  }
+  if (typeof data.silver === 'number') {
+    data.silver = { enabled: true, rate: data.silver };
+  }
 
   // Handle Gold
   if (data.gold) {

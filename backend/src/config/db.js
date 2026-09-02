@@ -306,19 +306,19 @@ async function createTables() {
 }
 
 async function seedInitialData() {
-  // 1. Seed Default Admin
+  // 1. Seed / Sync Default Admin
   const adminRows = await query(`SELECT id FROM users WHERE role = 'admin' LIMIT 1`);
+  const hashedPassword = await bcrypt.hash(config.adminPassword, 10);
   if (adminRows.length === 0) {
     const adminId = 'admin-user-00000000000000000001';
-    const hashedPassword = await bcrypt.hash('admin123', 10);
     await query(
       `INSERT INTO users (id, name, mobile, email, password_hash, role, account_status, kyc_status, profile_completed, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [
         adminId,
         'SJ Jewellers Admin',
-        '9999999999',
-        'admin@sjjewelers.com',
+        config.adminMobile,
+        config.adminEmail,
         hashedPassword,
         'admin',
         'active',
@@ -334,7 +334,13 @@ async function seedInitialData() {
       ['admin-profile-00000000000000000001', adminId, 'SJ Jewellers Admin']
     );
 
-    console.log('[MySQL Seed] Default administrator created (mobile: 9999999999 / pass: admin123)');
+    console.log('[MySQL Seed] Administrator account initialized');
+  } else {
+    // Keep admin credentials synced with environment config
+    await query(
+      `UPDATE users SET password_hash = ?, mobile = ?, email = ? WHERE id = ?`,
+      [hashedPassword, config.adminMobile, config.adminEmail, adminRows[0].id]
+    );
   }
 
   // 2. Seed Default Rates
