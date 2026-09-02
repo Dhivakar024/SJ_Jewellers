@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,9 +15,16 @@ import { COLORS, RADIUS, SHADOWS } from '../constants/theme';
 import { globalStyles } from '../styles/globalStyles';
 
 export default function HomeScreen({ navigation }) {
-  const { currentUser, goldRate, silverRate, holdings } = useApp();
+  const { currentUser, goldRate, silverRate, holdings, fetchLiveRates, fetchHoldings } = useApp();
   const [metalTab, setMetalTab] = useState('gold'); // 'gold' | 'silver'
   const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
+
+  useEffect(() => {
+    fetchLiveRates();
+    if (currentUser?.isAuthenticated) {
+      fetchHoldings();
+    }
+  }, [fetchLiveRates, fetchHoldings, currentUser?.isAuthenticated]);
 
   const handleNavigate = (screen, params = {}) => {
     setIsActionSheetOpen(false);

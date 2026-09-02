@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,9 +15,13 @@ import { COLORS, RADIUS, SHADOWS } from '../constants/theme';
 import { globalStyles } from '../styles/globalStyles';
 
 export default function TransactionHistoryScreen({ route, navigation }) {
-  const { transactions } = useApp();
+  const { transactions, fetchTransactions } = useApp();
   const fromScreen = route?.params?.fromScreen || 'Home';
   const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   // Active filters
   const [activeAsset, setActiveAsset] = useState('All');

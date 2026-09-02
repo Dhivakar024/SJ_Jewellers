@@ -16,6 +16,8 @@ import { cleanIndianMobileDigits, isValidIndianMobile } from '../utils/phoneUtil
 import { COLORS, RADIUS, SHADOWS } from '../constants/theme';
 import { globalStyles } from '../styles/globalStyles';
 
+import { authService } from '../services';
+
 export default function ForgotPasswordScreen({ navigation }) {
   const { resetUserPassword } = useApp();
 
@@ -30,7 +32,8 @@ export default function ForgotPasswordScreen({ navigation }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const handleStep1SendOtp = () => {
+  const handleStep1SendOtp = async () => {
+    if (isLoading) return;
     setError('');
     const cleanMobile = cleanIndianMobileDigits(mobile);
     if (!cleanMobile || cleanMobile.length !== 10 || !isValidIndianMobile(cleanMobile)) {
@@ -39,25 +42,36 @@ export default function ForgotPasswordScreen({ navigation }) {
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await authService.sendOtp(cleanMobile);
       setStep(2);
-    }, 400);
+    } catch (err) {
+      setError(err.message || 'Failed to dispatch verification code.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleStep2VerifyOtp = () => {
+  const handleStep2VerifyOtp = async () => {
+    if (isLoading) return;
     setError('');
     const cleanOtp = otp.trim();
+    const cleanMobile = cleanIndianMobileDigits(mobile);
+
     if (!cleanOtp || cleanOtp.length < 4) {
       setError('Please enter the verification code.');
       return;
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await authService.verifyOtp(cleanMobile, cleanOtp);
       setStep(3);
-    }, 400);
+    } catch (err) {
+      setError(err.message || 'Invalid or expired verification code.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleStep3Reset = async () => {

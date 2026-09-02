@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,9 +15,13 @@ import { COLORS, RADIUS, SHADOWS } from '../constants/theme';
 import { globalStyles } from '../styles/globalStyles';
 
 export default function ProfileScreen({ navigation }) {
-  const { currentUser, logoutUser } = useApp();
+  const { currentUser, logoutUser, fetchProfile } = useApp();
   const [isActionSheetOpen, setIsActionSheetOpen] = React.useState(false);
   const isProfileCompleted = currentUser.profileCompleted === true;
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const getKycBadgeColor = () => {
     const st = (currentUser.kycStatus || 'pending').toLowerCase();

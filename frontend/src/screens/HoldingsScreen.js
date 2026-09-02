@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,9 +14,14 @@ import { COLORS, RADIUS, SHADOWS } from '../constants/theme';
 import { globalStyles } from '../styles/globalStyles';
 
 export default function HoldingsScreen({ route, navigation }) {
-  const { holdings, goldRate, silverRate } = useApp();
+  const { holdings, goldRate, silverRate, fetchHoldings, fetchLiveRates } = useApp();
   const fromScreen = route?.params?.fromScreen || 'Home';
   const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
+
+  useEffect(() => {
+    fetchHoldings();
+    fetchLiveRates();
+  }, [fetchHoldings, fetchLiveRates]);
 
   const [lastUpdated] = useState(() => {
     const now = new Date();

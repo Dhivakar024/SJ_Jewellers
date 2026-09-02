@@ -1,6 +1,6 @@
 /**
  * Unified Transaction History Service
- * Retrieves customer combined purchases and withdrawals timeline from the FastAPI backend.
+ * Retrieves customer combined purchases and withdrawals timeline from backend.
  */
 
 import apiClient from './api/client';
@@ -8,46 +8,17 @@ import { ENDPOINTS } from './api/endpoints';
 
 export const transactionService = {
   /**
-   * Fetch paginated unified transaction history (purchases and withdrawals, newest first)
+   * Fetch paginated unified transaction history (purchases and withdrawals)
    */
-  getTransactions: async ({
-    type,
-    metal,
-    direction,
-    status,
-    from_date,
-    to_date,
-    search,
-    page = 1,
-    limit = 20,
-  } = {}) => {
-    return apiClient.get(ENDPOINTS.TRANSACTIONS.LIST, {
-      params: {
-        type,
-        metal,
-        direction,
-        status,
-        from_date,
-        to_date,
-        search,
-        page,
-        limit,
-      },
-    });
-  },
-
-  /**
-   * Fetch paginated unified transaction history (alias)
-   */
-  getMyTransactions: async (params = {}) => {
+  getTransactions: async (params = {}) => {
     return apiClient.get(ENDPOINTS.TRANSACTIONS.LIST, { params });
   },
 
   /**
-   * Fetch single normalized transaction detail by transaction ID
+   * Fetch single transaction detail by ID
    */
-  getTransactionById: async (transactionId) => {
-    return apiClient.get(ENDPOINTS.TRANSACTIONS.DETAIL(transactionId));
+  getTransactionById: async (id) => {
+    return apiClient.get(ENDPOINTS.TRANSACTIONS.DETAIL(id));
   },
 };
 

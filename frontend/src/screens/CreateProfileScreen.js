@@ -224,7 +224,7 @@ export default function CreateProfileScreen({ route, navigation }) {
     setErrors({});
 
     setIsSubmitting(true);
-    setTimeout(async () => {
+    try {
       const updatedUserObj = {
         name: formData.name.trim(),
         email: formData.email.trim() || null,
@@ -256,7 +256,10 @@ export default function CreateProfileScreen({ route, navigation }) {
       } else {
         navigation.replace('Home');
       }
-    }, 400);
+    } catch (err) {
+      setIsSubmitting(false);
+      setErrorMessage(err.message || 'Failed to update profile. Please try again.');
+    }
   };
 
   return (

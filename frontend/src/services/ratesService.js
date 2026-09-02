@@ -1,12 +1,18 @@
 /**
- * Rates Service
+ * Metal Rates Service
+ * Fetches current Gold & Silver rates from Node.js + Express backend.
  */
 
-import { api } from './api/client';
+import apiClient from './api/client';
 import { ENDPOINTS } from './api/endpoints';
 
 export const ratesService = {
+  /**
+   * Fetch active Gold & Silver rates (public endpoint)
+   */
   getLiveRates: async () => {
-    return await api.get(ENDPOINTS.GET_RATES, { requiresAuth: false });
+    return apiClient.get(ENDPOINTS.RATES.LIVE, { requiresAuth: false });
   },
 };
+
+export default ratesService;

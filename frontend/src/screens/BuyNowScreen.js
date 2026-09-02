@@ -17,8 +17,12 @@ import { COLORS, RADIUS, SHADOWS } from '../constants/theme';
 import { globalStyles } from '../styles/globalStyles';
 
 export default function BuyNowScreen({ route, navigation }) {
-  const { goldRate, silverRate, addPurchaseTransaction, buyNowState, setBuyNowState } = useApp();
+  const { goldRate, silverRate, addPurchaseTransaction, buyNowState, setBuyNowState, fetchLiveRates } = useApp();
   const initialAsset = route?.params?.assetType || buyNowState?.assetType || 'gold';
+
+  useEffect(() => {
+    fetchLiveRates();
+  }, [fetchLiveRates]);
 
   const [selectedAsset, setSelectedAsset] = useState(initialAsset);
   const isGold = selectedAsset === 'gold';
@@ -126,7 +130,7 @@ export default function BuyNowScreen({ route, navigation }) {
     setIsProcessing(false);
   };
 
-  const handleConfirmPay = () => {
+  const handleConfirmPay = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
 
@@ -136,8 +140,8 @@ export default function BuyNowScreen({ route, navigation }) {
     const gstVal = parseFloat((metalVal * 0.03).toFixed(2));
     const totalVal = parseFloat((metalVal + gstVal).toFixed(2));
 
-    setTimeout(() => {
-      addPurchaseTransaction({
+    try {
+      await addPurchaseTransaction({
         assetType: currentAsset,
         asset: currentAsset === 'gold' ? 'Gold' : 'Silver',
         amount: totalVal,
@@ -154,7 +158,10 @@ export default function BuyNowScreen({ route, navigation }) {
         setPaymentSuccess(false);
         navigation.navigate('TransactionHistory', { fromScreen: 'buy' });
       }, 1200);
-    }, 600);
+    } catch (err) {
+      setIsProcessing(false);
+      alert(err.message || 'Purchase failed. Please try again.');
+    }
   };
 
   const handleNavigate = (screen, params = {}) => {

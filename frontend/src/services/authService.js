@@ -1,44 +1,54 @@
 /**
  * Authentication Service
+ * Communicates with Node.js + Express backend for OTP, registration, login, and session checks.
  */
 
-import { api } from './api/client';
+import apiClient from './api/client';
 import { ENDPOINTS } from './api/endpoints';
 
 export const authService = {
-  login: async (credentials) => {
-    return await api.post(ENDPOINTS.LOGIN, credentials, { requiresAuth: false });
-  },
-
-  register: async (userData) => {
-    return await api.post(ENDPOINTS.REGISTER, userData, { requiresAuth: false });
-  },
-
+  /**
+   * Dispatch OTP to mobile number
+   */
   sendOtp: async (mobile) => {
-    return await api.post(ENDPOINTS.SEND_OTP, { mobile }, { requiresAuth: false });
+    return apiClient.post(ENDPOINTS.AUTH.SEND_OTP, { mobile }, { requiresAuth: false });
   },
 
+  /**
+   * Verify entered OTP for mobile number
+   */
   verifyOtp: async (mobile, otp) => {
-    return await api.post(ENDPOINTS.VERIFY_OTP, { mobile, otp }, { requiresAuth: false });
+    return apiClient.post(ENDPOINTS.AUTH.VERIFY_OTP, { mobile, otp }, { requiresAuth: false });
   },
 
-  forgotPassword: async (mobile) => {
-    return await api.post(ENDPOINTS.FORGOT_PASSWORD, { mobile }, { requiresAuth: false });
+  /**
+   * Register new user account
+   */
+  register: async ({ name, mobile, email, password }) => {
+    return apiClient.post(
+      ENDPOINTS.AUTH.REGISTER,
+      { name, mobile, email, password },
+      { requiresAuth: false }
+    );
   },
 
-  resetPassword: async (data) => {
-    return await api.post(ENDPOINTS.RESET_PASSWORD, data, { requiresAuth: false });
+  /**
+   * Authenticate user with mobile and password
+   */
+  login: async ({ mobile, password }) => {
+    return apiClient.post(
+      ENDPOINTS.AUTH.LOGIN,
+      { mobile, password },
+      { requiresAuth: false }
+    );
   },
 
+  /**
+   * Fetch current authenticated user record
+   */
   getMe: async () => {
-    return await api.get(ENDPOINTS.GET_ME);
-  },
-
-  logout: async () => {
-    try {
-      await api.post(ENDPOINTS.LOGOUT);
-    } catch {
-      // Best effort
-    }
+    return apiClient.get(ENDPOINTS.AUTH.ME);
   },
 };
+
+export default authService;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,9 +17,15 @@ import { COLORS, RADIUS, SHADOWS } from '../constants/theme';
 import { globalStyles } from '../styles/globalStyles';
 
 export default function WithdrawScreen({ route, navigation }) {
-  const { currentUser, holdings, goldRate, silverRate, submitKycRequest, requestWithdrawal } = useApp();
+  const { currentUser, holdings, goldRate, silverRate, submitKycRequest, requestWithdrawal, fetchHoldings, fetchLiveRates, fetchProfile } = useApp();
   const fromScreen = route?.params?.fromScreen || 'Home';
   const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
+
+  useEffect(() => {
+    fetchHoldings();
+    fetchLiveRates();
+    fetchProfile();
+  }, [fetchHoldings, fetchLiveRates, fetchProfile]);
 
   const isKycVerified =
     (currentUser?.kycStatus || '').toLowerCase() === 'verified' ||
@@ -63,7 +69,8 @@ export default function WithdrawScreen({ route, navigation }) {
     setShowWithdrawModal(true);
   };
 
-  const handleSubmitKyc = () => {
+  const handleSubmitKyc = async () => {
+    if (isSubmittingKyc) return;
     setKycError('');
     const cleanPan = (pan || '').trim().toUpperCase();
     const cleanAadhar = (aadhar || '').replace(/\D/g, '');
@@ -84,18 +91,21 @@ export default function WithdrawScreen({ route, navigation }) {
     }
 
     setIsSubmittingKyc(true);
-    setTimeout(() => {
-      submitKycRequest({ pan: cleanPan, aadhar: cleanAadhar });
+    try {
+      await submitKycRequest({ pan: cleanPan, aadhar: cleanAadhar });
       setKycSuccess(true);
       setTimeout(() => {
         setKycSuccess(false);
         setShowKycModal(false);
         setIsSubmittingKyc(false);
       }, 1000);
-    }, 400);
+    } catch (err) {
+      setIsSubmittingKyc(false);
+      setKycError(err.message || 'KYC submission failed. Please try again.');
+    }
   };
 
-  const handleConfirmWithdrawal = () => {
+  const handleConfirmWithdrawal = async () => {
     if (isSubmittingWithdrawal) return;
     setWithdrawError('');
 
@@ -112,25 +122,21 @@ export default function WithdrawScreen({ route, navigation }) {
       return;
     }
 
-    if (withdrawAsset === 'Gold' && g < 0.5) {
-      setWithdrawError('Minimum gold withdrawal is 0.5 grams.');
+    if (withdrawAsset === 'Gold' && g < 0.001) {
+      setWithdrawError('Minimum gold withdrawal is 0.001 grams.');
       return;
     }
 
-    if (withdrawAsset === 'Silver' && g < 10.0) {
-      setWithdrawError('Minimum silver withdrawal is 10.0 grams.');
+    if (withdrawAsset === 'Silver' && g < 0.001) {
+      setWithdrawError('Minimum silver withdrawal is 0.001 grams.');
       return;
     }
-
-    const rate = withdrawAsset === 'Gold' ? goldRate : silverRate;
-    const amountVal = g * rate;
 
     setIsSubmittingWithdrawal(true);
-    setTimeout(() => {
-      requestWithdrawal({
-        asset: withdrawAsset,
-        quantity: g,
-        amount: amountVal,
+    try {
+      await requestWithdrawal({
+        metal: withdrawAsset.toLowerCase(),
+        grams: g,
       });
 
       setWithdrawSuccess(true);
@@ -141,7 +147,10 @@ export default function WithdrawScreen({ route, navigation }) {
         setShowWithdrawModal(false);
         navigation.navigate('TransactionHistory', { fromScreen: 'withdraw' });
       }, 1200);
-    }, 500);
+    } catch (err) {
+      setIsSubmittingWithdrawal(false);
+      setWithdrawError(err.message || 'Withdrawal request failed. Please try again.');
+    }
   };
 
   const handleNavigate = (screen, params = {}) => {

@@ -1,16 +1,33 @@
 /**
  * Purchase Service
+ * Creates Gold & Silver buy transactions on the backend.
  */
 
-import { api } from './api/client';
+import apiClient from './api/client';
 import { ENDPOINTS } from './api/endpoints';
 
 export const purchaseService = {
-  createPurchase: async (purchaseData) => {
-    return await api.post(ENDPOINTS.CREATE_PURCHASE, purchaseData);
+  /**
+   * Submit purchase order for metal
+   * @param {Object} data - { metal: 'gold' | 'silver', quantity_grams: number }
+   */
+  createPurchase: async (data) => {
+    return apiClient.post(ENDPOINTS.PURCHASES.CREATE, data);
   },
 
-  getTransactions: async (params = {}) => {
-    return await api.get(ENDPOINTS.GET_TRANSACTIONS, { params });
+  /**
+   * Fetch customer purchase history
+   */
+  getPurchases: async (params = {}) => {
+    return apiClient.get(ENDPOINTS.PURCHASES.LIST, { params });
+  },
+
+  /**
+   * Fetch single purchase by ID
+   */
+  getPurchaseById: async (id) => {
+    return apiClient.get(ENDPOINTS.PURCHASES.DETAIL(id));
   },
 };
+
+export default purchaseService;

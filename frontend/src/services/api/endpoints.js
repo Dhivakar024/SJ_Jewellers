@@ -1,32 +1,71 @@
 /**
- * Centralized API Endpoints
+ * Centralized API Endpoints for SJ Jewellers Backend
  */
 
 export const ENDPOINTS = {
-  // Auth
-  LOGIN: '/auth/login',
-  REGISTER: '/auth/register',
-  LOGOUT: '/auth/logout',
-  SEND_OTP: '/auth/send-otp',
-  VERIFY_OTP: '/auth/verify-otp',
-  FORGOT_PASSWORD: '/auth/forgot-password',
-  RESET_PASSWORD: '/auth/reset-password',
-  GET_ME: '/auth/me',
+  // Health
+  HEALTH: '/health',
+
+  // Authentication
+  AUTH: {
+    SEND_OTP: '/api/auth/send-otp',
+    VERIFY_OTP: '/api/auth/verify-otp',
+    REGISTER: '/api/auth/register',
+    LOGIN: '/api/auth/login',
+    ME: '/api/auth/me',
+  },
 
   // Profile
-  GET_PROFILE: '/profile',
-  UPDATE_PROFILE: '/profile',
-  SUBMIT_KYC: '/profile/kyc',
+  PROFILE: {
+    ME: '/api/profile/me',
+  },
 
-  // Rates & Holdings
-  GET_RATES: '/rates/live',
-  GET_HOLDINGS: '/holdings',
+  // KYC
+  KYC: {
+    ME: '/api/kyc/me',
+    SUBMIT: '/api/kyc/submit',
+  },
 
-  // Purchases & Transactions
-  CREATE_PURCHASE: '/purchases/create',
-  GET_TRANSACTIONS: '/transactions',
+  // Rates
+  RATES: {
+    LIVE: '/api/rates',
+  },
+
+  // Holdings
+  HOLDINGS: {
+    ME: '/api/holdings/me',
+    BY_METAL: (metal) => `/api/holdings/me/${metal}`,
+  },
+
+  // Purchases
+  PURCHASES: {
+    CREATE: '/api/purchases',
+    LIST: '/api/purchases',
+    DETAIL: (id) => `/api/purchases/${id}`,
+  },
 
   // Withdrawals
-  REQUEST_WITHDRAWAL: '/withdrawals/request',
-  GET_WITHDRAWALS: '/withdrawals',
+  WITHDRAWALS: {
+    CREATE: '/api/withdrawals',
+    LIST: '/api/withdrawals',
+    DETAIL: (id) => `/api/withdrawals/${id}`,
+    CANCEL: (id) => `/api/withdrawals/${id}/cancel`,
+  },
+
+  // Transactions (Unified)
+  TRANSACTIONS: {
+    LIST: '/api/transactions',
+    DETAIL: (id) => `/api/transactions/${id}`,
+  },
+
+  // Notifications
+  NOTIFICATIONS: {
+    LIST: '/api/notifications',
+    UNREAD_COUNT: '/api/notifications/unread-count',
+    DETAIL: (id) => `/api/notifications/${id}`,
+    MARK_READ: (id) => `/api/notifications/${id}/read`,
+    MARK_ALL_READ: '/api/notifications/read-all',
+  },
 };
+
+export default ENDPOINTS;

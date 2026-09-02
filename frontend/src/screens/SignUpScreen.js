@@ -16,6 +16,8 @@ import { cleanIndianMobileDigits, isValidIndianMobile, isValidFullName } from '.
 import { COLORS, RADIUS, SHADOWS } from '../constants/theme';
 import { globalStyles } from '../styles/globalStyles';
 
+import { authService } from '../services';
+
 export default function SignUpScreen({ navigation }) {
   const { registerUser } = useApp();
 
@@ -30,7 +32,8 @@ export default function SignUpScreen({ navigation }) {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleStep1Submit = () => {
+  const handleStep1Submit = async () => {
+    if (isLoading) return;
     setError('');
     const cleanName = name.trim();
     const cleanMobile = cleanIndianMobileDigits(mobile);
@@ -46,28 +49,40 @@ export default function SignUpScreen({ navigation }) {
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await authService.sendOtp(cleanMobile);
       setStep(2);
-    }, 400);
+    } catch (err) {
+      setError(err.message || 'Failed to dispatch verification code.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleStep2VerifyOtp = () => {
+  const handleStep2VerifyOtp = async () => {
+    if (isLoading) return;
     setError('');
     const cleanOtp = otp.trim();
+    const cleanMobile = cleanIndianMobileDigits(mobile);
+
     if (!cleanOtp || cleanOtp.length < 4) {
       setError('Please enter the 6-digit verification code.');
       return;
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await authService.verifyOtp(cleanMobile, cleanOtp);
       setStep(3);
-    }, 400);
+    } catch (err) {
+      setError(err.message || 'Invalid or expired OTP. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleStep3Finish = async () => {
+    if (isLoading) return;
     setError('');
     if (!password || password.length < 6) {
       setError('Password must be at least 6 characters.');
@@ -78,17 +93,22 @@ export default function SignUpScreen({ navigation }) {
       return;
     }
 
-    setIsLoading(true);
-    setTimeout(async () => {
-      const registered = await registerUser(name.trim(), mobile.trim(), password);
-      setIsLoading(false);
+    const cleanName = name.trim();
+    const cleanMobile = cleanIndianMobileDigits(mobile);
 
+    setIsLoading(true);
+    try {
+      const registered = await registerUser(cleanName, cleanMobile, password);
       if (registered) {
         navigation.replace('CreateProfile', { mode: 'create', source: 'signup', fromScreen: 'signup' });
       } else {
         setError('An account with this mobile number already exists.');
       }
-    }, 400);
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleBack = () => {

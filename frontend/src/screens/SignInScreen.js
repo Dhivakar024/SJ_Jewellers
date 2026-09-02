@@ -46,6 +46,7 @@ export default function SignInScreen({ navigation }) {
   };
 
   const handleSignIn = async () => {
+    if (isLoading) return;
     setError('');
 
     const cleanMobile = cleanIndianMobileDigits(mobile);
@@ -60,10 +61,8 @@ export default function SignInScreen({ navigation }) {
     }
 
     setIsLoading(true);
-    setTimeout(async () => {
+    try {
       const user = await loginUser(cleanMobile, password);
-      setIsLoading(false);
-
       if (user) {
         if (!user.profileCompleted) {
           navigation.replace('CreateProfile', { mode: 'create', source: 'signup', fromScreen: 'signup' });
@@ -73,7 +72,11 @@ export default function SignInScreen({ navigation }) {
       } else {
         setError('Invalid mobile number or password.');
       }
-    }, 400);
+    } catch (err) {
+      setError(err.message || 'Invalid mobile number or password.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
