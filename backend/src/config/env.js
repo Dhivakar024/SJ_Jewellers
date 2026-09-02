@@ -27,9 +27,9 @@ export const config = {
   devOtp: process.env.DEV_OTP || '123456',
 
   // Initial Administrator Configuration
-  adminMobile: process.env.ADMIN_MOBILE || '9999999999',
-  adminEmail: process.env.ADMIN_EMAIL || 'admin@sjjewelers.com',
-  adminPassword: process.env.ADMIN_PASSWORD || 'Admin@SJJewelers#2026',
+  adminMobile: process.env.ADMIN_MOBILE || '9790400432',
+  adminEmail: process.env.ADMIN_EMAIL || 'sjjewellery174@gmail.com',
+  adminPassword: process.env.ADMIN_PASSWORD || 'Sjj@2026',
 
   // External Rates API
   metalRatesApiUrl: process.env.METAL_RATES_API_URL || null,

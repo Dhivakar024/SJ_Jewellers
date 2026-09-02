@@ -129,7 +129,18 @@ export async function registerUser({ name, mobile: rawMobile, email, password })
   };
 }
 
-export async function loginUser({ mobile: rawIdent, password }) {
+export async function loginUser(dataOrIdent, maybePassword) {
+  let rawIdent = '';
+  let password = '';
+
+  if (typeof dataOrIdent === 'object' && dataOrIdent !== null) {
+    rawIdent = dataOrIdent.mobile || dataOrIdent.identifier || dataOrIdent.email || dataOrIdent.username || '';
+    password = dataOrIdent.password || '';
+  } else {
+    rawIdent = dataOrIdent;
+    password = maybePassword;
+  }
+
   const ident = (rawIdent || '').toString().trim();
   const { mobile, variants } = normalizeMobile(ident);
   const allIdents = Array.from(new Set([ident, mobile, ...variants]));
