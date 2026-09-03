@@ -29,13 +29,14 @@ function getDefaultDateRange() {
 }
 
 export default function AdminAnalytics() {
+  const appContext = useApp() || {};
   const { 
     goldRate: liveGoldRate, 
     silverRate: liveSilverRate, 
     transactions = [], 
     withdrawals = [],
     refreshAllData 
-  } = useApp() || {};
+  } = appContext;
 
   const currentQInfo = useMemo(() => getCurrentQuarterInfo(), []);
   const defaultDates = useMemo(() => getDefaultDateRange(), []);
@@ -63,7 +64,7 @@ export default function AdminAnalytics() {
         from_date: fromDate,
         to_date: toDate,
       });
-      if (data) {
+      if (data && typeof data === 'object') {
         setAnalyticsData(data);
       }
     } catch (err) {
@@ -77,24 +78,8 @@ export default function AdminAnalytics() {
     fetchAnalytics();
   }, [fetchAnalytics]);
 
-  // Client-side fallback / real-time synchronization from shared store
-  const safeGoldRate = analyticsData?.overall?.gold_rate || liveGoldRate || 16263.65;
-  const safeSilverRate = analyticsData?.overall?.silver_rate || liveSilverRate || 267.00;
-
-  // Overall holdings calculations from database
-  const totalGoldBought = analyticsData?.overall?.total_gold_bought !== undefined 
-    ? analyticsData.overall.total_gold_bought 
-    : transactions.filter(t => (t?.metal || t?.asset || '').toLowerCase().includes('gold') && (t?.status === 'Success' || t?.rawStatus === 'completed')).reduce((sum, t) => sum + (parseFloat(t.grams) || 0), 0);
-
-  const totalSilverBought = analyticsData?.overall?.total_silver_bought !== undefined 
-    ? analyticsData.overall.total_silver_bought 
-    : transactions.filter(t => (t?.metal || t?.asset || '').toLowerCase().includes('silver') && (t?.status === 'Success' || t?.rawStatus === 'completed')).reduce((sum, t) => sum + (parseFloat(t.grams) || 0), 0);
-
-  const totalGoldCurrentValue = totalGoldBought * safeGoldRate;
-  const totalSilverCurrentValue = totalSilverBought * safeSilverRate;
-
-  // Period specific metrics
-  const dateRangeText = analyticsData?.date_range_text || useMemo(() => {
+  // Client-side fallback computation for date range text
+  const fallbackDateRangeText = useMemo(() => {
     const now = new Date();
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, '0');
@@ -107,7 +92,7 @@ export default function AdminAnalytics() {
       return `Showing ${yyyy}-01-01 to ${yyyy}-${mm}-${dd}`;
     }
     if (period === 'Quarterly') {
-      const q = quarter.toUpperCase();
+      const q = (quarter || '').toUpperCase();
       if (q.includes('Q1')) return `Showing ${year}-01-01 to ${year}-03-31`;
       if (q.includes('Q2')) return `Showing ${year}-04-01 to ${year}-06-30`;
       if (q.includes('Q3')) return `Showing ${year}-07-01 to ${year}-09-30`;
@@ -116,28 +101,57 @@ export default function AdminAnalytics() {
     return `Showing ${fromDate} to ${toDate}`;
   }, [period, quarter, year, fromDate, toDate]);
 
-  const goldPeriodGrams = analyticsData?.gold?.grams !== undefined ? analyticsData.gold.grams : 0;
-  const goldPeriodValue = analyticsData?.gold?.value !== undefined ? analyticsData.gold.value : 0;
-  const goldPeriodAvgRate = analyticsData?.gold?.avg_rate !== undefined ? analyticsData.gold.avg_rate : (goldPeriodGrams > 0 ? goldPeriodValue / goldPeriodGrams : 0);
-  const goldBars = analyticsData?.gold?.bars || [];
+  const dateRangeText = analyticsData?.date_range_text || fallbackDateRangeText;
 
-  const silverPeriodGrams = analyticsData?.silver?.grams !== undefined ? analyticsData.silver.grams : 0;
-  const silverPeriodValue = analyticsData?.silver?.value !== undefined ? analyticsData.silver.value : 0;
-  const silverPeriodAvgRate = analyticsData?.silver?.avg_rate !== undefined ? analyticsData.silver.avg_rate : (silverPeriodGrams > 0 ? silverPeriodValue / silverPeriodGrams : 0);
-  const silverBars = analyticsData?.silver?.bars || [];
+  // Safe live rates
+  const safeGoldRate = Number(analyticsData?.overall?.gold_rate) || Number(liveGoldRate) || 16263.65;
+  const safeSilverRate = Number(analyticsData?.overall?.silver_rate) || Number(liveSilverRate) || 267.00;
 
-  const periodWithdrawalValue = analyticsData?.withdrawals?.total_value !== undefined ? analyticsData.withdrawals.total_value : 0;
+  // Overall holdings calculations from database
+  const totalGoldBought = analyticsData?.overall?.total_gold_bought !== undefined 
+    ? Number(analyticsData.overall.total_gold_bought) || 0
+    : transactions
+        .filter(t => (t?.metal || t?.asset || '').toLowerCase().includes('gold') && (t?.status === 'Success' || t?.rawStatus === 'completed'))
+        .reduce((sum, t) => sum + (parseFloat(t.grams) || 0), 0);
+
+  const totalSilverBought = analyticsData?.overall?.total_silver_bought !== undefined 
+    ? Number(analyticsData.overall.total_silver_bought) || 0
+    : transactions
+        .filter(t => (t?.metal || t?.asset || '').toLowerCase().includes('silver') && (t?.status === 'Success' || t?.rawStatus === 'completed'))
+        .reduce((sum, t) => sum + (parseFloat(t.grams) || 0), 0);
+
+  const totalGoldCurrentValue = totalGoldBought * safeGoldRate;
+  const totalSilverCurrentValue = totalSilverBought * safeSilverRate;
+
+  // Period specific metrics
+  const goldPeriodGrams = analyticsData?.gold?.grams !== undefined ? Number(analyticsData.gold.grams) || 0 : 0;
+  const goldPeriodValue = analyticsData?.gold?.value !== undefined ? Number(analyticsData.gold.value) || 0 : 0;
+  const goldPeriodAvgRate = analyticsData?.gold?.avg_rate !== undefined 
+    ? Number(analyticsData.gold.avg_rate) || 0 
+    : (goldPeriodGrams > 0 ? goldPeriodValue / goldPeriodGrams : 0);
+  const goldBars = Array.isArray(analyticsData?.gold?.bars) ? analyticsData.gold.bars : [];
+
+  const silverPeriodGrams = analyticsData?.silver?.grams !== undefined ? Number(analyticsData.silver.grams) || 0 : 0;
+  const silverPeriodValue = analyticsData?.silver?.value !== undefined ? Number(analyticsData.silver.value) || 0 : 0;
+  const silverPeriodAvgRate = analyticsData?.silver?.avg_rate !== undefined 
+    ? Number(analyticsData.silver.avg_rate) || 0 
+    : (silverPeriodGrams > 0 ? silverPeriodValue / silverPeriodGrams : 0);
+  const silverBars = Array.isArray(analyticsData?.silver?.bars) ? analyticsData.silver.bars : [];
+
+  const periodWithdrawalValue = analyticsData?.withdrawals?.total_value !== undefined 
+    ? Number(analyticsData.withdrawals.total_value) || 0 
+    : 0;
 
   // Compute maximums for bar chart Y axes
   const maxGoldGrams = useMemo(() => {
-    if (goldBars.length === 0) return 1;
-    const max = Math.max(...goldBars.map((b) => b.grams), 0);
+    if (!goldBars || goldBars.length === 0) return 1;
+    const max = Math.max(...goldBars.map((b) => Number(b.grams) || 0), 0);
     return max > 0 ? (max <= 1 ? 1 : Math.ceil(max)) : 1;
   }, [goldBars]);
 
   const maxSilverGrams = useMemo(() => {
-    if (silverBars.length === 0) return 1;
-    const max = Math.max(...silverBars.map((b) => b.grams), 0);
+    if (!silverBars || silverBars.length === 0) return 1;
+    const max = Math.max(...silverBars.map((b) => Number(b.grams) || 0), 0);
     return max > 0 ? (max <= 1 ? 1 : Math.ceil(max)) : 1;
   }, [silverBars]);
 
@@ -342,7 +356,8 @@ export default function AdminAnalytics() {
                 {/* Bars */}
                 <div style={{ flex: 1, display: 'flex', justifyContent: 'space-around', height: '100%', alignItems: 'flex-end', zIndex: 1 }}>
                   {goldBars.map((bar, idx) => {
-                    const heightPct = maxGoldGrams > 0 ? Math.min((bar.grams / maxGoldGrams) * 100, 100) : 0;
+                    const barGrams = Number(bar.grams) || 0;
+                    const heightPct = maxGoldGrams > 0 ? Math.min((barGrams / maxGoldGrams) * 100, 100) : 0;
                     return (
                       <div
                         key={idx}
@@ -379,7 +394,7 @@ export default function AdminAnalytics() {
                   whiteSpace: 'nowrap'
                 }}>
                   <div style={{ color: 'var(--admin-text-secondary)' }}>{hoveredGoldBar.full_date || hoveredGoldBar.date}</div>
-                  <div style={{ fontWeight: '700', color: 'var(--admin-gold-pie)' }}>Gold: {hoveredGoldBar.grams} g (₹{hoveredGoldBar.value?.toLocaleString('en-IN')})</div>
+                  <div style={{ fontWeight: '700', color: 'var(--admin-gold-pie)' }}>Gold: {hoveredGoldBar.grams} g (₹{(Number(hoveredGoldBar.value) || 0).toLocaleString('en-IN')})</div>
                 </div>
               )}
 
@@ -447,7 +462,8 @@ export default function AdminAnalytics() {
                 {/* Bars */}
                 <div style={{ flex: 1, display: 'flex', justifyContent: 'space-around', height: '100%', alignItems: 'flex-end', zIndex: 1 }}>
                   {silverBars.map((bar, idx) => {
-                    const heightPct = maxSilverGrams > 0 ? Math.min((bar.grams / maxSilverGrams) * 100, 100) : 0;
+                    const barGrams = Number(bar.grams) || 0;
+                    const heightPct = maxSilverGrams > 0 ? Math.min((barGrams / maxSilverGrams) * 100, 100) : 0;
                     return (
                       <div
                         key={idx}
@@ -484,7 +500,7 @@ export default function AdminAnalytics() {
                   whiteSpace: 'nowrap'
                 }}>
                   <div style={{ color: 'var(--admin-text-secondary)' }}>{hoveredSilverBar.full_date || hoveredSilverBar.date}</div>
-                  <div style={{ fontWeight: '700', color: 'var(--admin-silver-pie)' }}>Silver: {hoveredSilverBar.grams} g (₹{hoveredSilverBar.value?.toLocaleString('en-IN')})</div>
+                  <div style={{ fontWeight: '700', color: 'var(--admin-silver-pie)' }}>Silver: {hoveredSilverBar.grams} g (₹{(Number(hoveredSilverBar.value) || 0).toLocaleString('en-IN')})</div>
                 </div>
               )}
 
