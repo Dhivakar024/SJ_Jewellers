@@ -292,14 +292,23 @@ export function AppProvider({ children }) {
   // Save Rates Action (Real Backend)
   const saveRates = useCallback(async ({ newGoldRate, newSilverRate, goldCustom, silverCustom, goldInputVal, silverInputVal }) => {
     try {
-      if (goldCustom || silverCustom) {
-        await adminService.setCustomRates({
-          gold_rate: goldCustom ? parseFloat(goldInputVal || newGoldRate) : null,
-          silver_rate: silverCustom ? parseFloat(silverInputVal || newSilverRate) : null,
-        });
-      } else {
+      await adminService.setCustomRates({
+        gold: {
+          enabled: Boolean(goldCustom),
+          rate: goldCustom ? parseFloat(goldInputVal || newGoldRate) : undefined,
+        },
+        silver: {
+          enabled: Boolean(silverCustom),
+          rate: silverCustom ? parseFloat(silverInputVal || newSilverRate) : undefined,
+        },
+        gold_rate: goldCustom ? parseFloat(goldInputVal || newGoldRate) : null,
+        silver_rate: silverCustom ? parseFloat(silverInputVal || newSilverRate) : null,
+      });
+
+      if (!goldCustom && !silverCustom) {
         await adminService.refreshRates();
       }
+
       await fetchRates();
       await fetchDashboard();
     } catch (err) {

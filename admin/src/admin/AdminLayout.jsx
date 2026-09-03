@@ -12,7 +12,7 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
     adminTheme = 'light', 
     toggleAdminTheme, 
     pendingVerifications = [], 
-    withdrawals = [], 
+    logoutAdmin,
     setAdminAuth,
     adminSettings = { username: 'SJ Jewellers' } 
   } = useApp() || {};
@@ -24,11 +24,13 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
   const totalNotifications = pendingWithdrawalsCount + pendingVerificationsCount;
 
   const handleLogout = () => {
-    localStorage.setItem('sj_admin_logged_out', 'true');
-    localStorage.removeItem('sj_admin_session');
-    sessionStorage.removeItem('sj_admin_session');
-    if (typeof setAdminAuth === 'function') {
-      setAdminAuth({ isAuthenticated: false, email: '', role: null });
+    if (typeof logoutAdmin === 'function') {
+      logoutAdmin();
+    } else {
+      clearAllAuth();
+      if (typeof setAdminAuth === 'function') {
+        setAdminAuth({ isAuthenticated: false, user: null, token: null });
+      }
     }
   };
 

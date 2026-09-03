@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 
 export default function AdminRates() {
@@ -7,11 +7,12 @@ export default function AdminRates() {
     silverRate, 
     apiGoldRate = 16263.65,
     apiSilverRate = 267.00,
-    isGoldCustom, 
-    isSilverCustom, 
-    customGoldInput, 
-    customSilverInput, 
-    saveRates 
+    isGoldCustom = false, 
+    isSilverCustom = false, 
+    customGoldInput = '', 
+    customSilverInput = '', 
+    saveRates,
+    refreshAllData 
   } = useApp() || {};
 
   const [goldCustom, setGoldCustom] = useState(Boolean(isGoldCustom));
@@ -19,6 +20,26 @@ export default function AdminRates() {
   const [goldInput, setGoldInput] = useState(customGoldInput || (goldRate ? goldRate.toString() : '16263.65'));
   const [silverInput, setSilverInput] = useState(customSilverInput || (silverRate ? silverRate.toString() : '267.00'));
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Sync state when AppContext rates update from backend
+  useEffect(() => {
+    setGoldCustom(Boolean(isGoldCustom));
+    if (customGoldInput) {
+      setGoldInput(customGoldInput);
+    } else if (goldRate) {
+      setGoldInput(goldRate.toString());
+    }
+  }, [isGoldCustom, customGoldInput, goldRate]);
+
+  useEffect(() => {
+    setSilverCustom(Boolean(isSilverCustom));
+    if (customSilverInput) {
+      setSilverInput(customSilverInput);
+    } else if (silverRate) {
+      setSilverInput(silverRate.toString());
+    }
+  }, [isSilverCustom, customSilverInput, silverRate]);
 
   const liveGoldRate = apiGoldRate || 16263.65;
   const liveSilverRate = apiSilverRate || 267.00;
@@ -44,6 +65,16 @@ export default function AdminRates() {
     const gVal = goldCustom ? (parseFloat(goldInput) || liveGoldRate) : liveGoldRate;
     const sVal = silverCustom ? (parseFloat(silverInput) || liveSilverRate) : liveSilverRate;
 
+    if (goldCustom && (!gVal || isNaN(gVal) || gVal <= 0)) {
+      alert('Please enter a valid positive rate for Gold.');
+      return;
+    }
+    if (silverCustom && (!sVal || isNaN(sVal) || sVal <= 0)) {
+      alert('Please enter a valid positive rate for Silver.');
+      return;
+    }
+
+    setIsSaving(true);
     try {
       if (typeof saveRates === 'function') {
         await saveRates({
@@ -57,9 +88,15 @@ export default function AdminRates() {
       }
 
       setSavedSuccess(true);
-      setTimeout(() => setSavedSuccess(false), 2500);
+      setTimeout(() => setSavedSuccess(false), 3000);
     } catch (err) {
-      alert(err.message || 'Failed to update rates.');
+      if (err.status === 401 || err.message?.includes('authenticated') || err.message?.includes('token')) {
+        alert('Your session has expired or is not authenticated. Please sign in again.');
+      } else {
+        alert(err.message || 'Failed to update rates.');
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -90,17 +127,17 @@ export default function AdminRates() {
                 {/* Gold Indicator & Label */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div style={{
-                    width: '38px',
-                    height: '38px',
+                    width: '32px',
+                    height: '32px',
                     borderRadius: '50%',
                     backgroundColor: '#fef3c7',
-                    color: '#D4A017',
+                    color: '#d97706',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontWeight: '800',
                     fontSize: '16px',
-                    boxShadow: '0 1px 3px rgba(212, 160, 23, 0.2)',
+                    boxShadow: '0 1px 3px rgba(217, 119, 6, 0.2)',
                     flexShrink: 0
                   }}>
                     $
@@ -168,7 +205,7 @@ export default function AdminRates() {
                 step={goldCustom ? "0.01" : undefined}
                 disabled={!goldCustom}
                 readOnly={!goldCustom}
-                placeholder="e.g. 13850.00"
+                placeholder="e.g. 16500.00"
                 value={goldCustom ? goldInput : `₹${liveGoldRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/g`}
                 onChange={(e) => setGoldInput(e.target.value)}
                 className="admin-input"
@@ -191,8 +228,8 @@ export default function AdminRates() {
                 {/* Silver Indicator & Label */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div style={{
-                    width: '38px',
-                    height: '38px',
+                    width: '32px',
+                    height: '32px',
                     borderRadius: '50%',
                     backgroundColor: '#f1f5f9',
                     color: '#64748b',
@@ -289,8 +326,18 @@ export default function AdminRates() {
           {/* Save Button & Note */}
           <div style={{ borderTop: '1px solid var(--admin-border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-              <button type="submit" className="admin-btn-orange" style={{ padding: '10px 24px', fontSize: '14.5px' }}>
-                Save Rates
+              <button 
+                type="submit" 
+                disabled={isSaving}
+                className="admin-btn-orange" 
+                style={{ 
+                  padding: '10px 24px', 
+                  fontSize: '14.5px',
+                  cursor: isSaving ? 'not-allowed' : 'pointer',
+                  opacity: isSaving ? 0.7 : 1
+                }}
+              >
+                {isSaving ? 'Saving Rates...' : 'Save Rates'}
               </button>
               {savedSuccess && (
                 <span style={{ fontSize: '13.5px', color: '#10b981', fontWeight: '700' }}>

@@ -52,6 +52,8 @@ export async function getRatesPublic() {
   };
 
   return {
+    gold_rate: cleanRate(gold.active_rate),
+    silver_rate: cleanRate(silver.active_rate),
     gold: {
       api_rate: cleanRate(gold.api_rate),
       active_rate: cleanRate(gold.active_rate),
