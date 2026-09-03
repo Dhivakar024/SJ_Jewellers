@@ -1,5 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import { TrendingUp, Clock, BarChart2, Calendar, Activity } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { 
+  TrendingUp, Clock, BarChart2, Calendar, Activity, 
+  Users, CheckCircle, AlertCircle, FileText, ArrowUpRight, ArrowDownRight, Layers
+} from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 // Helper to parse transaction amounts safely
@@ -60,179 +63,154 @@ function MetalBarChartCard({
   goldRaw = 0,
   silverRaw = 0,
   goldColor = '#D4A017',
-  silverColor = '#94a3b8'
+  silverColor = '#94a3b8',
 }) {
-  const [hoveredBar, setHoveredBar] = useState(null);
+  const gVal = typeof goldRaw === 'number' ? goldRaw : (parseFloat(goldRaw) || 0);
+  const sVal = typeof silverRaw === 'number' ? silverRaw : (parseFloat(silverRaw) || 0);
+  const total = gVal + sVal;
 
-  const total = goldRaw + silverRaw;
-  const goldPct = total > 0 ? (goldRaw / total) * 100 : 50;
-  const silverPct = total > 0 ? (silverRaw / total) * 100 : 50;
+  const gPct = total > 0 ? (gVal / total) * 100 : 0;
+  const sPct = total > 0 ? (sVal / total) * 100 : 0;
 
-  const maxVal = Math.max(goldRaw, silverRaw, 1);
-  const goldBarPct = (goldRaw / maxVal) * 100;
-  const silverBarPct = (silverRaw / maxVal) * 100;
+  let gDisplay = '₹0';
+  let sDisplay = '₹0';
 
-  let subtext = '';
   if (type === 'value') {
-    if (goldRaw >= silverRaw) {
-      subtext = `Gold leads by value with ₹${goldRaw.toLocaleString('en-IN', { maximumFractionDigits: 2 })} (${goldPct.toFixed(1)}%)`;
-    } else {
-      subtext = `Silver leads by value with ₹${silverRaw.toLocaleString('en-IN', { maximumFractionDigits: 2 })} (${silverPct.toFixed(1)}%)`;
-    }
+    gDisplay = `₹${gVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    sDisplay = `₹${sVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   } else {
-    if (goldRaw >= silverRaw) {
-      subtext = `Gold has more volume with ${goldRaw} orders (${goldPct.toFixed(1)}%)`;
-    } else {
-      subtext = `Silver has more volume with ${silverRaw} orders (${silverPct.toFixed(1)}%)`;
-    }
+    gDisplay = `${gVal} txn${gVal === 1 ? '' : 's'}`;
+    sDisplay = `${sVal} txn${sVal === 1 ? '' : 's'}`;
   }
 
   return (
-    <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', minHeight: '260px', boxSizing: 'border-box', position: 'relative' }}>
-      {/* Title */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Clock size={16} color="var(--admin-text-muted)" />
-          <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--admin-text-heading)' }}>
-            {title}
-          </span>
-        </div>
-        <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--admin-text-muted)' }}>
-          Total: {type === 'value' ? `₹${total.toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : `${total} orders`}
-        </span>
+    <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px', textAlign: 'left', boxSizing: 'border-box' }}>
+      
+      {/* Card Header Title */}
+      <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--admin-text-heading)' }}>
+        {title}
       </div>
 
-      {/* Bar Chart Area */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', flex: 1, justifyContent: 'center' }}>
+      {/* 2-Row Vertical Stacked Layout */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         
-        {/* Gold Bar Row */}
-        <div 
-          onMouseEnter={() => setHoveredBar('gold')}
-          onMouseLeave={() => setHoveredBar(null)}
-          style={{ cursor: 'pointer' }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+        {/* Row 1: Gold */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13.5px' }}>
+            <span style={{ fontWeight: '700', color: 'var(--admin-gold-text)' }}>Gold</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: goldColor }}></span>
-              <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--admin-gold-text)' }}>Gold</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--admin-text-value)' }}>
-                {type === 'value' ? `₹${goldRaw.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `${goldRaw} orders`}
-              </span>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--admin-text-muted)' }}>
-                ({goldPct.toFixed(1)}%)
+              <span style={{ fontWeight: '700', color: 'var(--admin-text-value)' }}>{gDisplay}</span>
+              <span style={{ fontSize: '12px', color: 'var(--admin-text-muted)', minWidth: '42px', textAlign: 'right' }}>
+                ({total > 0 ? gPct.toFixed(1) : '0.0'}%)
               </span>
             </div>
           </div>
-
-          {/* Bar track */}
-          <div style={{ width: '100%', height: '14px', backgroundColor: 'var(--admin-border-subtle)', borderRadius: '7px', overflow: 'hidden' }}>
-            <div 
-              style={{ 
-                width: `${goldBarPct}%`, 
-                height: '100%', 
-                backgroundColor: goldColor, 
-                borderRadius: '7px',
-                transition: 'width 0.4s ease',
-                boxShadow: hoveredBar === 'gold' ? '0 0 10px rgba(212, 160, 23, 0.5)' : 'none'
-              }} 
-            />
+          
+          {/* Progress Bar Container */}
+          <div style={{
+            width: '100%',
+            height: '8px',
+            backgroundColor: 'var(--admin-bg-progress-track)',
+            borderRadius: '4px',
+            overflow: 'hidden',
+            position: 'relative'
+          }}>
+            <div style={{
+              width: `${Math.min(Math.max(gPct, 0), 100)}%`,
+              height: '100%',
+              backgroundColor: goldColor,
+              borderRadius: '4px',
+              transition: 'width 0.4s ease'
+            }} />
           </div>
         </div>
 
-        {/* Silver Bar Row */}
-        <div 
-          onMouseEnter={() => setHoveredBar('silver')}
-          onMouseLeave={() => setHoveredBar(null)}
-          style={{ cursor: 'pointer' }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+        {/* Row 2: Silver */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13.5px' }}>
+            <span style={{ fontWeight: '700', color: 'var(--admin-silver-text)' }}>Silver</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: silverColor }}></span>
-              <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--admin-silver-text)' }}>Silver</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--admin-text-value)' }}>
-                {type === 'value' ? `₹${silverRaw.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `${silverRaw} orders`}
-              </span>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--admin-text-muted)' }}>
-                ({silverPct.toFixed(1)}%)
+              <span style={{ fontWeight: '700', color: 'var(--admin-text-value)' }}>{sDisplay}</span>
+              <span style={{ fontSize: '12px', color: 'var(--admin-text-muted)', minWidth: '42px', textAlign: 'right' }}>
+                ({total > 0 ? sPct.toFixed(1) : '0.0'}%)
               </span>
             </div>
           </div>
-
-          {/* Bar track */}
-          <div style={{ width: '100%', height: '14px', backgroundColor: 'var(--admin-border-subtle)', borderRadius: '7px', overflow: 'hidden' }}>
-            <div 
-              style={{ 
-                width: `${silverBarPct}%`, 
-                height: '100%', 
-                backgroundColor: silverColor, 
-                borderRadius: '7px',
-                transition: 'width 0.4s ease',
-                boxShadow: hoveredBar === 'silver' ? '0 0 10px rgba(148, 163, 184, 0.5)' : 'none'
-              }} 
-            />
+          
+          {/* Progress Bar Container */}
+          <div style={{
+            width: '100%',
+            height: '8px',
+            backgroundColor: 'var(--admin-bg-progress-track)',
+            borderRadius: '4px',
+            overflow: 'hidden',
+            position: 'relative'
+          }}>
+            <div style={{
+              width: `${Math.min(Math.max(sPct, 0), 100)}%`,
+              height: '100%',
+              backgroundColor: silverColor,
+              borderRadius: '4px',
+              transition: 'width 0.4s ease'
+            }} />
           </div>
         </div>
 
       </div>
 
-      {/* Subtext */}
-      <div style={{ textAlign: 'left', fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '14px', paddingTop: '10px', borderTop: '1px solid var(--admin-border-subtle)' }}>
-        {subtext}
-      </div>
     </div>
   );
 }
 
 // =========================================================================
-// 2. Stock-Market-Style Financial Trend Line Graph Component
+// 2. High-Resolution Stock Market Smooth Line Chart Component
 // =========================================================================
 function StockMarketLineGraph({
   title,
   subtitle,
   icon,
   data = [],
-  maxVal = 1000,
+  maxVal = 100000,
   lineColor = '#252525',
   isDaily = false
 }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
 
-  const safeData = Array.isArray(data) ? data : [];
-  const count = safeData.length;
-  const safeMax = typeof maxVal === 'number' && !isNaN(maxVal) && maxVal > 0 ? maxVal : 1000;
+  const width = 900;
+  const height = 240;
+  const paddingLeft = 10;
+  const paddingRight = 20;
+  const paddingTop = 25;
+  const paddingBottom = 45;
+
+  const plotWidth = width - paddingLeft - paddingRight;
+  const plotHeight = height - paddingTop - paddingBottom;
+
+  const safeMax = maxVal > 0 ? maxVal : 10000;
+  const count = data.length;
 
   const yTicks = [
     safeMax,
-    safeMax * 0.75,
-    safeMax * 0.5,
-    safeMax * 0.25,
+    Math.round(safeMax * 0.75),
+    Math.round(safeMax * 0.5),
+    Math.round(safeMax * 0.25),
     0
   ];
 
-  // SVG Coordinate calculations with adequate right padding to keep Aug 27 cleanly inside
-  const svgWidth = 800;
-  const svgHeight = 220;
-  const paddingLeft = 16;
-  const paddingRight = 24;
-  const paddingTop = 15;
-  const paddingBottom = 20;
+  const points = useMemo(() => {
+    if (count === 0) return [];
+    if (count === 1) {
+      const y = paddingTop + plotHeight - ((data[0].totalValue || 0) / safeMax) * plotHeight;
+      return [{ x: paddingLeft + plotWidth / 2, y, ...data[0] }];
+    }
+    return data.map((d, i) => {
+      const x = paddingLeft + (i / (count - 1)) * plotWidth;
+      const val = d.totalValue || 0;
+      const y = paddingTop + plotHeight - (val / safeMax) * plotHeight;
+      return { x, y: isNaN(y) ? paddingTop + plotHeight : y, ...d };
+    });
+  }, [data, count, plotWidth, plotHeight, safeMax, paddingLeft, paddingTop]);
 
-  const plotWidth = svgWidth - paddingLeft - paddingRight;
-  const plotHeight = svgHeight - paddingTop - paddingBottom;
-
-  // Calculate (x, y) coordinates for each data point
-  const points = safeData.map((item, idx) => {
-    const x = count > 1 ? paddingLeft + (idx / (count - 1)) * plotWidth : paddingLeft + plotWidth / 2;
-    const normalizedY = safeMax > 0 ? (item.totalValue / safeMax) : 0;
-    const y = paddingTop + plotHeight - (normalizedY * plotHeight);
-    return { ...item, x, y, idx };
-  });
-
-  // Generate smooth cubic bezier spline path
   let pathString = '';
   if (points.length > 0) {
     pathString = `M ${points[0].x} ${points[0].y}`;
@@ -298,196 +276,197 @@ function StockMarketLineGraph({
         </div>
 
         {/* SVG Drawing Canvas */}
-        <div style={{ flex: 1, height: '100%', position: 'relative', width: '100%', overflow: 'visible' }}>
+        <div style={{ flex: 1, position: 'relative', height: '100%' }}>
           <svg
-            viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-            style={{ width: '100%', height: '100%', overflow: 'visible', display: 'block' }}
+            viewBox={`0 0 ${width} ${height}`}
             preserveAspectRatio="none"
+            style={{ width: '100%', height: '100%', overflow: 'visible' }}
           >
-            {/* Horizontal Dashed Grid Lines */}
-            {[0, 0.25, 0.5, 0.75, 1].map((pct, idx) => {
-              const y = paddingTop + plotHeight * (1 - pct);
+            {/* Grid Horizontal Lines */}
+            {yTicks.map((t, idx) => {
+              const y = paddingTop + (idx / 4) * plotHeight;
               return (
                 <line
                   key={idx}
                   x1={paddingLeft}
                   y1={y}
-                  x2={svgWidth - paddingRight}
+                  x2={paddingLeft + plotWidth}
                   y2={y}
-                  stroke="var(--admin-border-subtle)"
+                  stroke="var(--admin-chart-grid)"
                   strokeWidth="1"
-                  strokeDasharray={pct === 0 ? 'none' : '3 3'}
+                  strokeDasharray="4 4"
                 />
               );
             })}
 
-            {/* Hover Vertical Crosshair */}
-            {activePoint && (
-              <line
-                x1={activePoint.x}
-                y1={paddingTop}
-                x2={activePoint.x}
-                y2={paddingTop + plotHeight}
-                stroke={lineColor}
-                strokeWidth="1"
-                strokeDasharray="3 3"
-                opacity="0.65"
+            {/* Gradient Fill under Path */}
+            <defs>
+              <linearGradient id={`grad-${title.replace(/\s+/g, '')}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#10b981" stopOpacity="0.18" />
+                <stop offset="100%" stopColor="#10b981" stopOpacity="0.00" />
+              </linearGradient>
+            </defs>
+
+            {points.length > 1 && (
+              <path
+                d={`${pathString} L ${points[points.length - 1].x} ${paddingTop + plotHeight} L ${points[0].x} ${paddingTop + plotHeight} Z`}
+                fill={`url(#grad-${title.replace(/\s+/g, '')})`}
               />
             )}
 
-            {/* Professional XY Thin Line (Completely transparent below - No area fill) */}
-            {pathString && (
+            {/* Main Trend Line */}
+            {points.length > 0 && (
               <path
                 d={pathString}
                 fill="none"
-                stroke={lineColor}
-                strokeWidth="1.8"
+                stroke="var(--admin-chart-line)"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
             )}
 
-            {/* XY Data Points */}
+            {/* Data Points */}
             {points.map((p, idx) => {
               const isHovered = hoveredIndex === idx;
-              const pointRadius = isHovered ? (isDaily ? 4.5 : 5.5) : (isDaily ? 2.5 : 3.5);
               return (
                 <g key={idx}>
-                  {/* Invisible Hit target for easy hovering */}
                   <circle
                     cx={p.x}
                     cy={p.y}
-                    r="12"
+                    r={isHovered ? 6.5 : (count > 20 ? 2.5 : 4)}
+                    fill={isHovered ? '#10b981' : 'var(--admin-chart-line)'}
+                    stroke="var(--admin-bg-card)"
+                    strokeWidth={isHovered ? 2.5 : 1.5}
+                    style={{ transition: 'r 0.15s ease, fill 0.15s ease' }}
+                  />
+                  {/* Invisible broad hitbox for easy touch/mouse targeting */}
+                  <rect
+                    x={p.x - (plotWidth / (count * 2 || 1))}
+                    y={0}
+                    width={Math.max(plotWidth / (count || 1), 16)}
+                    height={height}
                     fill="transparent"
                     style={{ cursor: 'pointer' }}
                     onMouseEnter={() => setHoveredIndex(idx)}
                     onMouseLeave={() => setHoveredIndex(null)}
-                  />
-                  {/* Visible XY Circular Node */}
-                  <circle
-                    cx={p.x}
-                    cy={p.y}
-                    r={pointRadius}
-                    fill={isHovered ? lineColor : '#ffffff'}
-                    stroke={isHovered ? '#ffffff' : lineColor}
-                    strokeWidth={isHovered ? '2' : '1.8'}
-                    style={{ pointerEvents: 'none', transition: 'all 0.12s ease' }}
                   />
                 </g>
               );
             })}
           </svg>
 
-          {/* Floating Tooltip Card */}
+          {/* Interactive Floating Hover Tooltip */}
           {activePoint && (
             <div style={{
               position: 'absolute',
-              top: '8px',
-              left: `${Math.min(Math.max((activePoint.x / svgWidth) * 100, 14), 86)}%`,
-              transform: 'translateX(-50%)',
-              backgroundColor: 'var(--admin-bg-card)',
-              color: 'var(--admin-text-main)',
-              border: '1px solid var(--admin-border)',
-              padding: '8px 14px',
-              borderRadius: '8px',
+              left: `${(activePoint.x / width) * 100}%`,
+              top: `${Math.max((activePoint.y / height) * 100 - 32, 0)}%`,
+              transform: 'translate(-50%, -100%)',
+              backgroundColor: 'var(--admin-tooltip-bg)',
+              color: 'var(--admin-tooltip-text)',
+              padding: '7px 11px',
+              borderRadius: '7px',
               fontSize: '12px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-              zIndex: 20,
+              fontWeight: '600',
               pointerEvents: 'none',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.22)',
               whiteSpace: 'nowrap',
-              textAlign: 'center'
+              zIndex: 30,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '2px',
+              border: '1px solid var(--admin-border-subtle)'
             }}>
-              <div style={{ fontWeight: '800', color: 'var(--admin-text-value)', marginBottom: '2px' }}>
-                {activePoint.fullLabel || activePoint.label}
-              </div>
-              <div style={{ color: 'var(--admin-text-value)', fontWeight: '800', fontSize: '13px' }}>
-                ₹{activePoint.totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--admin-text-secondary)', marginTop: '4px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                <span style={{ color: 'var(--admin-gold-text)', fontWeight: '700' }}>
-                  Gold: ₹{(activePoint.goldValue || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                </span>
-                <span style={{ color: 'var(--admin-silver-text)', fontWeight: '700' }}>
-                  Silver: ₹{(activePoint.silverValue || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                </span>
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--admin-text-muted)', marginTop: '2px' }}>
-                Total Orders: {activePoint.count || 0}
-              </div>
+              <span style={{ fontWeight: '700', color: '#10b981' }}>{activePoint.fullLabel || activePoint.label}</span>
+              <span>Total: ₹{Math.round(activePoint.totalValue || 0).toLocaleString('en-IN')}</span>
+              {activePoint.count !== undefined && (
+                <span style={{ fontSize: '11px', opacity: 0.85 }}>Transactions: {activePoint.count}</span>
+              )}
             </div>
           )}
+
+          {/* X-axis Labels at Bottom */}
+          <div style={{
+            position: 'absolute',
+            left: `${paddingLeft}px`,
+            right: `${paddingRight}px`,
+            bottom: 0,
+            height: `${paddingBottom - 10}px`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '11px',
+            fontWeight: '600',
+            color: 'var(--admin-text-muted)',
+            userSelect: 'none'
+          }}>
+            {points.map((p, idx) => {
+              let showLabel = true;
+              if (isDaily) {
+                showLabel = idx % 5 === 0 || idx === points.length - 1;
+              }
+              if (!showLabel) return <div key={idx} style={{ width: '1px' }} />;
+              return (
+                <span
+                  key={idx}
+                  style={{
+                    textAlign: 'center',
+                    color: hoveredIndex === idx ? 'var(--admin-text-heading)' : 'var(--admin-text-muted)',
+                    fontWeight: hoveredIndex === idx ? '800' : '600'
+                  }}
+                >
+                  {p.label}
+                </span>
+              );
+            })}
+          </div>
         </div>
-      </div>
-
-      {/* X-axis Labels Aligned Directly with Data Point Coordinates */}
-      <div style={{
-        position: 'relative',
-        height: '22px',
-        marginLeft: '64px',
-        marginRight: '20px',
-        marginTop: '8px',
-        fontSize: '11.5px',
-        color: 'var(--admin-text-muted)',
-        userSelect: 'none',
-        boxSizing: 'border-box'
-      }}>
-        {points.map((p, idx) => {
-          let isVisible = true;
-          if (isDaily) {
-            isVisible = idx === 0 || idx === 5 || idx === 10 || idx === 15 || idx === 20 || idx === 25 || idx === points.length - 1;
-          }
-          if (!isVisible) return null;
-
-          const isFirst = idx === 0;
-          const isLast = idx === points.length - 1;
-
-          return (
-            <div
-              key={p.key || idx}
-              className="admin-chart-xaxis-label"
-              style={{
-                position: 'absolute',
-                left: `${(p.x / svgWidth) * 100}%`,
-                transform: isFirst ? 'translateX(0%)' : (isLast ? 'translateX(-100%)' : 'translateX(-50%)'),
-                textAlign: isFirst ? 'left' : (isLast ? 'right' : 'center'),
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {p.label}
-            </div>
-          );
-        })}
       </div>
     </div>
   );
 }
 
 // =========================================================================
-// Main Admin Dashboard
+// 3. Main Admin Dashboard Component
 // =========================================================================
 export default function AdminDashboard({ onSelectTab }) {
-  const appContext = useApp();
-  const rawGoldRate = appContext?.goldRate;
-  const rawSilverRate = appContext?.silverRate;
-  const rawTransactions = appContext?.transactions;
-  const refreshAllData = appContext?.refreshAllData;
+  const appContext = useApp() || {};
+  const {
+    goldRate: rawGoldRate,
+    silverRate: rawSilverRate,
+    transactions: rawTransactions,
+    dashboardOverview,
+    salesByMetal: rawSalesByMetal,
+    pendingVerifications = [],
+    withdrawals: rawWithdrawals = [],
+    refreshAllData,
+  } = appContext;
 
-  React.useEffect(() => {
+  // Refresh live backend data on load
+  useEffect(() => {
     if (typeof refreshAllData === 'function') {
       refreshAllData();
     }
   }, [refreshAllData]);
 
-  const goldRate = typeof rawGoldRate === 'number' && !isNaN(rawGoldRate) ? rawGoldRate : (parseFloat(rawGoldRate) || 16263.65);
-  const silverRate = typeof rawSilverRate === 'number' && !isNaN(rawSilverRate) ? rawSilverRate : (parseFloat(rawSilverRate) || 267.00);
-  const transactions = Array.isArray(rawTransactions) ? rawTransactions : [];
+  // Real backend metrics resolution
+  const goldRate = typeof rawGoldRate === 'number' && !isNaN(rawGoldRate) 
+    ? rawGoldRate 
+    : (parseFloat(rawGoldRate) || 16263.65);
+  const silverRate = typeof rawSilverRate === 'number' && !isNaN(rawSilverRate) 
+    ? rawSilverRate 
+    : (parseFloat(rawSilverRate) || 267.00);
 
-  // Reference date: latest transaction date or current system date
+  const transactions = Array.isArray(rawTransactions) ? rawTransactions : [];
+  const withdrawalsList = Array.isArray(rawWithdrawals) ? rawWithdrawals : [];
+
+  // 1. Reference date calculation from actual records
   const referenceDate = useMemo(() => {
     let latest = new Date();
     transactions.forEach((t) => {
-      if (!t?.date) return;
-      const d = parseTxnDate(t.date);
+      if (!t?.date && !t?.createdAt) return;
+      const d = parseTxnDate(t.date || t.createdAt);
       if (d && !isNaN(d.getTime()) && d.getTime() > latest.getTime()) {
         latest = d;
       }
@@ -495,39 +474,65 @@ export default function AdminDashboard({ onSelectTab }) {
     return !isNaN(latest.getTime()) ? latest : new Date();
   }, [transactions]);
 
-  // Dynamic Sales by Metal calculations from actual transactions
-  const { 
-    goldValue, 
-    silverValue, 
-    goldTxnCount, 
-    silverTxnCount
-  } = useMemo(() => {
+  // 2. Completed Sales Aggregation (Excluding withdrawals and cancelled records)
+  const salesMetrics = useMemo(() => {
+    let gGrams = 0;
+    let sGrams = 0;
     let gVal = 0;
     let sVal = 0;
     let gCount = 0;
     let sCount = 0;
 
     transactions.forEach((t) => {
+      // Exclude withdrawals or debit transactions from sales calculations
+      if (t?.type === 'withdrawal' || t?.direction === 'debit') return;
+      if (t?.rawStatus && t.rawStatus !== 'completed' && t.rawStatus !== 'success') return;
+      if (t?.status === 'Rejected' || t?.status === 'Failed' || t?.status === 'Cancelled') return;
+
       const amt = parseTxnAmount(t?.amount);
+      const grams = parseFloat(t?.grams) || parseFloat(t?.quantity_grams) || 0;
       const isGold = (t?.asset || t?.assetType || t?.metal || '').toLowerCase().includes('gold');
+
       if (isGold) {
         gVal += amt;
+        gGrams += grams;
         gCount += 1;
       } else {
         sVal += amt;
+        sGrams += grams;
         sCount += 1;
       }
     });
 
-    return {
-      goldValue: gVal,
-      silverValue: sVal,
-      goldTxnCount: gCount,
-      silverTxnCount: sCount
-    };
-  }, [transactions]);
+    // Merge with backend overview if available
+    const backendGoldGrams = dashboardOverview?.gold?.total_sold_grams;
+    const backendSilverGrams = dashboardOverview?.silver?.total_sold_grams;
+    const backendGoldVal = dashboardOverview?.gold?.total_sales_value;
+    const backendSilverVal = dashboardOverview?.silver?.total_sales_value;
+    const backendGoldTxns = dashboardOverview?.gold?.total_transactions;
+    const backendSilverTxns = dashboardOverview?.silver?.total_transactions;
 
-  // 1. Annual Transactions Aggregation (Last 5 Years: 2022 to 2026)
+    return {
+      goldGrams: backendGoldGrams !== undefined ? backendGoldGrams : gGrams,
+      silverGrams: backendSilverGrams !== undefined ? backendSilverGrams : sGrams,
+      goldValue: backendGoldVal !== undefined ? backendGoldVal : (rawSalesByMetal?.gold?.value ?? gVal),
+      silverValue: backendSilverVal !== undefined ? backendSilverVal : (rawSalesByMetal?.silver?.value ?? sVal),
+      goldTxnCount: backendGoldTxns !== undefined ? backendGoldTxns : (rawSalesByMetal?.gold?.transactions ?? gCount),
+      silverTxnCount: backendSilverTxns !== undefined ? backendSilverTxns : (rawSalesByMetal?.silver?.transactions ?? sCount),
+      totalTxns: (backendGoldTxns !== undefined && backendSilverTxns !== undefined) 
+        ? (backendGoldTxns + backendSilverTxns) 
+        : (gCount + sCount),
+    };
+  }, [transactions, dashboardOverview, rawSalesByMetal]);
+
+  // 3. Pending counts & withdrawal statistics
+  const pendingKycCount = dashboardOverview?.kyc?.pending ?? (pendingVerifications || []).length;
+  const pendingWdCount = dashboardOverview?.withdrawals?.pending ?? withdrawalsList.filter((w) => w?.status === 'Pending').length;
+  const approvedWdCount = dashboardOverview?.withdrawals?.approved ?? withdrawalsList.filter((w) => w?.status === 'Success' || w?.status === 'Approved').length;
+  const totalWdValue = dashboardOverview?.withdrawals?.total_withdrawn_value ?? withdrawalsList.filter((w) => w?.status === 'Success' || w?.status === 'Approved').reduce((sum, w) => sum + (parseFloat(w?.amount) || 0), 0);
+  const totalWdGoldGrams = dashboardOverview?.withdrawals?.total_withdrawn_gold_grams ?? withdrawalsList.filter((w) => (w?.metal || '').toLowerCase() === 'gold' && (w?.status === 'Success' || w?.status === 'Approved')).reduce((sum, w) => sum + (parseFloat(w?.grams) || 0), 0);
+
+  // 4. Annual Transactions Aggregation (Last 5 Years)
   const annualChartData = useMemo(() => {
     const currentYear = referenceDate.getFullYear();
     const years = [currentYear - 4, currentYear - 3, currentYear - 2, currentYear - 1, currentYear];
@@ -542,14 +547,17 @@ export default function AdminDashboard({ onSelectTab }) {
         goldValue: 0,
         silverValue: 0,
         count: 0,
-        goldCount: 0,
-        silverCount: 0
       };
     });
 
     transactions.forEach((t) => {
-      if (!t?.date) return;
-      const d = parseTxnDate(t.date);
+      if (t?.type === 'withdrawal' || t?.direction === 'debit') return;
+      if (t?.rawStatus && t.rawStatus !== 'completed' && t.rawStatus !== 'success') return;
+      if (t?.status === 'Rejected' || t?.status === 'Failed' || t?.status === 'Cancelled') return;
+
+      const dateVal = t?.date || t?.createdAt;
+      if (!dateVal) return;
+      const d = parseTxnDate(dateVal);
       if (!d) return;
       const y = d.getFullYear();
       if (map[y]) {
@@ -557,13 +565,8 @@ export default function AdminDashboard({ onSelectTab }) {
         const isGold = (t.asset || t.assetType || t.metal || '').toLowerCase().includes('gold');
         map[y].totalValue += amt;
         map[y].count += 1;
-        if (isGold) {
-          map[y].goldValue += amt;
-          map[y].goldCount += 1;
-        } else {
-          map[y].silverValue += amt;
-          map[y].silverCount += 1;
-        }
+        if (isGold) map[y].goldValue += amt;
+        else map[y].silverValue += amt;
       }
     });
 
@@ -575,7 +578,7 @@ export default function AdminDashboard({ onSelectTab }) {
     return { items, maxVal: max };
   }, [transactions, referenceDate]);
 
-  // 2. Monthly Transactions Aggregation (Last 12 Months)
+  // 5. Monthly Transactions Aggregation (Last 12 Months)
   const monthlyChartData = useMemo(() => {
     const months = [];
     const refYear = referenceDate.getFullYear();
@@ -596,8 +599,6 @@ export default function AdminDashboard({ onSelectTab }) {
         goldValue: 0,
         silverValue: 0,
         count: 0,
-        goldCount: 0,
-        silverCount: 0
       });
     }
 
@@ -605,8 +606,13 @@ export default function AdminDashboard({ onSelectTab }) {
     months.forEach((m) => { map[m.key] = m; });
 
     transactions.forEach((t) => {
-      if (!t?.date) return;
-      const d = parseTxnDate(t.date);
+      if (t?.type === 'withdrawal' || t?.direction === 'debit') return;
+      if (t?.rawStatus && t.rawStatus !== 'completed' && t.rawStatus !== 'success') return;
+      if (t?.status === 'Rejected' || t?.status === 'Failed' || t?.status === 'Cancelled') return;
+
+      const dateVal = t?.date || t?.createdAt;
+      if (!dateVal) return;
+      const d = parseTxnDate(dateVal);
       if (!d) return;
       const yyyy = d.getFullYear();
       const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -616,13 +622,8 @@ export default function AdminDashboard({ onSelectTab }) {
         const isGold = (t.asset || t.assetType || t.metal || '').toLowerCase().includes('gold');
         map[key].totalValue += amt;
         map[key].count += 1;
-        if (isGold) {
-          map[key].goldValue += amt;
-          map[key].goldCount += 1;
-        } else {
-          map[key].silverValue += amt;
-          map[key].silverCount += 1;
-        }
+        if (isGold) map[key].goldValue += amt;
+        else map[key].silverValue += amt;
       }
     });
 
@@ -633,7 +634,7 @@ export default function AdminDashboard({ onSelectTab }) {
     return { items: months, maxVal: max };
   }, [transactions, referenceDate]);
 
-  // 3. Daily Transactions Aggregation (Last 30 Days)
+  // 6. Daily Transactions Aggregation (Last 30 Days)
   const dailyChartData = useMemo(() => {
     const days = [];
     const refYear = referenceDate.getFullYear();
@@ -657,8 +658,6 @@ export default function AdminDashboard({ onSelectTab }) {
         goldValue: 0,
         silverValue: 0,
         count: 0,
-        goldCount: 0,
-        silverCount: 0
       });
     }
 
@@ -666,8 +665,13 @@ export default function AdminDashboard({ onSelectTab }) {
     days.forEach((d) => { map[d.key] = d; });
 
     transactions.forEach((t) => {
-      if (!t?.date) return;
-      const d = parseTxnDate(t.date);
+      if (t?.type === 'withdrawal' || t?.direction === 'debit') return;
+      if (t?.rawStatus && t.rawStatus !== 'completed' && t.rawStatus !== 'success') return;
+      if (t?.status === 'Rejected' || t?.status === 'Failed' || t?.status === 'Cancelled') return;
+
+      const dateVal = t?.date || t?.createdAt;
+      if (!dateVal) return;
+      const d = parseTxnDate(dateVal);
       if (!d) return;
       const yyyy = d.getFullYear();
       const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -678,13 +682,8 @@ export default function AdminDashboard({ onSelectTab }) {
         const isGold = (t.asset || t.assetType || t.metal || '').toLowerCase().includes('gold');
         map[key].totalValue += amt;
         map[key].count += 1;
-        if (isGold) {
-          map[key].goldValue += amt;
-          map[key].goldCount += 1;
-        } else {
-          map[key].silverValue += amt;
-          map[key].silverCount += 1;
-        }
+        if (isGold) map[key].goldValue += amt;
+        else map[key].silverValue += amt;
       }
     });
 
@@ -701,7 +700,7 @@ export default function AdminDashboard({ onSelectTab }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', boxSizing: 'border-box' }}>
       
-      {/* 1. Page Header (Left-aligned, Bold matching Dashboard) */}
+      {/* 1. Page Header */}
       <div className="admin-page-header">
         <h1 className="admin-page-title" style={{ fontWeight: '800' }}>Dashboard</h1>
         <p className="admin-page-sub">
@@ -709,7 +708,7 @@ export default function AdminDashboard({ onSelectTab }) {
         </p>
       </div>
 
-      {/* 2. Top Two Rate Cards (Side by Side, Increased Size & Typography, Single Horizontal Line) */}
+      {/* 2. Top Live Rates Cards (Gold & Silver) */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
@@ -717,7 +716,7 @@ export default function AdminDashboard({ onSelectTab }) {
         width: '100%',
         boxSizing: 'border-box'
       }}>
-        {/* Gold (24K) Card */}
+        {/* Gold (24K) Rate Card */}
         <div className="admin-dashboard-rate-card-gold" style={{
           padding: '16px 22px',
           borderLeft: '5px solid #D4A017',
@@ -776,7 +775,7 @@ export default function AdminDashboard({ onSelectTab }) {
           </div>
         </div>
 
-        {/* Silver Card */}
+        {/* Silver Rate Card */}
         <div className="admin-dashboard-rate-card-silver" style={{
           padding: '16px 22px',
           borderLeft: '5px solid #94a3b8',
@@ -836,7 +835,139 @@ export default function AdminDashboard({ onSelectTab }) {
         </div>
       </div>
 
-      {/* 3. Sales By Metal Bar Charts (Separate Value & Transactions Cards) */}
+      {/* 3. Real Business Statistics Cards Grid (Sold Metals, Total Txns, Pending KYC & Withdrawals) */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: '14px',
+        width: '100%',
+        boxSizing: 'border-box'
+      }}>
+        {/* Total Gold Sold */}
+        <div className="admin-card" style={{ padding: '16px 18px', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-muted)' }}>Total Gold Sold</span>
+            <div style={{ width: '24px', height: '24px', borderRadius: '6px', backgroundColor: '#fef3c7', color: '#D4A017', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '800' }}>
+              Au
+            </div>
+          </div>
+          <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--admin-text-heading)', letterSpacing: '-0.3px' }}>
+            {salesMetrics.goldGrams.toFixed(4)} <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-muted)' }}>grams</span>
+          </div>
+          <div style={{ fontSize: '12.5px', color: 'var(--admin-text-secondary)', fontWeight: '600' }}>
+            ₹{salesMetrics.goldValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })} sales
+          </div>
+        </div>
+
+        {/* Total Silver Sold */}
+        <div className="admin-card" style={{ padding: '16px 18px', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-muted)' }}>Total Silver Sold</span>
+            <div style={{ width: '24px', height: '24px', borderRadius: '6px', backgroundColor: '#f1f5f9', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '800' }}>
+              Ag
+            </div>
+          </div>
+          <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--admin-text-heading)', letterSpacing: '-0.3px' }}>
+            {salesMetrics.silverGrams.toFixed(4)} <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-muted)' }}>grams</span>
+          </div>
+          <div style={{ fontSize: '12.5px', color: 'var(--admin-text-secondary)', fontWeight: '600' }}>
+            ₹{salesMetrics.silverValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })} sales
+          </div>
+        </div>
+
+        {/* Total Transactions */}
+        <div className="admin-card" style={{ padding: '16px 18px', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-muted)' }}>Total Transactions</span>
+            <FileText size={16} color="var(--admin-blue-badge)" />
+          </div>
+          <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--admin-text-heading)', letterSpacing: '-0.3px' }}>
+            {salesMetrics.totalTxns} <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-muted)' }}>purchases</span>
+          </div>
+          <div style={{ fontSize: '12.5px', color: 'var(--admin-text-secondary)', fontWeight: '600' }}>
+            {salesMetrics.goldTxnCount} Gold · {salesMetrics.silverTxnCount} Silver
+          </div>
+        </div>
+
+        {/* Pending KYC Count */}
+        <div 
+          className="admin-card" 
+          onClick={() => typeof onSelectTab === 'function' && onSelectTab('notifications')}
+          style={{ 
+            padding: '16px 18px', 
+            textAlign: 'left', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '6px',
+            cursor: 'pointer',
+            transition: 'transform 0.15s ease, border-color 0.15s ease'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-muted)' }}>Pending KYC</span>
+            <Users size={16} color={pendingKycCount > 0 ? '#ef4444' : '#10b981'} />
+          </div>
+          <div style={{ fontSize: '20px', fontWeight: '800', color: pendingKycCount > 0 ? '#ef4444' : 'var(--admin-text-heading)', letterSpacing: '-0.3px' }}>
+            {pendingKycCount} <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-muted)' }}>pending</span>
+          </div>
+          <div style={{ fontSize: '12px', color: pendingKycCount > 0 ? '#ef4444' : 'var(--admin-text-muted)', fontWeight: '700' }}>
+            {pendingKycCount > 0 ? 'Review verifications →' : '✓ All verified'}
+          </div>
+        </div>
+
+        {/* Pending Withdrawals */}
+        <div 
+          className="admin-card" 
+          onClick={() => typeof onSelectTab === 'function' && onSelectTab('withdrawal')}
+          style={{ 
+            padding: '16px 18px', 
+            textAlign: 'left', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '6px',
+            cursor: 'pointer',
+            transition: 'transform 0.15s ease, border-color 0.15s ease'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-muted)' }}>Pending Withdrawals</span>
+            <Clock size={16} color={pendingWdCount > 0 ? '#ea580c' : '#10b981'} />
+          </div>
+          <div style={{ fontSize: '20px', fontWeight: '800', color: pendingWdCount > 0 ? '#ea580c' : 'var(--admin-text-heading)', letterSpacing: '-0.3px' }}>
+            {pendingWdCount} <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-muted)' }}>requests</span>
+          </div>
+          <div style={{ fontSize: '12px', color: pendingWdCount > 0 ? '#ea580c' : 'var(--admin-text-muted)', fontWeight: '700' }}>
+            {pendingWdCount > 0 ? 'Review withdrawals →' : '✓ Up to date'}
+          </div>
+        </div>
+
+        {/* Withdrawal Statistics Summary */}
+        <div 
+          className="admin-card" 
+          onClick={() => typeof onSelectTab === 'function' && onSelectTab('withdrawal')}
+          style={{ 
+            padding: '16px 18px', 
+            textAlign: 'left', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '6px',
+            cursor: 'pointer'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-muted)' }}>Withdrawal Stats</span>
+            <CheckCircle size={16} color="#10b981" />
+          </div>
+          <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--admin-text-heading)', letterSpacing: '-0.3px' }}>
+            ₹{totalWdValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          </div>
+          <div style={{ fontSize: '12.5px', color: 'var(--admin-text-secondary)', fontWeight: '600' }}>
+            {approvedWdCount} Approved ({totalWdGoldGrams.toFixed(4)}g Au)
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Sales By Metal Bar Charts (Separate Value & Transactions Cards) */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -846,8 +977,8 @@ export default function AdminDashboard({ onSelectTab }) {
         <MetalBarChartCard
           title="Sales by Metal (Value)"
           type="value"
-          goldRaw={goldValue}
-          silverRaw={silverValue}
+          goldRaw={salesMetrics.goldValue}
+          silverRaw={salesMetrics.silverValue}
           goldColor="#D4A017"
           silverColor="#94a3b8"
         />
@@ -856,14 +987,14 @@ export default function AdminDashboard({ onSelectTab }) {
         <MetalBarChartCard
           title="Sales by Metal (Transactions)"
           type="transactions"
-          goldRaw={goldTxnCount}
-          silverRaw={silverTxnCount}
+          goldRaw={salesMetrics.goldTxnCount}
+          silverRaw={salesMetrics.silverTxnCount}
           goldColor="#D4A017"
           silverColor="#94a3b8"
         />
       </div>
 
-      {/* 4. Annual Transactions (Last 5 Years - Line Graph) */}
+      {/* 5. Annual Transactions (Last 5 Years - Line Graph) */}
       <StockMarketLineGraph
         title="Annual Transactions (Last 5 Years)"
         subtitle="Annual transaction value trend (INR) across 5 years"
@@ -874,7 +1005,7 @@ export default function AdminDashboard({ onSelectTab }) {
         isDaily={false}
       />
 
-      {/* 5. Monthly Transactions (Last 12 Months - Line Graph) */}
+      {/* 6. Monthly Transactions (Last 12 Months - Line Graph) */}
       <StockMarketLineGraph
         title="Monthly Transactions (Last 12 Months)"
         subtitle="Monthly transaction value trend (INR) across 12 months"
@@ -885,7 +1016,7 @@ export default function AdminDashboard({ onSelectTab }) {
         isDaily={false}
       />
 
-      {/* 6. Daily Transactions (Last 30 Days - Line Graph) */}
+      {/* 7. Daily Transactions (Last 30 Days - Line Graph) */}
       <StockMarketLineGraph
         title="Daily Transactions (Last 30 Days)"
         subtitle="Daily transaction volume & revenue trend (INR) for past 30 days"
@@ -896,7 +1027,7 @@ export default function AdminDashboard({ onSelectTab }) {
         isDaily={true}
       />
 
-      {/* 7. Footer Rates Updated Timestamp */}
+      {/* 8. Footer Rates Updated Timestamp */}
       <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '4px', textAlign: 'left' }}>
         Rates updated: {updatedTimestamp}
       </div>
@@ -904,4 +1035,3 @@ export default function AdminDashboard({ onSelectTab }) {
     </div>
   );
 }
-

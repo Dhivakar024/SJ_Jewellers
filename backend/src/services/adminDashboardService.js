@@ -70,7 +70,7 @@ export async function getDashboardOverview(adminUser) {
 
   // 3. Sales metrics (completed purchases)
   const salesAgg = await query(
-    `SELECT metal, SUM(total_amount) as total_val, COUNT(*) as txns_count 
+    `SELECT metal, SUM(quantity_grams) as total_grams, SUM(total_amount) as total_val, COUNT(*) as txns_count 
      FROM purchases 
      WHERE status = 'completed' 
      GROUP BY metal`
@@ -86,28 +86,86 @@ export async function getDashboardOverview(adminUser) {
   const kycRejectedRows = await query("SELECT COUNT(*) as cnt FROM kyc WHERE status = 'rejected'");
 
   // 5. Withdrawals metrics
-  const wdPendingRows = await query("SELECT COUNT(*) as cnt FROM withdrawals WHERE status = 'pending'");
-  const wdApprovedRows = await query("SELECT COUNT(*) as cnt FROM withdrawals WHERE status = 'approved'");
-  const wdRejectedRows = await query("SELECT COUNT(*) as cnt FROM withdrawals WHERE status = 'rejected'");
+  const wdRows = await query(
+    `SELECT status, metal, COUNT(*) as cnt, SUM(quantity_grams) as total_grams, SUM(metal_value) as total_val 
+     FROM withdrawals 
+     GROUP BY status, metal`
+  );
 
-  // 6. Notifications
+  let wdPendingCount = 0;
+  let wdApprovedCount = 0;
+  let wdRejectedCount = 0;
+  let wdGoldGrams = 0;
+  let wdSilverGrams = 0;
+  let wdTotalValue = 0;
+
+  const wdByMetal = {
+    gold: { pending: 0, approved: 0, rejected: 0 },
+    silver: { pending: 0, approved: 0, rejected: 0 },
+  };
+
+  for (const r of wdRows) {
+    const st = r.status;
+    const mt = r.metal;
+    const cnt = parseInt(r.cnt, 10) || 0;
+    const grams = parseFloat(r.total_grams) || 0;
+    const val = parseFloat(r.total_val) || 0;
+
+    if (st === 'pending') wdPendingCount += cnt;
+    if (st === 'approved') {
+      wdApprovedCount += cnt;
+      if (mt === 'gold') wdGoldGrams += grams;
+      if (mt === 'silver') wdSilverGrams += grams;
+      wdTotalValue += val;
+    }
+    if (st === 'rejected') wdRejectedCount += cnt;
+
+    if (wdByMetal[mt] && wdByMetal[mt][st] !== undefined) {
+      wdByMetal[mt][st] += cnt;
+    }
+  }
+
+  // 6. Rates
+  const ratesPublic = await getRatesPublic();
+
+  // 7. Notifications
   const unreadNotifs = await getUnreadNotificationCount(adminUser.id, 'admin');
 
+  const totalPurchases = (salesMap.gold?.txns_count || 0) + (salesMap.silver?.txns_count || 0);
+  const totalWithdrawals = wdPendingCount + wdApprovedCount + wdRejectedCount;
+
   return {
+    rates: {
+      gold_rate: cleanRate(ratesPublic.gold?.active_rate || 16263.65),
+      silver_rate: cleanRate(ratesPublic.silver?.active_rate || 267.00),
+      gold_api_rate: cleanRate(ratesPublic.gold?.api_rate || 16263.65),
+      silver_api_rate: cleanRate(ratesPublic.silver?.api_rate || 267.00),
+      gold_mode: ratesPublic.gold?.mode || 'api',
+      silver_mode: ratesPublic.silver?.mode || 'api',
+    },
     customers: {
       total: totalCustRows[0]?.cnt || 0,
       active: activeCustRows[0]?.cnt || 0,
       blocked: blockedCustRows[0]?.cnt || 0,
     },
     gold: {
+      total_sold_grams: cleanGrams(salesMap.gold?.total_grams || 0),
       total_holdings_grams: goldHoldingsGrams,
       total_sales_value: cleanRate(salesMap.gold?.total_val || 0),
       total_transactions: salesMap.gold?.txns_count || 0,
     },
     silver: {
+      total_sold_grams: cleanGrams(salesMap.silver?.total_grams || 0),
       total_holdings_grams: silverHoldingsGrams,
       total_sales_value: cleanRate(salesMap.silver?.total_val || 0),
       total_transactions: salesMap.silver?.txns_count || 0,
+    },
+    transactions: {
+      total_count: totalPurchases,
+      total_all_count: totalPurchases + totalWithdrawals,
+      total_sales_value: cleanRate((salesMap.gold?.total_val || 0) + (salesMap.silver?.total_val || 0)),
+      gold_count: salesMap.gold?.txns_count || 0,
+      silver_count: salesMap.silver?.txns_count || 0,
     },
     kyc: {
       pending: kycPendingRows[0]?.cnt || 0,
@@ -115,9 +173,15 @@ export async function getDashboardOverview(adminUser) {
       rejected: kycRejectedRows[0]?.cnt || 0,
     },
     withdrawals: {
-      pending: wdPendingRows[0]?.cnt || 0,
-      approved: wdApprovedRows[0]?.cnt || 0,
-      rejected: wdRejectedRows[0]?.cnt || 0,
+      pending: wdPendingCount,
+      approved: wdApprovedCount,
+      rejected: wdRejectedCount,
+      total: totalWithdrawals,
+      total_withdrawn_gold_grams: cleanGrams(wdGoldGrams),
+      total_withdrawn_silver_grams: cleanGrams(wdSilverGrams),
+      total_withdrawn_value: cleanRate(wdTotalValue),
+      gold: wdByMetal.gold,
+      silver: wdByMetal.silver,
     },
     notifications: {
       unread: unreadNotifs,
@@ -127,7 +191,7 @@ export async function getDashboardOverview(adminUser) {
 
 export async function getSalesByMetal() {
   const salesAgg = await query(
-    `SELECT metal, SUM(total_amount) as total_val, COUNT(*) as txns_count 
+    `SELECT metal, SUM(quantity_grams) as total_grams, SUM(total_amount) as total_val, COUNT(*) as txns_count 
      FROM purchases 
      WHERE status = 'completed' 
      GROUP BY metal`
@@ -140,10 +204,12 @@ export async function getSalesByMetal() {
   return {
     gold: {
       value: cleanRate(salesMap.gold?.total_val || 0),
+      grams: cleanGrams(salesMap.gold?.total_grams || 0),
       transactions: salesMap.gold?.txns_count || 0,
     },
     silver: {
       value: cleanRate(salesMap.silver?.total_val || 0),
+      grams: cleanGrams(salesMap.silver?.total_grams || 0),
       transactions: salesMap.silver?.txns_count || 0,
     },
   };
