@@ -123,7 +123,25 @@ export async function getUserKyc(user) {
 
 export async function getPendingKycList() {
   const rows = await query(
-    `SELECT k.id as kyc_id, k.user_id, k.full_name, k.status, k.submitted_at, u.name as user_name, u.mobile as user_mobile 
+    `SELECT 
+        k.id as kyc_id, 
+        k.id as id,
+        k.user_id, 
+        k.full_name, 
+        k.id_type, 
+        k.id_number, 
+        k.status, 
+        k.submitted_at, 
+        k.address_line, 
+        k.city, 
+        k.state, 
+        k.pincode,
+        u.name as user_name, 
+        u.mobile as user_mobile, 
+        u.email as user_email, 
+        u.role as user_role, 
+        u.created_at as user_created_at, 
+        u.account_status as user_account_status
      FROM kyc k
      JOIN users u ON k.user_id = u.id
      WHERE k.status = 'pending'
@@ -131,12 +149,28 @@ export async function getPendingKycList() {
   );
 
   const items = rows.map((r) => ({
+    id: r.kyc_id,
     kyc_id: r.kyc_id,
     user_id: r.user_id,
-    name: r.user_name || r.full_name,
-    mobile: r.user_mobile,
-    status: 'pending',
+    name: r.user_name || r.full_name || 'Customer',
+    customer_name: r.user_name || r.full_name || 'Customer',
+    full_name: r.full_name || r.user_name || 'Customer',
+    mobile: r.user_mobile || '',
+    email: r.user_email || '',
+    role: r.user_role || 'customer',
+    account_status: r.user_account_status || 'active',
+    id_type: (r.id_type || 'PAN').toUpperCase(),
+    id_number: r.id_number || '',
+    status: r.status || 'pending',
+    address: {
+      address_line: r.address_line || '',
+      city: r.city || '',
+      state: r.state || '',
+      pincode: r.pincode || '',
+    },
     submitted_at: r.submitted_at,
+    user_created_at: r.user_created_at,
+    created_at: r.user_created_at || r.submitted_at,
   }));
 
   return {

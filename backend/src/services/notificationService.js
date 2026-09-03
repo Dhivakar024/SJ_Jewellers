@@ -189,6 +189,8 @@ export async function notifyWithdrawalCancelled(withdrawalDoc) {
 }
 
 export async function notifyKycSubmitted(userId, kycId) {
+  const userRows = await query('SELECT id, name, mobile, email, role, created_at FROM users WHERE id = ? LIMIT 1', [userId]);
+  const user = userRows[0] || {};
   const admins = await query("SELECT id FROM users WHERE role = 'admin'");
   for (const adm of admins) {
     await createNotification({
@@ -196,8 +198,16 @@ export async function notifyKycSubmitted(userId, kycId) {
       recipient_id: adm.id,
       type: 'kyc_submitted',
       title: 'New KYC Verification',
-      message: 'A customer has submitted KYC documents for verification.',
-      data: { user_id: userId, kyc_id: kycId },
+      message: `${user.name || 'A customer'} (${user.mobile || ''}) has submitted KYC documents for verification.`,
+      data: {
+        user_id: userId,
+        kyc_id: kycId,
+        name: user.name || 'Customer',
+        mobile: user.mobile || '',
+        email: user.email || '',
+        role: user.role || 'customer',
+        created_at: user.created_at,
+      },
       source_type: 'kyc',
       source_id: kycId,
     });

@@ -213,20 +213,28 @@ export function AppProvider({ children }) {
       const list = await adminService.getPendingKyc();
       const items = Array.isArray(list) ? list : (list?.items || []);
       const mapped = items.map((k) => {
-        const d = new Date(k.created_at || Date.now());
-        const formattedDate = `${d.getDate()} ${d.toLocaleString('en-US', { month: 'short' })} ${d.getFullYear()}, ${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+        const dCreated = new Date(k.user_created_at || k.created_at || Date.now());
+        const createdFormatted = `${dCreated.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+        const dSubmitted = new Date(k.submitted_at || Date.now());
+        const submittedFormatted = `${dSubmitted.getDate()} ${dSubmitted.toLocaleString('en-US', { month: 'short' })} ${dSubmitted.getFullYear()}`;
 
         return {
-          id: k.id,
-          kycId: k.id,
+          id: k.id || k.kyc_id,
+          kycId: k.kyc_id || k.id,
           userId: k.user_id,
-          name: k.full_name || k.user?.name || 'Customer',
-          mobile: k.user?.mobile || '',
+          name: k.name || k.user_name || k.full_name || 'Customer',
+          mobile: k.mobile || k.user_mobile || '',
+          email: k.email || k.user_email || '',
+          role: k.role || k.user_role || 'customer',
+          accountStatus: k.account_status || k.user_account_status || 'active',
           idType: (k.id_type || 'PAN').toUpperCase(),
           idNumber: k.id_number || '',
           status: k.status || 'pending',
-          date: formattedDate,
-          createdAt: k.created_at,
+          created: createdFormatted,
+          submitted: submittedFormatted,
+          createdAt: k.user_created_at || k.created_at,
+          submittedAt: k.submitted_at,
+          address: k.address || null,
         };
       });
       setPendingVerifications(mapped);
