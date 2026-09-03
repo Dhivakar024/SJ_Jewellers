@@ -1,6 +1,11 @@
-import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Calendar, X, Trash2, AlertTriangle, CheckCircle, Phone, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { 
+  ArrowLeft, Calendar, X, Trash2, AlertTriangle, CheckCircle, Phone, 
+  ChevronLeft, ChevronRight, ShieldCheck, ShieldAlert, Clock, Mail, 
+  User, MapPin, CreditCard, RefreshCw, Check, AlertCircle
+} from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import adminService from '../services/adminService';
 
 export default function AdminMembers() {
   const context = useApp() || {};
@@ -10,9 +15,11 @@ export default function AdminMembers() {
   const rawGoldRate = context.goldRate;
   const rawSilverRate = context.silverRate;
   const deleteMember = context.deleteMember;
+  const verifyCustomer = context.verifyCustomer;
+  const rejectKyc = context.rejectKyc;
   const refreshAllData = context.refreshAllData;
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof refreshAllData === 'function') {
       refreshAllData();
     }
@@ -24,7 +31,18 @@ export default function AdminMembers() {
   const goldRate = typeof rawGoldRate === 'number' && !isNaN(rawGoldRate) ? rawGoldRate : (parseFloat(rawGoldRate) || 13818.88);
   const silverRate = typeof rawSilverRate === 'number' && !isNaN(rawSilverRate) ? rawSilverRate : (parseFloat(rawSilverRate) || 206.17);
 
+  // Selection & Details State
   const [selectedMemberId, setSelectedMemberId] = useState(null);
+  const [memberDetail, setMemberDetail] = useState(null);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const [detailError, setDetailError] = useState('');
+  
+  // KYC Action Modal State
+  const [showRejectKycModal, setShowRejectKycModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [isSubmittingKyc, setIsSubmittingKyc] = useState(false);
+
+  // Tab & Filters State
   const [activeTab, setActiveTab] = useState('gold'); // 'gold' | 'silver'
   const [filterType, setFilterType] = useState('all'); // 'all' | 'purchases' | 'withdrawals'
   const [fromDate, setFromDate] = useState('');
@@ -38,23 +56,159 @@ export default function AdminMembers() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Selected Member Lookup
-  const selectedMember = useMemo(() => {
+  // Fetch Member Details from backend when selectedMemberId changes
+  const fetchSelectedMemberDetail = useCallback(async (userId) => {
+    if (!userId) return;
+    setIsLoadingDetail(true);
+    setDetailError('');
+    try {
+      const data = await adminService.getUserDetail(userId);
+      setMemberDetail(data);
+    } catch (err) {
+      console.error('Failed to fetch user details:', err);
+      setDetailError(err.message || 'Unable to load member details. Please try again.');
+    } finally {
+      setIsLoadingDetail(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedMemberId) {
+      fetchSelectedMemberDetail(selectedMemberId);
+    } else {
+      setMemberDetail(null);
+      setDetailError('');
+    }
+  }, [selectedMemberId, fetchSelectedMemberDetail]);
+
+  // Selected Member fallback from members list while loading or if detail is ready
+  const selectedMemberSummary = useMemo(() => {
     if (!selectedMemberId) return null;
     return members.find((m) => m && (m.id === selectedMemberId || m.id === selectedMemberId.toString()));
   }, [members, selectedMemberId]);
 
+  // Handle Approve KYC
+  const handleApproveKycAction = async () => {
+    const kycId = memberDetail?.kyc?.id || memberDetail?.kyc?.kyc_id;
+    if (!kycId || isSubmittingKyc) return;
+    setIsSubmittingKyc(true);
+    try {
+      if (typeof verifyCustomer === 'function') {
+        await verifyCustomer(kycId);
+      } else {
+        await adminService.approveKyc(kycId);
+      }
+      setToastMessage(`KYC for ${memberDetail.name || memberDetail.profile?.full_name || 'Customer'} has been verified successfully.`);
+      await fetchSelectedMemberDetail(selectedMemberId);
+      if (typeof refreshAllData === 'function') {
+        await refreshAllData();
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to approve KYC.');
+    } finally {
+      setIsSubmittingKyc(false);
+    }
+  };
+
+  // Handle Reject KYC
+  const handleRejectKycAction = async () => {
+    const kycId = memberDetail?.kyc?.id || memberDetail?.kyc?.kyc_id;
+    if (!kycId || isSubmittingKyc) return;
+    setIsSubmittingKyc(true);
+    try {
+      const reason = rejectionReason.trim() || 'Document verification failed';
+      if (typeof rejectKyc === 'function') {
+        await rejectKyc(kycId, reason);
+      } else {
+        await adminService.rejectKyc(kycId, reason);
+      }
+      setToastMessage(`KYC for ${memberDetail.name || 'Customer'} has been rejected.`);
+      setShowRejectKycModal(false);
+      setRejectionReason('');
+      await fetchSelectedMemberDetail(selectedMemberId);
+      if (typeof refreshAllData === 'function') {
+        await refreshAllData();
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to reject KYC.');
+    } finally {
+      setIsSubmittingKyc(false);
+    }
+  };
+
   // Aggregate and calculate all transactions & withdrawals for selected member
   const memberTransactions = useMemo(() => {
-    if (!selectedMember) {
+    if (!memberDetail && !selectedMemberSummary) {
       return { goldPurchases: [], silverPurchases: [], goldWithdrawals: [], silverWithdrawals: [], allGold: [], allSilver: [] };
     }
 
-    const username = (selectedMember.username || '').toLowerCase().trim();
-    const memberId = (selectedMember.id || '').toString().trim();
-    const mobileDigits = (selectedMember.mobile || '').replace(/[^0-9]/g, '');
+    // Prefer real transactions from memberDetail if available
+    if (memberDetail?.transactions || memberDetail?.withdrawals) {
+      const rawTx = Array.isArray(memberDetail.transactions) ? memberDetail.transactions : [];
+      const rawWd = Array.isArray(memberDetail.withdrawals) ? memberDetail.withdrawals : [];
 
-    // Match purchases
+      const purchases = rawTx.map((t) => {
+        const isGold = (t.metal || '').toLowerCase().includes('gold');
+        const gNum = parseFloat(t.quantity_grams || t.quantity || 0) || 0;
+        const amtNum = parseFloat(t.total_amount || t.amount || 0) || 0;
+        const rateVal = parseFloat(t.rate_per_gram || t.rate) || (gNum > 0 && amtNum > 0 ? (amtNum / gNum) : (isGold ? goldRate : silverRate));
+        const d = new Date(t.created_at || Date.now());
+        const dateFormatted = `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+
+        return {
+          ...t,
+          type: 'Purchase',
+          metal: isGold ? 'Gold' : 'Silver',
+          displayGrams: gNum,
+          displayRate: rateVal,
+          displayAmount: amtNum,
+          displayDate: dateFormatted,
+          displayStatus: (t.status === 'completed' || t.status === 'approved') ? 'Success' : (t.status === 'rejected' ? 'Rejected' : 'Pending'),
+          displayPayment: t.payment_method || 'UPI',
+        };
+      });
+
+      const memberWithdrawals = rawWd.map((w) => {
+        const isGold = (w.metal || '').toLowerCase().includes('gold');
+        const gNum = parseFloat(w.quantity_grams || w.grams || 0) || 0;
+        const amtNum = parseFloat(w.metal_value || w.amount || 0) || 0;
+        const rateVal = parseFloat(w.rate_per_gram || w.rate) || (isGold ? goldRate : silverRate);
+        const d = new Date(w.created_at || Date.now());
+        const dateFormatted = `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+
+        return {
+          ...w,
+          type: 'Withdrawal',
+          metal: isGold ? 'Gold' : 'Silver',
+          displayGrams: gNum,
+          displayRate: rateVal,
+          displayAmount: amtNum,
+          displayDate: dateFormatted,
+          displayStatus: (w.status === 'completed' || w.status === 'approved') ? 'Success' : (w.status === 'rejected' ? 'Rejected' : 'Pending'),
+          displayPayment: w.withdrawal_mode || 'Physical Delivery',
+        };
+      });
+
+      const goldPurchases = purchases.filter((p) => p.metal === 'Gold');
+      const silverPurchases = purchases.filter((p) => p.metal === 'Silver');
+      const goldWithdrawals = memberWithdrawals.filter((w) => w.metal === 'Gold');
+      const silverWithdrawals = memberWithdrawals.filter((w) => w.metal === 'Silver');
+
+      return {
+        goldPurchases,
+        silverPurchases,
+        goldWithdrawals,
+        silverWithdrawals,
+        allGold: [...goldPurchases, ...goldWithdrawals],
+        allSilver: [...silverPurchases, ...silverWithdrawals],
+      };
+    }
+
+    const username = (selectedMemberSummary?.username || '').toLowerCase().trim();
+    const memberId = (selectedMemberSummary?.id || '').toString().trim();
+    const mobileDigits = (selectedMemberSummary?.mobile || '').replace(/[^0-9]/g, '');
+
+    // Match purchases from global transactions
     const purchases = transactions.filter((t) => {
       if (!t) return false;
       const cust = (t.customer || t.username || '').toLowerCase().trim();
@@ -64,7 +218,6 @@ export default function AdminMembers() {
       if (cust && cust === username) return true;
       if (uId && uId === memberId) return true;
       if (tMobile && mobileDigits && tMobile.includes(mobileDigits)) return true;
-      if ((memberId === '1' || username === 'testuser') && !cust && !uId) return true;
       return false;
     }).map((t) => {
       const isGold = (t.asset || t.assetType || t.metal || '').toLowerCase().includes('gold');
@@ -95,7 +248,6 @@ export default function AdminMembers() {
       if (cust && cust === username) return true;
       if (uId && uId === memberId) return true;
       if (wMobile && mobileDigits && wMobile.includes(mobileDigits)) return true;
-      if ((memberId === '1' || username === 'testuser') && !uId && !cust) return true;
       return false;
     }).map((w) => {
       const isGold = (w.metal || w.asset || '').toLowerCase().includes('gold');
@@ -118,63 +270,68 @@ export default function AdminMembers() {
 
     const goldPurchases = purchases.filter((p) => p.metal === 'Gold');
     const silverPurchases = purchases.filter((p) => p.metal === 'Silver');
-    
     const goldWithdrawals = memberWithdrawals.filter((w) => w.metal === 'Gold');
     const silverWithdrawals = memberWithdrawals.filter((w) => w.metal === 'Silver');
-
-    const allGold = [...goldPurchases, ...goldWithdrawals];
-    const allSilver = [...silverPurchases, ...silverWithdrawals];
 
     return {
       goldPurchases,
       silverPurchases,
       goldWithdrawals,
       silverWithdrawals,
-      allGold,
-      allSilver
+      allGold: [...goldPurchases, ...goldWithdrawals],
+      allSilver: [...silverPurchases, ...silverWithdrawals]
     };
-  }, [selectedMember, transactions, withdrawals, goldRate, silverRate]);
+  }, [memberDetail, selectedMemberSummary, transactions, withdrawals, goldRate, silverRate]);
 
-  // Total Gold & Silver Bought calculations
-  const totalGoldBoughtGrams = useMemo(() => {
-    const sum = (memberTransactions?.goldPurchases || []).reduce((acc, p) => acc + (p?.displayGrams || 0), 0);
-    if (sum === 0 && (selectedMember?.id === '1' || selectedMember?.username === 'testuser')) {
-      return 1.8570;
+  // Holdings calculations
+  const goldHoldingsData = useMemo(() => {
+    if (memberDetail?.holdings?.gold) {
+      return memberDetail.holdings.gold;
     }
-    return sum;
-  }, [memberTransactions, selectedMember]);
+    const grams = (memberTransactions?.goldPurchases || []).reduce((acc, p) => acc + (p?.displayGrams || 0), 0);
+    return {
+      quantity_grams: grams,
+      invested_amount: grams * goldRate,
+      avg_buy_rate: goldRate,
+      current_rate: goldRate,
+      current_value: grams * goldRate
+    };
+  }, [memberDetail, memberTransactions, goldRate]);
 
-  const totalSilverBoughtGrams = useMemo(() => {
-    const sum = (memberTransactions?.silverPurchases || []).reduce((acc, p) => acc + (p?.displayGrams || 0), 0);
-    if (sum === 0 && (selectedMember?.id === '1' || selectedMember?.username === 'testuser')) {
-      return 77.0550;
+  const silverHoldingsData = useMemo(() => {
+    if (memberDetail?.holdings?.silver) {
+      return memberDetail.holdings.silver;
     }
-    return sum;
-  }, [memberTransactions, selectedMember]);
+    const grams = (memberTransactions?.silverPurchases || []).reduce((acc, p) => acc + (p?.displayGrams || 0), 0);
+    return {
+      quantity_grams: grams,
+      invested_amount: grams * silverRate,
+      avg_buy_rate: silverRate,
+      current_rate: silverRate,
+      current_value: grams * silverRate
+    };
+  }, [memberDetail, memberTransactions, silverRate]);
 
-  // Dynamic filter application
+  // Dynamic filter application for history table
   const filteredList = useMemo(() => {
     const list = activeTab === 'gold' ? (memberTransactions?.allGold || []) : (memberTransactions?.allSilver || []);
     
     return list.filter((item) => {
       if (!item) return false;
-      // Type Filter
       if (filterType === 'purchases' && item.type !== 'Purchase') return false;
       if (filterType === 'withdrawals' && item.type !== 'Withdrawal') return false;
 
-      // Date Range Filter
       if (fromDate) {
-        const itemDate = new Date(item.date || item.displayDate);
+        const itemDate = new Date(item.date || item.displayDate || item.created_at);
         const from = new Date(fromDate);
         if (!isNaN(itemDate.getTime()) && !isNaN(from.getTime()) && itemDate < from) return false;
       }
       if (toDate) {
-        const itemDate = new Date(item.date || item.displayDate);
+        const itemDate = new Date(item.date || item.displayDate || item.created_at);
         const to = new Date(toDate);
         if (!isNaN(itemDate.getTime()) && !isNaN(to.getTime()) && itemDate > new Date(to.getTime() + 86400000)) return false;
       }
 
-      // Min/Max Grams Filter
       const grams = typeof item.displayGrams === 'number' ? item.displayGrams : 0;
       if (minGrams !== '' && !isNaN(parseFloat(minGrams))) {
         if (grams < parseFloat(minGrams)) return false;
@@ -187,7 +344,7 @@ export default function AdminMembers() {
     });
   }, [activeTab, memberTransactions, filterType, fromDate, toDate, minGrams, maxGrams]);
 
-  const handleClearFilters = () => {
+  const handleResetFilters = () => {
     setFilterType('all');
     setFromDate('');
     setToDate('');
@@ -196,12 +353,12 @@ export default function AdminMembers() {
   };
 
   const handleDeleteMember = () => {
-    if (!selectedMember) return;
+    if (!selectedMemberId) return;
     if (typeof deleteMember === 'function') {
-      deleteMember(selectedMember.id);
+      deleteMember(selectedMemberId);
     }
     setShowDeleteConfirm(false);
-    setToastMessage(`Member ${selectedMember.username || 'user'} has been deactivated.`);
+    setToastMessage(`Member status has been updated.`);
     setTimeout(() => {
       setSelectedMemberId(null);
       setToastMessage('');
@@ -210,30 +367,39 @@ export default function AdminMembers() {
 
   const renderStatusBadge = (status) => {
     const s = (status || '').toLowerCase();
-    if (s.includes('success') || s.includes('approved') || s.includes('completed')) {
+    if (s.includes('success') || s.includes('approved') || s.includes('completed') || s.includes('verified')) {
       return <span className="admin-badge-green">Success</span>;
     }
     if (s.includes('pending') || s.includes('processing')) {
       return <span className="admin-badge-yellow">Pending</span>;
     }
+    if (s.includes('rejected') || s.includes('failed')) {
+      return <span className="admin-badge-red" style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>Rejected</span>;
+    }
     return <span className="admin-badge-gray">{status || 'Completed'}</span>;
   };
 
   // =========================================================================
-  // VIEW 1: MEMBER DETAILS PAGE
+  // VIEW 1: MEMBER DETAILS VIEW (When selectedMemberId is set)
   // =========================================================================
-  if (selectedMember) {
-    const isVerified = selectedMember.verified === 'Yes';
-    const isMobileVerified = selectedMember.mobileVerified === 'Yes';
-    const isActive = selectedMember.active === 'Yes';
-
-    const safeGoldGrams = typeof totalGoldBoughtGrams === 'number' && !isNaN(totalGoldBoughtGrams) ? totalGoldBoughtGrams : 0;
-    const safeSilverGrams = typeof totalSilverBoughtGrams === 'number' && !isNaN(totalSilverBoughtGrams) ? totalSilverBoughtGrams : 0;
+  if (selectedMemberId) {
+    const memberName = memberDetail?.name || memberDetail?.profile?.full_name || selectedMemberSummary?.name || selectedMemberSummary?.username || 'Customer';
+    const memberMobile = memberDetail?.mobile || selectedMemberSummary?.mobile || '-';
+    const memberEmail = memberDetail?.email || selectedMemberSummary?.email || 'Not provided';
+    const memberRole = memberDetail?.role || selectedMemberSummary?.role || 'customer';
+    const memberStatus = memberDetail?.account_status || selectedMemberSummary?.status || 'active';
+    const rawKycStatus = (memberDetail?.kyc_status || memberDetail?.kyc?.status || selectedMemberSummary?.kycStatus || 'pending').toLowerCase();
+    const isKycVerified = rawKycStatus === 'verified' || rawKycStatus === 'approved';
+    const isKycPending = rawKycStatus === 'pending';
+    const isKycRejected = rawKycStatus === 'rejected';
+    
+    const dJoined = new Date(memberDetail?.created_at || Date.now());
+    const joinedFormatted = `${dJoined.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', boxSizing: 'border-box' }}>
         
-        {/* Toast Message */}
+        {/* Toast Notification */}
         {toastMessage && (
           <div style={{
             position: 'fixed',
@@ -256,8 +422,8 @@ export default function AdminMembers() {
           </div>
         )}
 
-        {/* 1. Back Navigation & Header */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
+        {/* 1. Back Navigation Button */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button
             onClick={() => setSelectedMemberId(null)}
             className="admin-btn-secondary"
@@ -265,491 +431,820 @@ export default function AdminMembers() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '7px 16px',
-              fontSize: '13px',
+              padding: '8px 18px',
+              fontSize: '13.5px',
+              fontWeight: '700',
               cursor: 'pointer'
             }}
           >
-            <ArrowLeft size={14} />
+            <ArrowLeft size={16} />
             <span>Back to Members</span>
           </button>
+
+          {isLoadingDetail && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--admin-text-secondary)', fontSize: '13px' }}>
+              <RefreshCw size={14} className="admin-spin" />
+              <span>Updating member data...</span>
+            </div>
+          )}
         </div>
 
-        {/* 2. Member Profile Header Card */}
-        <div className="admin-card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        {/* Loading State Skeleton */}
+        {isLoadingDetail && !memberDetail && (
+          <div className="admin-card" style={{ textAlign: 'center', padding: '50px 20px' }}>
             <div style={{
-              width: '54px',
-              height: '54px',
+              width: '40px',
+              height: '40px',
+              border: '3px solid #e2e8f0',
+              borderTopColor: '#ea580c',
               borderRadius: '50%',
-              backgroundColor: '#ea580c',
-              color: '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '22px',
-              fontWeight: '800'
-            }}>
-              {(selectedMember.username || 'U').charAt(0).toUpperCase()}
-            </div>
-
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                <h2 className="admin-member-header-name">
-                  {selectedMember.username || 'Member'}
-                </h2>
-                <span className="admin-badge-gray" style={{ fontSize: '11px' }}>
-                  ID: #{selectedMember.id}
-                </span>
-                <span className="admin-badge-gray" style={{ fontSize: '11px', textTransform: 'capitalize' }}>
-                  {selectedMember.role || 'Customer'}
-                </span>
-              </div>
-
-              <div className="admin-member-header-sub">
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  <Phone size={13} /> {selectedMember.mobile || '-'}
-                </span>
-                <span>•</span>
-                <span>Joined: {selectedMember.created || 'Jan 2026'}</span>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <span style={{
-              padding: '4px 10px',
-              borderRadius: '6px',
-              fontSize: '12px',
-              fontWeight: '700',
-              backgroundColor: isVerified ? '#dcfce7' : '#fef3c7',
-              color: isVerified ? '#15803d' : '#b45309'
-            }}>
-              KYC: {isVerified ? 'Verified' : 'Unverified'}
-            </span>
-
-            <span style={{
-              padding: '4px 10px',
-              borderRadius: '6px',
-              fontSize: '12px',
-              fontWeight: '700',
-              backgroundColor: isMobileVerified ? '#dcfce7' : '#fef3c7',
-              color: isMobileVerified ? '#15803d' : '#b45309'
-            }}>
-              Mobile: {isMobileVerified ? 'Verified' : 'Unverified'}
-            </span>
-
-            <span style={{
-              padding: '4px 10px',
-              borderRadius: '6px',
-              fontSize: '12px',
-              fontWeight: '700',
-              backgroundColor: isActive ? '#dcfce7' : '#fee2e2',
-              color: isActive ? '#15803d' : '#dc2626'
-            }}>
-              Status: {isActive ? 'Active' : 'Inactive'}
-            </span>
-          </div>
-        </div>
-
-        {/* 3. Holdings Summary Cards (Side by Side) */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '20px'
-        }}>
-          {/* Total Gold bought Card */}
-          <div className="admin-holdings-card-gold">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span className="admin-holdings-title-gold">
-                Total Gold bought
-              </span>
-              <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                backgroundColor: '#fef3c7',
-                color: '#d97706',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: '800',
-                fontSize: '15px'
-              }}>
-                $
-              </div>
-            </div>
-
-            <div className="admin-holdings-value-gold">
-              {safeGoldGrams.toFixed(4)} gm
-            </div>
-
-            <div className="admin-holdings-sub-gold">
-              Valuation: ₹{(safeGoldGrams * goldRate).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · (₹{goldRate.toLocaleString('en-IN')}/gm)
-            </div>
-          </div>
-
-          {/* Total Silver bought Card */}
-          <div className="admin-holdings-card-silver">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span className="admin-holdings-title-silver">
-                Total Silver bought
-              </span>
-              <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                backgroundColor: '#f1f5f9',
-                color: '#64748b',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: '800',
-                fontSize: '15px'
-              }}>
-                $
-              </div>
-            </div>
-
-            <div className="admin-holdings-value-silver">
-              {safeSilverGrams.toFixed(4)} gm
-            </div>
-
-            <div className="admin-holdings-sub-silver">
-              Valuation: ₹{(safeSilverGrams * silverRate).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · (₹{silverRate.toLocaleString('en-IN')}/gm)
-            </div>
-          </div>
-        </div>
-
-        {/* 4. Transaction History Section with Tabs & Filters */}
-        <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '20px' }}>
-          
-          {/* Header & Tabs */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '12px' }}>
-            <div>
-              <h3 style={{ fontSize: '17px', fontWeight: '800', margin: '0 0 2px 0', color: 'var(--admin-text-heading)' }}>
-                Transaction History
-              </h3>
-              <p style={{ fontSize: '13px', color: 'var(--admin-text-secondary)', margin: 0 }}>
-                Gold and silver transactions and withdrawal logs for this member
-              </p>
-            </div>
-
-            {/* Gold / Silver Filter Buttons - Matching Withdrawal Page Pill Style & Fixed Equal Dimensions */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <button
-                onClick={() => setActiveTab('gold')}
-                style={{
-                  height: '40px',
-                  width: '135px',
-                  padding: '0 20px',
-                  borderRadius: '20px',
-                  border: activeTab === 'gold' ? 'none' : '1px solid var(--admin-border)',
-                  backgroundColor: activeTab === 'gold' ? '#d97706' : 'var(--admin-bg-card)',
-                  color: activeTab === 'gold' ? '#ffffff' : 'var(--admin-text-secondary)',
-                  fontSize: '14.5px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: activeTab === 'gold' ? '0 2px 8px rgba(217, 119, 6, 0.25)' : 'none',
-                  boxSizing: 'border-box'
-                }}
-                onMouseEnter={(e) => {
-                  if (activeTab !== 'gold') {
-                    e.currentTarget.style.backgroundColor = 'var(--admin-border-subtle)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (activeTab !== 'gold') {
-                    e.currentTarget.style.backgroundColor = 'var(--admin-bg-card)';
-                    e.currentTarget.style.transform = 'none';
-                  }
-                }}
-              >
-                Gold ({(memberTransactions?.allGold || []).length})
-              </button>
-
-              <button
-                onClick={() => setActiveTab('silver')}
-                style={{
-                  height: '40px',
-                  width: '135px',
-                  padding: '0 20px',
-                  borderRadius: '20px',
-                  border: activeTab === 'silver' ? 'none' : '1px solid var(--admin-border)',
-                  backgroundColor: activeTab === 'silver' ? '#475569' : 'var(--admin-bg-card)',
-                  color: activeTab === 'silver' ? '#ffffff' : 'var(--admin-text-secondary)',
-                  fontSize: '14.5px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: activeTab === 'silver' ? '0 2px 8px rgba(71, 85, 105, 0.25)' : 'none',
-                  boxSizing: 'border-box'
-                }}
-                onMouseEnter={(e) => {
-                  if (activeTab !== 'silver') {
-                    e.currentTarget.style.backgroundColor = 'var(--admin-border-subtle)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (activeTab !== 'silver') {
-                    e.currentTarget.style.backgroundColor = 'var(--admin-bg-card)';
-                    e.currentTarget.style.transform = 'none';
-                  }
-                }}
-              >
-                Silver ({(memberTransactions?.allSilver || []).length})
-              </button>
-            </div>
-          </div>
-
-          {/* Filters Bar */}
-          <div className="admin-filter-bar">
-            {/* Type Pills */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span className="admin-filter-label">Type:</span>
-              {[
-                { id: 'all', label: 'All' },
-                { id: 'purchases', label: 'Purchases' },
-                { id: 'withdrawals', label: 'Withdrawals' }
-              ].map((opt) => (
-                <button
-                  key={opt.id}
-                  onClick={() => setFilterType(opt.id)}
-                  style={{
-                    padding: '5px 12px',
-                    borderRadius: '16px',
-                    border: 'none',
-                    backgroundColor: filterType === opt.id ? 'var(--admin-orange)' : 'var(--admin-border-subtle)',
-                    color: filterType === opt.id ? '#ffffff' : 'var(--admin-text-secondary)',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Date Range Filters with Working Calendar Picker */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span className="admin-filter-label">From:</span>
-              <div className="admin-date-wrapper">
-                <Calendar size={14} className="admin-date-icon" />
-                <input
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                  onClick={(e) => {
-                    try {
-                      if (e.target.showPicker) e.target.showPicker();
-                    } catch (err) {}
-                  }}
-                  className="admin-input"
-                  style={{ height: '36px', paddingLeft: '34px', paddingRight: '8px', fontSize: '13px', width: '150px', cursor: 'pointer' }}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span className="admin-filter-label">To:</span>
-              <div className="admin-date-wrapper">
-                <Calendar size={14} className="admin-date-icon" />
-                <input
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                  onClick={(e) => {
-                    try {
-                      if (e.target.showPicker) e.target.showPicker();
-                    } catch (err) {}
-                  }}
-                  className="admin-input"
-                  style={{ height: '36px', paddingLeft: '34px', paddingRight: '8px', fontSize: '13px', width: '150px', cursor: 'pointer' }}
-                />
-              </div>
-            </div>
-
-            {/* Grams Range Filters */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span className="admin-filter-label">Grams:</span>
-              <input
-                type="number"
-                step="0.0001"
-                placeholder="Min gm"
-                value={minGrams}
-                onChange={(e) => setMinGrams(e.target.value)}
-                className="admin-input"
-                style={{ height: '36px', padding: '0 10px', fontSize: '13px', width: '85px' }}
-              />
-              <span style={{ color: 'var(--admin-text-muted)' }}>-</span>
-              <input
-                type="number"
-                step="0.0001"
-                placeholder="Max gm"
-                value={maxGrams}
-                onChange={(e) => setMaxGrams(e.target.value)}
-                className="admin-input"
-                style={{ height: '36px', padding: '0 10px', fontSize: '13px', width: '85px' }}
-              />
-            </div>
-
-            {/* Clear Filters Button */}
-            {(filterType !== 'all' || fromDate || toDate || minGrams || maxGrams) && (
-              <button
-                onClick={handleClearFilters}
-                className="admin-btn-secondary"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  padding: '5px 12px',
-                  fontSize: '12px',
-                  marginLeft: 'auto'
-                }}
-              >
-                <X size={12} /> Clear filters
-              </button>
-            )}
-          </div>
-
-          {/* Transactions Table */}
-          <div className="admin-table-container">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>DATE</th>
-                  <th>TYPE</th>
-                  <th>GRAMS</th>
-                  <th>RATE (₹/G)</th>
-                  <th>AMOUNT (₹)</th>
-                  <th>STATUS</th>
-                  <th>PAYMENT METHOD</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredList.length > 0 ? (
-                  filteredList.map((txn, idx) => {
-                    const tRate = typeof txn.displayRate === 'number' && !isNaN(txn.displayRate) ? txn.displayRate : 0;
-                    const tAmount = typeof txn.displayAmount === 'number' && !isNaN(txn.displayAmount) ? txn.displayAmount : 0;
-                    const tGrams = typeof txn.displayGrams === 'number' && !isNaN(txn.displayGrams) ? txn.displayGrams : 0;
-
-                    return (
-                      <tr key={txn.id || idx}>
-                        <td style={{ fontWeight: '600', color: 'var(--admin-text-secondary)' }}>
-                          {txn.displayDate}
-                        </td>
-
-                        <td>
-                          <span style={{
-                            padding: '4px 10px',
-                            borderRadius: '6px',
-                            fontSize: '11.5px',
-                            fontWeight: '700',
-                            backgroundColor: txn.type === 'Purchase' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.15)',
-                            color: txn.type === 'Purchase' ? '#047857' : '#1d4ed8'
-                          }}>
-                            {txn.type}
-                          </span>
-                        </td>
-
-                        <td style={{ fontWeight: '700', color: 'var(--admin-text-value)' }}>
-                          {tGrams.toFixed(4)} gm
-                        </td>
-
-                        <td style={{ color: 'var(--admin-text-secondary)' }}>
-                          ₹{tRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </td>
-
-                        <td style={{ fontWeight: '700', color: 'var(--admin-text-value)' }}>
-                          ₹{tAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </td>
-
-                        <td>
-                          {renderStatusBadge(txn.displayStatus)}
-                        </td>
-
-                        <td style={{ color: 'var(--admin-text-secondary)' }}>
-                          {txn.displayPayment}
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan="7" style={{ textAlign: 'center', padding: '36px 16px', color: 'var(--admin-text-muted)' }}>
-                      No {activeTab} transactions found for this member matching the filter criteria.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* 5. Delete / Ban Member Danger Zone */}
-        <div className="admin-danger-zone">
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <Trash2 size={16} color="#ef4444" />
-              <h4 className="admin-danger-title">
-                Deactivate Member
-              </h4>
-            </div>
-            <p className="admin-danger-desc">
-              Deactivating will disable this user's active status. Historical transactions and audit records will remain preserved.
+              animation: 'admin-spin 0.8s linear infinite',
+              margin: '0 auto 16px'
+            }} />
+            <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--admin-text-heading)', margin: '0 0 4px 0' }}>
+              Loading member details...
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--admin-text-secondary)', margin: 0 }}>
+              Fetching real customer account, KYC, and holdings records from MySQL
             </p>
           </div>
+        )}
 
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            style={{
-              backgroundColor: '#dc2626',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '8px 18px',
-              fontSize: '13px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'background-color 0.15s ease'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
-          >
-            <Trash2 size={14} />
-            <span>Delete Member</span>
-          </button>
-        </div>
+        {/* Error State */}
+        {detailError && (
+          <div className="admin-card" style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <AlertCircle size={24} color="#dc2626" />
+              <div>
+                <h4 style={{ margin: '0 0 2px 0', fontSize: '14.5px', fontWeight: '700', color: '#991b1b' }}>Unable to load member details</h4>
+                <p style={{ margin: 0, fontSize: '13px', color: '#b91c1c' }}>{detailError}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => fetchSelectedMemberDetail(selectedMemberId)}
+              style={{
+                backgroundColor: '#dc2626',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '8px 16px',
+                fontSize: '12.5px',
+                fontWeight: '700',
+                cursor: 'pointer'
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        )}
 
-        {/* 6. Delete Confirmation Modal Dialog */}
-        {showDeleteConfirm && (
-          <div className="admin-modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
-            <div className="admin-modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'rgba(239, 68, 68, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <AlertTriangle size={20} color="#ef4444" />
+        {/* Main Details View Content */}
+        {(!isLoadingDetail || memberDetail) && (
+          <>
+            {/* 2. Member Profile Header Card */}
+            <div className="admin-card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{
+                  width: '54px',
+                  height: '54px',
+                  borderRadius: '50%',
+                  backgroundColor: '#ea580c',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '22px',
+                  fontWeight: '800'
+                }}>
+                  {(memberName || 'U').charAt(0).toUpperCase()}
                 </div>
-                <h3 style={{ fontSize: '17px', fontWeight: '800', margin: 0, color: 'var(--admin-text-value)' }}>
-                  Confirm Member Deactivation
-                </h3>
+
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                    <h2 className="admin-member-header-name" style={{ margin: 0, fontSize: '20px' }}>
+                      {memberName}
+                    </h2>
+                    <span className="admin-badge-gray" style={{ fontSize: '11px', fontWeight: '600' }}>
+                      ID: #{selectedMemberId}
+                    </span>
+                    <span className="admin-badge-gray" style={{ fontSize: '11px', textTransform: 'capitalize' }}>
+                      {memberRole}
+                    </span>
+                  </div>
+
+                  <div className="admin-member-header-sub" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', fontSize: '13px', color: 'var(--admin-text-secondary)' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <Phone size={13} /> {memberMobile}
+                    </span>
+                    <span>•</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <Mail size={13} /> {memberEmail}
+                    </span>
+                    <span>•</span>
+                    <span>Joined: {joinedFormatted}</span>
+                  </div>
+                </div>
               </div>
 
-              <p style={{ fontSize: '13.5px', color: 'var(--admin-text-secondary)', lineHeight: '1.4', marginBottom: '18px' }}>
-                Are you sure you want to deactivate member <strong style={{ color: 'var(--admin-text-value)' }}>{selectedMember.username || 'user'}</strong> (ID: #{selectedMember.id})? This will mark their status as Inactive.
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{
+                  padding: '5px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12.5px',
+                  fontWeight: '700',
+                  backgroundColor: isKycVerified ? '#dcfce7' : (isKycPending ? '#fef3c7' : '#fee2e2'),
+                  color: isKycVerified ? '#15803d' : (isKycPending ? '#b45309' : '#dc2626'),
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}>
+                  {isKycVerified ? <ShieldCheck size={14} /> : (isKycPending ? <Clock size={14} /> : <ShieldAlert size={14} />)}
+                  KYC: {isKycVerified ? 'Verified' : (isKycPending ? 'Pending' : (isKycRejected ? 'Rejected' : 'Unverified'))}
+                </span>
+
+                <span style={{
+                  padding: '5px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12.5px',
+                  fontWeight: '700',
+                  backgroundColor: '#dcfce7',
+                  color: '#15803d'
+                }}>
+                  Mobile: Verified
+                </span>
+
+                <span style={{
+                  padding: '5px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12.5px',
+                  fontWeight: '700',
+                  backgroundColor: memberStatus === 'active' ? '#dcfce7' : '#fee2e2',
+                  color: memberStatus === 'active' ? '#15803d' : '#dc2626'
+                }}>
+                  Status: {memberStatus === 'active' ? 'Active' : 'Banned'}
+                </span>
+              </div>
+            </div>
+
+            {/* 3. KYC ACTION BANNER (When KYC is Pending) */}
+            {isKycPending && (
+              <div style={{
+                backgroundColor: '#fffbeb',
+                border: '1px solid #fde68a',
+                borderRadius: '12px',
+                padding: '16px 20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '14px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    backgroundColor: '#fef3c7',
+                    color: '#d97706',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <Clock size={20} />
+                  </div>
+                  <div>
+                    <h4 style={{ margin: '0 0 2px 0', fontSize: '15px', fontWeight: '800', color: '#92400e' }}>
+                      KYC Verification Pending Review
+                    </h4>
+                    <p style={{ margin: 0, fontSize: '13px', color: '#b45309' }}>
+                      This customer submitted their KYC identification documents and is awaiting administrator verification.
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <button
+                    type="button"
+                    disabled={isSubmittingKyc}
+                    onClick={handleApproveKycAction}
+                    style={{
+                      backgroundColor: '#16a34a',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '9px 18px',
+                      fontSize: '13.5px',
+                      fontWeight: '700',
+                      cursor: isSubmittingKyc ? 'not-allowed' : 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: '0 2px 6px rgba(22, 163, 74, 0.25)'
+                    }}
+                  >
+                    <Check size={16} />
+                    <span>{isSubmittingKyc ? 'Approving...' : 'Approve KYC'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isSubmittingKyc}
+                    onClick={() => setShowRejectKycModal(true)}
+                    style={{
+                      backgroundColor: '#dc2626',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '9px 18px',
+                      fontSize: '13.5px',
+                      fontWeight: '700',
+                      cursor: isSubmittingKyc ? 'not-allowed' : 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <X size={16} />
+                    <span>Reject KYC</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* 4. KYC Status Banner for Verified / Rejected */}
+            {isKycVerified && (
+              <div style={{
+                backgroundColor: '#f0fdf4',
+                border: '1px solid #bbf7d0',
+                borderRadius: '10px',
+                padding: '12px 18px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                color: '#15803d',
+                fontSize: '13.5px',
+                fontWeight: '600'
+              }}>
+                <ShieldCheck size={18} />
+                <span>Customer identity has been verified and approved in database.</span>
+              </div>
+            )}
+
+            {isKycRejected && (
+              <div style={{
+                backgroundColor: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: '10px',
+                padding: '12px 18px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                color: '#b91c1c',
+                fontSize: '13.5px',
+                fontWeight: '600'
+              }}>
+                <ShieldAlert size={18} />
+                <span>
+                  KYC Verification Rejected: {memberDetail?.kyc?.rejection_reason || 'Document verification failed'}.
+                </span>
+              </div>
+            )}
+
+            {/* 5. Two-Column Information Section: Customer Profile & KYC Details */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gap: '20px'
+            }}>
+              
+              {/* Card A: Customer Information */}
+              <div className="admin-card" style={{ padding: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '10px' }}>
+                  <User size={18} color="#ea580c" />
+                  <h3 style={{ margin: 0, fontSize: '15.5px', fontWeight: '800', color: 'var(--admin-text-heading)' }}>
+                    Customer Information
+                  </h3>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '8px' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--admin-text-secondary)' }}>Customer Name</span>
+                    <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--admin-text-value)' }}>{memberName}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '8px' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--admin-text-secondary)' }}>Mobile Number</span>
+                    <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--admin-text-value)' }}>{memberMobile}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '8px' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--admin-text-secondary)' }}>Email</span>
+                    <span style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--admin-text-value)' }}>{memberEmail}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '8px' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--admin-text-secondary)' }}>User ID</span>
+                    <span style={{ fontSize: '12.5px', fontFamily: 'monospace', color: 'var(--admin-text-secondary)' }}>{selectedMemberId}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '8px' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--admin-text-secondary)' }}>Account Status</span>
+                    <span style={{ fontSize: '13px', fontWeight: '700', textTransform: 'capitalize', color: memberStatus === 'active' ? '#10b981' : '#dc2626' }}>
+                      {memberStatus}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '8px' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--admin-text-secondary)' }}>Gender / DOB</span>
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-value)' }}>
+                      {memberDetail?.profile?.gender || memberDetail?.kyc?.gender || '-'} / {memberDetail?.profile?.date_of_birth || memberDetail?.kyc?.date_of_birth || '-'}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '8px' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--admin-text-secondary)' }}>Joined Date</span>
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-value)' }}>{joinedFormatted}</span>
+                  </div>
+
+                  {memberDetail?.profile?.nominee_name && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '2px' }}>
+                      <span style={{ fontSize: '13px', color: 'var(--admin-text-secondary)' }}>Nominee</span>
+                      <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-value)' }}>{memberDetail.profile.nominee_name}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Card B: KYC Information */}
+              <div className="admin-card" style={{ padding: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '10px' }}>
+                  <ShieldCheck size={18} color="#16a34a" />
+                  <h3 style={{ margin: 0, fontSize: '15.5px', fontWeight: '800', color: 'var(--admin-text-heading)' }}>
+                    KYC & Identity Details
+                  </h3>
+                </div>
+
+                {memberDetail?.kyc ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '8px' }}>
+                      <span style={{ fontSize: '13px', color: 'var(--admin-text-secondary)' }}>KYC Status</span>
+                      <span style={{
+                        fontSize: '12.5px',
+                        fontWeight: '700',
+                        textTransform: 'uppercase',
+                        color: isKycVerified ? '#10b981' : (isKycPending ? '#f59e0b' : '#dc2626')
+                      }}>
+                        {memberDetail.kyc.status}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '8px' }}>
+                      <span style={{ fontSize: '13px', color: 'var(--admin-text-secondary)' }}>Full Name on ID</span>
+                      <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--admin-text-value)' }}>
+                        {memberDetail.kyc.full_name || memberName}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '8px' }}>
+                      <span style={{ fontSize: '13px', color: 'var(--admin-text-secondary)' }}>ID Type</span>
+                      <span style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--admin-text-value)' }}>
+                        {memberDetail.kyc.id_type || 'PAN'}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '8px' }}>
+                      <span style={{ fontSize: '13px', color: 'var(--admin-text-secondary)' }}>ID Number</span>
+                      <span style={{ fontSize: '13px', fontWeight: '700', fontFamily: 'monospace', color: 'var(--admin-text-value)' }}>
+                        {memberDetail.kyc.id_number || '-'}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '8px' }}>
+                      <span style={{ fontSize: '13px', color: 'var(--admin-text-secondary)' }}>Submitted At</span>
+                      <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--admin-text-value)' }}>
+                        {memberDetail.kyc.submitted_at ? new Date(memberDetail.kyc.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '8px' }}>
+                      <span style={{ fontSize: '13px', color: 'var(--admin-text-secondary)' }}>Address</span>
+                      <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--admin-text-value)', textAlign: 'right', maxWidth: '60%' }}>
+                        {[
+                          memberDetail.kyc.address?.address_line,
+                          memberDetail.kyc.address?.city,
+                          memberDetail.kyc.address?.state,
+                          memberDetail.kyc.address?.pincode
+                        ].filter(Boolean).join(', ') || 'Not specified'}
+                      </span>
+                    </div>
+
+                    {memberDetail.kyc.rejection_reason && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '2px' }}>
+                        <span style={{ fontSize: '13px', color: '#dc2626' }}>Rejection Reason</span>
+                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#dc2626' }}>
+                          {memberDetail.kyc.rejection_reason}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '24px 10px', color: 'var(--admin-text-secondary)' }}>
+                    <ShieldAlert size={28} color="#94a3b8" style={{ marginBottom: '8px' }} />
+                    <p style={{ margin: 0, fontSize: '13.5px' }}>Customer has not submitted KYC identification documents yet.</p>
+                  </div>
+                )}
+              </div>
+
+            </div>
+
+            {/* 6. Holdings Summary Cards (Gold & Silver) */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '20px'
+            }}>
+              {/* Gold Holdings Card */}
+              <div className="admin-holdings-card-gold">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span className="admin-holdings-title-gold">
+                    Gold Holdings
+                  </span>
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    backgroundColor: '#fef3c7',
+                    color: '#d97706',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: '800',
+                    fontSize: '15px'
+                  }}>
+                    Au
+                  </div>
+                </div>
+
+                <div className="admin-holdings-value-gold">
+                  {Number(goldHoldingsData?.quantity_grams || 0).toFixed(4)} gm
+                </div>
+
+                <div className="admin-holdings-sub-gold">
+                  Valuation: ₹{Number(goldHoldingsData?.current_value || (Number(goldHoldingsData?.quantity_grams || 0) * goldRate)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · (₹{goldRate.toLocaleString('en-IN')}/gm)
+                </div>
+              </div>
+
+              {/* Silver Holdings Card */}
+              <div className="admin-holdings-card-silver">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span className="admin-holdings-title-silver">
+                    Silver Holdings
+                  </span>
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    backgroundColor: '#f1f5f9',
+                    color: '#64748b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: '800',
+                    fontSize: '15px'
+                  }}>
+                    Ag
+                  </div>
+                </div>
+
+                <div className="admin-holdings-value-silver">
+                  {Number(silverHoldingsData?.quantity_grams || 0).toFixed(4)} gm
+                </div>
+
+                <div className="admin-holdings-sub-silver">
+                  Valuation: ₹{Number(silverHoldingsData?.current_value || (Number(silverHoldingsData?.quantity_grams || 0) * silverRate)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · (₹{silverRate.toLocaleString('en-IN')}/gm)
+                </div>
+              </div>
+            </div>
+
+            {/* 7. Transaction History Section with Tabs & Filters */}
+            <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '20px' }}>
+              
+              {/* Header & Tabs */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '12px' }}>
+                <div>
+                  <h3 style={{ fontSize: '17px', fontWeight: '800', margin: '0 0 2px 0', color: 'var(--admin-text-heading)' }}>
+                    Transaction History
+                  </h3>
+                  <p style={{ fontSize: '13px', color: 'var(--admin-text-secondary)', margin: 0 }}>
+                    Gold and silver purchase orders and withdrawal requests for this customer
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => setActiveTab('gold')}
+                    style={{
+                      height: '40px',
+                      width: '135px',
+                      padding: '0 20px',
+                      borderRadius: '20px',
+                      border: activeTab === 'gold' ? 'none' : '1px solid var(--admin-border)',
+                      backgroundColor: activeTab === 'gold' ? '#d97706' : 'var(--admin-bg-card)',
+                      color: activeTab === 'gold' ? '#ffffff' : 'var(--admin-text-secondary)',
+                      fontSize: '14.5px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      boxShadow: activeTab === 'gold' ? '0 4px 12px rgba(217, 119, 6, 0.25)' : 'none',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    Gold
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('silver')}
+                    style={{
+                      height: '40px',
+                      width: '135px',
+                      padding: '0 20px',
+                      borderRadius: '20px',
+                      border: activeTab === 'silver' ? 'none' : '1px solid var(--admin-border)',
+                      backgroundColor: activeTab === 'silver' ? '#475569' : 'var(--admin-bg-card)',
+                      color: activeTab === 'silver' ? '#ffffff' : 'var(--admin-text-secondary)',
+                      fontSize: '14.5px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      boxShadow: activeTab === 'silver' ? '0 4px 12px rgba(71, 85, 105, 0.25)' : 'none',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    Silver
+                  </button>
+                </div>
+              </div>
+
+              {/* Filter Controls Bar */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', backgroundColor: 'var(--admin-bg-page)', padding: '12px 16px', borderRadius: '10px' }}>
+                
+                {/* Type Filter */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '12.5px', fontWeight: '600', color: 'var(--admin-text-secondary)' }}>Type:</span>
+                  <select
+                    value={filterType}
+                    onChange={(e) => setFilterType(e.target.value)}
+                    style={{
+                      height: '34px',
+                      padding: '0 10px',
+                      borderRadius: '6px',
+                      border: '1px solid var(--admin-border)',
+                      backgroundColor: 'var(--admin-bg-card)',
+                      color: 'var(--admin-text-main)',
+                      fontSize: '13px',
+                      outline: 'none'
+                    }}
+                  >
+                    <option value="all">All</option>
+                    <option value="purchases">Purchases Only</option>
+                    <option value="withdrawals">Withdrawals Only</option>
+                  </select>
+                </div>
+
+                {/* From Date */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '12.5px', fontWeight: '600', color: 'var(--admin-text-secondary)' }}>From:</span>
+                  <input
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    style={{
+                      height: '34px',
+                      padding: '0 8px',
+                      borderRadius: '6px',
+                      border: '1px solid var(--admin-border)',
+                      backgroundColor: 'var(--admin-bg-card)',
+                      color: 'var(--admin-text-main)',
+                      fontSize: '12.5px',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+
+                {/* To Date */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '12.5px', fontWeight: '600', color: 'var(--admin-text-secondary)' }}>To:</span>
+                  <input
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    style={{
+                      height: '34px',
+                      padding: '0 8px',
+                      borderRadius: '6px',
+                      border: '1px solid var(--admin-border)',
+                      backgroundColor: 'var(--admin-bg-card)',
+                      color: 'var(--admin-text-main)',
+                      fontSize: '12.5px',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+
+                {/* Reset Filters */}
+                {(filterType !== 'all' || fromDate || toDate || minGrams || maxGrams) && (
+                  <button
+                    onClick={handleResetFilters}
+                    style={{
+                      height: '34px',
+                      padding: '0 12px',
+                      borderRadius: '6px',
+                      border: '1px solid var(--admin-border)',
+                      backgroundColor: 'var(--admin-bg-card)',
+                      color: 'var(--admin-text-secondary)',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <X size={13} />
+                    <span>Reset</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Transactions Table */}
+              <div style={{ overflowX: 'auto', width: '100%' }}>
+                <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      <th>TYPE</th>
+                      <th>WEIGHT (GM)</th>
+                      <th>RATE (₹/GM)</th>
+                      <th>TOTAL AMOUNT (₹)</th>
+                      <th>PAYMENT / MODE</th>
+                      <th>DATE</th>
+                      <th style={{ textAlign: 'right' }}>STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredList.length > 0 ? (
+                      filteredList.map((item, idx) => (
+                        <tr key={item.id || idx}>
+                          <td>
+                            <span style={{
+                              fontWeight: '700',
+                              color: item.type === 'Purchase' ? '#10b981' : '#f59e0b'
+                            }}>
+                              {item.type}
+                            </span>
+                          </td>
+                          <td style={{ fontWeight: '700', color: 'var(--admin-text-value)' }}>
+                            {Number(item.displayGrams || 0).toFixed(4)} gm
+                          </td>
+                          <td style={{ color: 'var(--admin-text-secondary)' }}>
+                            ₹{Number(item.displayRate || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td style={{ fontWeight: '700', color: 'var(--admin-text-heading)' }}>
+                            ₹{Number(item.displayAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td style={{ color: 'var(--admin-text-secondary)' }}>
+                            {item.displayPayment}
+                          </td>
+                          <td style={{ color: 'var(--admin-text-secondary)' }}>
+                            {item.displayDate}
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            {renderStatusBadge(item.displayStatus)}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: 'center', padding: '32px 10px', color: 'var(--admin-text-secondary)' }}>
+                          No {activeTab} transactions found for this customer.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+          </>
+        )}
+
+        {/* REJECT KYC MODAL */}
+        {showRejectKycModal && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 200,
+            padding: '20px'
+          }}>
+            <div style={{
+              backgroundColor: 'var(--admin-bg-card)',
+              borderRadius: '12px',
+              padding: '24px',
+              maxWidth: '440px',
+              width: '100%',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.25)',
+              border: '1px solid var(--admin-border)'
+            }}>
+              <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '800', color: '#dc2626' }}>
+                Reject KYC Verification
+              </h3>
+              <p style={{ fontSize: '13.5px', color: 'var(--admin-text-secondary)', margin: '0 0 16px 0' }}>
+                Please state the reason for rejecting KYC for <strong style={{ color: 'var(--admin-text-value)' }}>{memberName}</strong>.
+              </p>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '600', color: 'var(--admin-text-secondary)', marginBottom: '6px' }}>
+                  Reason for rejection:
+                </label>
+                <textarea
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  placeholder="e.g. Document image is blurred, Name does not match identity card..."
+                  rows={3}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--admin-border)',
+                    backgroundColor: 'var(--admin-bg-page)',
+                    color: 'var(--admin-text-main)',
+                    fontSize: '13.5px',
+                    outline: 'none',
+                    resize: 'vertical',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button
+                  type="button"
+                  disabled={isSubmittingKyc}
+                  onClick={() => setShowRejectKycModal(false)}
+                  className="admin-btn-secondary"
+                  style={{ padding: '8px 16px', fontSize: '13px' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isSubmittingKyc}
+                  onClick={handleRejectKycAction}
+                  style={{
+                    backgroundColor: '#dc2626',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '8px 18px',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    cursor: isSubmittingKyc ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {isSubmittingKyc ? 'Rejecting...' : 'Reject KYC'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* DEACTIVATE MEMBER MODAL */}
+        {showDeleteConfirm && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 200,
+            padding: '20px'
+          }}>
+            <div style={{
+              backgroundColor: 'var(--admin-bg-card)',
+              borderRadius: '12px',
+              padding: '24px',
+              maxWidth: '440px',
+              width: '100%',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.25)',
+              border: '1px solid var(--admin-border)'
+            }}>
+              <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '800', color: '#dc2626' }}>
+                Deactivate Member
+              </h3>
+              <p style={{ fontSize: '13.5px', color: 'var(--admin-text-secondary)', margin: '0 0 18px 0' }}>
+                Are you sure you want to deactivate member <strong style={{ color: 'var(--admin-text-value)' }}>{memberName}</strong> (ID: #{selectedMemberId})?
               </p>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
@@ -757,6 +1252,7 @@ export default function AdminMembers() {
                   type="button"
                   onClick={() => setShowDeleteConfirm(false)}
                   className="admin-btn-secondary"
+                  style={{ padding: '8px 16px', fontSize: '13px' }}
                 >
                   Cancel
                 </button>
@@ -858,13 +1354,15 @@ export default function AdminMembers() {
                 <tbody>
                   {paginatedMembers.map((m, idx) => {
                     if (!m) return null;
-                    const isVerified = m.verified === 'Yes';
+                    const isVerified = (m.kycStatus || '').toLowerCase() === 'verified' || (m.kycStatus || '').toLowerCase() === 'approved' || m.verified === 'Yes';
                     const isMobileVerified = m.mobileVerified === 'Yes';
-                    const isActive = m.active === 'Yes';
+                    const isActive = m.active === 'Yes' || m.status === 'active';
 
                     return (
                       <tr key={m.id || idx}>
-                        <td style={{ color: 'var(--admin-text-secondary)', fontWeight: '600' }}>#{m.id}</td>
+                        <td style={{ color: 'var(--admin-text-secondary)', fontWeight: '600' }}>
+                          #{m.id.length > 8 ? m.id.substring(0, 8) + '...' : m.id}
+                        </td>
                         
                         {/* Customer Name & Username */}
                         <td>
@@ -883,14 +1381,14 @@ export default function AdminMembers() {
                         </td>
 
                         <td>
-                          <span className="admin-badge-gray">
+                          <span className="admin-badge-gray" style={{ textTransform: 'capitalize' }}>
                             {m.role || 'customer'}
                           </span>
                         </td>
 
                         <td>
                           <span style={{ fontWeight: '700', color: isVerified ? '#10b981' : '#f59e0b' }}>
-                            {m.verified || 'No'}
+                            {isVerified ? 'Yes' : 'No'}
                           </span>
                         </td>
 
@@ -902,7 +1400,7 @@ export default function AdminMembers() {
 
                         <td>
                           <span style={{ fontWeight: '700', color: isActive ? '#10b981' : '#ef4444' }}>
-                            {m.active || 'Yes'}
+                            {isActive ? 'Yes' : 'No'}
                           </span>
                         </td>
 
@@ -949,30 +1447,31 @@ export default function AdminMembers() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'flex-end',
-              flexWrap: 'wrap',
-              gap: '24px',
-              padding: '14px 20px',
+              padding: '12px 20px',
               borderTop: '1px solid var(--admin-border)',
               backgroundColor: 'var(--admin-bg-card)',
-              fontSize: '13.5px',
-              color: 'var(--admin-text-secondary)',
-              boxSizing: 'border-box'
+              flexShrink: 0,
+              gap: '24px'
             }}>
-              {/* 1. Rows per page */}
+              {/* Rows Per Page */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span>Rows per page:</span>
+                <span style={{ fontSize: '13px', color: 'var(--admin-text-secondary)' }}>
+                  Rows per page:
+                </span>
                 <select
                   value={pageSize}
                   onChange={(e) => {
                     setPageSize(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="admin-select"
                   style={{
-                    height: '32px',
-                    padding: '0 24px 0 10px',
-                    fontSize: '13px',
+                    padding: '4px 8px',
                     borderRadius: '6px',
+                    border: '1px solid var(--admin-border)',
+                    backgroundColor: 'var(--admin-bg-page)',
+                    color: 'var(--admin-text-main)',
+                    fontSize: '13px',
+                    outline: 'none',
                     cursor: 'pointer'
                   }}
                 >
@@ -983,58 +1482,56 @@ export default function AdminMembers() {
                 </select>
               </div>
 
-              {/* 2. Visible Range (e.g. 1–10 of 28) */}
-              <div style={{ fontWeight: '500' }}>
-                <span style={{ color: 'var(--admin-text-main)' }}>{totalItems === 0 ? 0 : startIndex + 1}–{endIndex}</span> of <span style={{ color: 'var(--admin-text-main)' }}>{totalItems}</span>
-              </div>
+              {/* Range Counter */}
+              <span style={{ fontSize: '13px', color: 'var(--admin-text-secondary)', fontWeight: '500' }}>
+                {totalItems === 0 ? '0–0 of 0' : `${startIndex + 1}–${endIndex} of ${totalItems}`}
+              </span>
 
-              {/* 3. Navigation Controls (< >) */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {/* Prev / Next Buttons */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <button
+                  type="button"
+                  disabled={safePage <= 1}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={safePage === 1}
                   style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     width: '32px',
                     height: '32px',
                     borderRadius: '6px',
                     border: '1px solid var(--admin-border)',
-                    backgroundColor: 'var(--admin-bg-card)',
-                    color: safePage === 1 ? 'var(--admin-text-muted)' : 'var(--admin-text-main)',
-                    cursor: safePage === 1 ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    opacity: safePage === 1 ? 0.45 : 1,
-                    transition: 'all 0.15s ease'
+                    backgroundColor: 'var(--admin-bg-page)',
+                    color: safePage <= 1 ? 'var(--admin-text-muted)' : 'var(--admin-text-main)',
+                    cursor: safePage <= 1 ? 'not-allowed' : 'pointer',
+                    opacity: safePage <= 1 ? 0.5 : 1
                   }}
-                  aria-label="Previous Page"
                 >
                   <ChevronLeft size={16} />
                 </button>
-
                 <button
+                  type="button"
+                  disabled={safePage >= totalPages}
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={safePage === totalPages || totalPages === 0}
                   style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     width: '32px',
                     height: '32px',
                     borderRadius: '6px',
                     border: '1px solid var(--admin-border)',
-                    backgroundColor: 'var(--admin-bg-card)',
-                    color: safePage === totalPages || totalPages === 0 ? 'var(--admin-text-muted)' : 'var(--admin-text-main)',
-                    cursor: safePage === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    opacity: safePage === totalPages || totalPages === 0 ? 0.45 : 1,
-                    transition: 'all 0.15s ease'
+                    backgroundColor: 'var(--admin-bg-page)',
+                    color: safePage >= totalPages ? 'var(--admin-text-muted)' : 'var(--admin-text-main)',
+                    cursor: safePage >= totalPages ? 'not-allowed' : 'pointer',
+                    opacity: safePage >= totalPages ? 0.5 : 1
                   }}
-                  aria-label="Next Page"
                 >
                   <ChevronRight size={16} />
                 </button>
               </div>
             </div>
+
           </div>
         );
       })()}
