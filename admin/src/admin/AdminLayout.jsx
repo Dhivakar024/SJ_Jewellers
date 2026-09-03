@@ -5,6 +5,7 @@ import {
   Moon, Sun, User, ChevronsLeft, ChevronsRight
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { clearAllAuth } from '../utils/authStorage';
 import '../styles/admin.css';
 
 export default function AdminLayout({ activeTab, onSelectTab, children }) {
@@ -12,6 +13,7 @@ export default function AdminLayout({ activeTab, onSelectTab, children }) {
     adminTheme = 'light', 
     toggleAdminTheme, 
     pendingVerifications = [], 
+    withdrawals = [],
     logoutAdmin,
     setAdminAuth,
     adminSettings = { username: 'SJ Jewellers' } 
