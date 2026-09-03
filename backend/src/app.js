@@ -16,6 +16,7 @@ import withdrawalsRouter from './routes/withdrawals.js';
 import transactionsRouter from './routes/transactions.js';
 import notificationsRouter from './routes/notifications.js';
 import adminDashboardRouter from './routes/adminDashboard.js';
+import adminAnalyticsRouter from './routes/adminAnalytics.js';
 import adminRouter from './routes/admin.js';
 
 export function createApp() {
@@ -69,6 +70,7 @@ export function createApp() {
   app.use('/api/transactions', transactionsRouter);
   app.use('/api/notifications', notificationsRouter);
   app.use('/api/admin/dashboard', adminDashboardRouter);
+  app.use('/api/admin/analytics', adminAnalyticsRouter);
   app.use('/api/admin', adminRouter);
 
   // 404 Handler

@@ -65,6 +65,9 @@ export const ENDPOINTS = {
     TRANSACTIONS: '/api/admin/transactions',
     TRANSACTION_DETAIL: (id) => `/api/admin/transactions/${id}`,
 
+    // Analytics
+    ANALYTICS: '/api/admin/analytics',
+
     // Notifications
     NOTIFICATIONS: '/api/admin/notifications',
     NOTIFICATIONS_UNREAD: '/api/admin/notifications/unread-count',

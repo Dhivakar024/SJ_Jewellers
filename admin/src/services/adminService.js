@@ -142,6 +142,11 @@ export const adminService = {
     return apiClient.get(ENDPOINTS.ADMIN.TRANSACTION_DETAIL(id));
   },
 
+  // --- Analytics ---
+  getAnalytics: async (params = {}) => {
+    return apiClient.get(ENDPOINTS.ADMIN.ANALYTICS, { params });
+  },
+
   // --- Notifications ---
   getNotifications: async (params = {}) => {
     return apiClient.get(ENDPOINTS.ADMIN.NOTIFICATIONS, { params });

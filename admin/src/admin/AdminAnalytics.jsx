@@ -1,55 +1,145 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
+import adminService from '../services/adminService';
+
+// Helper to determine current quarter
+function getCurrentQuarterInfo() {
+  const now = new Date();
+  const month = now.getMonth(); // 0-11
+  let q = 'Q1 (Jan-Mar)';
+  if (month >= 3 && month <= 5) q = 'Q2 (Apr-Jun)';
+  else if (month >= 6 && month <= 8) q = 'Q3 (Jul-Sep)';
+  else if (month >= 9 && month <= 11) q = 'Q4 (Oct-Dec)';
+  return {
+    quarter: q,
+    year: now.getFullYear().toString(),
+  };
+}
+
+// Helper to get default month dates
+function getDefaultDateRange() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  return {
+    fromDate: `${yyyy}-${mm}-01`,
+    toDate: `${yyyy}-${mm}-${dd}`,
+  };
+}
 
 export default function AdminAnalytics() {
-  const { goldRate, silverRate } = useApp() || {};
+  const { 
+    goldRate: liveGoldRate, 
+    silverRate: liveSilverRate, 
+    transactions = [], 
+    withdrawals = [],
+    refreshAllData 
+  } = useApp() || {};
+
+  const currentQInfo = useMemo(() => getCurrentQuarterInfo(), []);
+  const defaultDates = useMemo(() => getDefaultDateRange(), []);
 
   const [period, setPeriod] = useState('Monthly (current month)');
-  const [quarter, setQuarter] = useState('Q1 (Jan-Mar)');
-  const [year, setYear] = useState('2026');
-  const [fromDate, setFromDate] = useState('2026-08-01');
-  const [toDate, setToDate] = useState('2026-08-20');
+  const [quarter, setQuarter] = useState(currentQInfo.quarter);
+  const [year, setYear] = useState(currentQInfo.year);
+  const [fromDate, setFromDate] = useState(defaultDates.fromDate);
+  const [toDate, setToDate] = useState(defaultDates.toDate);
+  
   const [hoveredGoldBar, setHoveredGoldBar] = useState(null);
+  const [hoveredSilverBar, setHoveredSilverBar] = useState(null);
 
-  // Dynamic Date Range calculation
-  const dateRangeText = useMemo(() => {
-    if (period === 'Monthly (current month)') {
-      return 'Showing 2026-08-01 to 2026-08-20';
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch real backend analytics data whenever filters change
+  const fetchAnalytics = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data = await adminService.getAnalytics({
+        period,
+        quarter,
+        year,
+        from_date: fromDate,
+        to_date: toDate,
+      });
+      if (data) {
+        setAnalyticsData(data);
+      }
+    } catch (err) {
+      console.warn('[Admin Analytics] Backend analytics fetch note:', err.message);
+    } finally {
+      setIsLoading(false);
     }
-    if (period === 'Annually (current year)') {
-      return 'Showing 2026-01-01 to 2026-08-20';
-    }
-    if (period === 'Quarterly') {
-      if (quarter.startsWith('Q1')) return 'Showing 2026-01-01 to 2026-03-31';
-      if (quarter.startsWith('Q2')) return 'Showing 2026-04-01 to 2026-06-30';
-      if (quarter.startsWith('Q3')) return 'Showing 2026-07-01 to 2026-09-30';
-      return 'Showing 2026-10-01 to 2026-12-31';
-    }
-    return `Showing ${fromDate} to ${toDate}`;
   }, [period, quarter, year, fromDate, toDate]);
 
-  // Overall holdings calculations
-  const totalGoldBought = 1.857;
-  const totalSilverBought = 77.055;
-  const safeGoldRate = goldRate || 13818.88;
-  const safeSilverRate = silverRate || 206.17;
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
+
+  // Client-side fallback / real-time synchronization from shared store
+  const safeGoldRate = analyticsData?.overall?.gold_rate || liveGoldRate || 16263.65;
+  const safeSilverRate = analyticsData?.overall?.silver_rate || liveSilverRate || 267.00;
+
+  // Overall holdings calculations from database
+  const totalGoldBought = analyticsData?.overall?.total_gold_bought !== undefined 
+    ? analyticsData.overall.total_gold_bought 
+    : transactions.filter(t => (t?.metal || t?.asset || '').toLowerCase().includes('gold') && (t?.status === 'Success' || t?.rawStatus === 'completed')).reduce((sum, t) => sum + (parseFloat(t.grams) || 0), 0);
+
+  const totalSilverBought = analyticsData?.overall?.total_silver_bought !== undefined 
+    ? analyticsData.overall.total_silver_bought 
+    : transactions.filter(t => (t?.metal || t?.asset || '').toLowerCase().includes('silver') && (t?.status === 'Success' || t?.rawStatus === 'completed')).reduce((sum, t) => sum + (parseFloat(t.grams) || 0), 0);
+
   const totalGoldCurrentValue = totalGoldBought * safeGoldRate;
   const totalSilverCurrentValue = totalSilverBought * safeSilverRate;
 
   // Period specific metrics
-  const isMonthly = period === 'Monthly (current month)';
-  const isQuarterly = period === 'Quarterly';
-  const isAnnual = period === 'Annually (current year)';
+  const dateRangeText = analyticsData?.date_range_text || useMemo(() => {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
 
-  const goldPeriodGrams = isMonthly ? 0.00 : isQuarterly ? 0.857 : 1.857;
-  const goldPeriodAvgRate = isMonthly ? 0 : isQuarterly ? 11809.34 : 11779.70;
-  const goldPeriodValue = isMonthly ? 0.00 : isQuarterly ? 7547.64 : 21872.55;
+    if (period === 'Monthly (current month)') {
+      return `Showing ${yyyy}-${mm}-01 to ${yyyy}-${mm}-${dd}`;
+    }
+    if (period === 'Annually (current year)') {
+      return `Showing ${yyyy}-01-01 to ${yyyy}-${mm}-${dd}`;
+    }
+    if (period === 'Quarterly') {
+      const q = quarter.toUpperCase();
+      if (q.includes('Q1')) return `Showing ${year}-01-01 to ${year}-03-31`;
+      if (q.includes('Q2')) return `Showing ${year}-04-01 to ${year}-06-30`;
+      if (q.includes('Q3')) return `Showing ${year}-07-01 to ${year}-09-30`;
+      return `Showing ${year}-10-01 to ${year}-12-31`;
+    }
+    return `Showing ${fromDate} to ${toDate}`;
+  }, [period, quarter, year, fromDate, toDate]);
 
-  const silverPeriodGrams = isMonthly ? 0.038 : isQuarterly ? 77.017 : 77.055;
-  const silverPeriodAvgRate = isMonthly ? 273.21 : isQuarterly ? 268.01 : 268.01;
-  const silverPeriodValue = isMonthly ? 10.30 : isQuarterly ? 20703.00 : 20713.30;
+  const goldPeriodGrams = analyticsData?.gold?.grams !== undefined ? analyticsData.gold.grams : 0;
+  const goldPeriodValue = analyticsData?.gold?.value !== undefined ? analyticsData.gold.value : 0;
+  const goldPeriodAvgRate = analyticsData?.gold?.avg_rate !== undefined ? analyticsData.gold.avg_rate : (goldPeriodGrams > 0 ? goldPeriodValue / goldPeriodGrams : 0);
+  const goldBars = analyticsData?.gold?.bars || [];
 
-  const periodWithdrawalValue = isMonthly ? 0.00 : 13950.01;
+  const silverPeriodGrams = analyticsData?.silver?.grams !== undefined ? analyticsData.silver.grams : 0;
+  const silverPeriodValue = analyticsData?.silver?.value !== undefined ? analyticsData.silver.value : 0;
+  const silverPeriodAvgRate = analyticsData?.silver?.avg_rate !== undefined ? analyticsData.silver.avg_rate : (silverPeriodGrams > 0 ? silverPeriodValue / silverPeriodGrams : 0);
+  const silverBars = analyticsData?.silver?.bars || [];
+
+  const periodWithdrawalValue = analyticsData?.withdrawals?.total_value !== undefined ? analyticsData.withdrawals.total_value : 0;
+
+  // Compute maximums for bar chart Y axes
+  const maxGoldGrams = useMemo(() => {
+    if (goldBars.length === 0) return 1;
+    const max = Math.max(...goldBars.map((b) => b.grams), 0);
+    return max > 0 ? (max <= 1 ? 1 : Math.ceil(max)) : 1;
+  }, [goldBars]);
+
+  const maxSilverGrams = useMemo(() => {
+    if (silverBars.length === 0) return 1;
+    const max = Math.max(...silverBars.map((b) => b.grams), 0);
+    return max > 0 ? (max <= 1 ? 1 : Math.ceil(max)) : 1;
+  }, [silverBars]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', boxSizing: 'border-box' }}>
@@ -107,6 +197,7 @@ export default function AdminAnalytics() {
                   >
                     <option value="2026">2026</option>
                     <option value="2025">2025</option>
+                    <option value="2024">2024</option>
                   </select>
                 </div>
               </>
@@ -204,7 +295,7 @@ export default function AdminAnalytics() {
             {goldPeriodGrams > 0 ? (
               <>Total: {goldPeriodGrams.toFixed(3)} g · Avg rate ₹{goldPeriodAvgRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm<br />Value: ₹{goldPeriodValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</>
             ) : (
-              <>Total: 0.00 g<br />Value: ₹0.00</>
+              <>Total: 0.000 g<br />Value: ₹0.00</>
             )}
           </div>
 
@@ -212,7 +303,7 @@ export default function AdminAnalytics() {
             Gold (total grams by period)
           </div>
 
-          {goldPeriodGrams === 0 ? (
+          {goldPeriodGrams === 0 || goldBars.length === 0 ? (
             /* Empty State */
             <div style={{
               height: '140px',
@@ -231,11 +322,11 @@ export default function AdminAnalytics() {
             <div style={{ position: 'relative' }}>
               <div style={{ height: '140px', position: 'relative', display: 'flex', alignItems: 'flex-end', paddingLeft: '35px', borderBottom: '1px solid var(--admin-border)' }}>
                 <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '30px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '10px', color: 'var(--admin-text-muted)' }}>
-                  <span>1</span>
-                  <span>0.8</span>
-                  <span>0.6</span>
-                  <span>0.4</span>
-                  <span>0.2</span>
+                  <span>{maxGoldGrams}</span>
+                  <span>{(maxGoldGrams * 0.8).toFixed(1)}</span>
+                  <span>{(maxGoldGrams * 0.6).toFixed(1)}</span>
+                  <span>{(maxGoldGrams * 0.4).toFixed(1)}</span>
+                  <span>{(maxGoldGrams * 0.2).toFixed(1)}</span>
                   <span>0</span>
                 </div>
 
@@ -250,21 +341,24 @@ export default function AdminAnalytics() {
 
                 {/* Bars */}
                 <div style={{ flex: 1, display: 'flex', justifyContent: 'space-around', height: '100%', alignItems: 'flex-end', zIndex: 1 }}>
-                  <div
-                    onMouseEnter={() => setHoveredGoldBar('0.85')}
-                    onMouseLeave={() => setHoveredGoldBar(null)}
-                    style={{
-                      width: isQuarterly ? '25%' : '35%',
-                      height: '85%',
-                      backgroundColor: 'var(--admin-gold-pie)',
-                      borderRadius: '3px 3px 0 0',
-                      cursor: 'pointer'
-                    }}
-                  ></div>
-
-                  {isAnnual && (
-                    <div style={{ width: '35%', height: '90%', backgroundColor: 'var(--admin-gold-pie)', borderRadius: '3px 3px 0 0' }}></div>
-                  )}
+                  {goldBars.map((bar, idx) => {
+                    const heightPct = maxGoldGrams > 0 ? Math.min((bar.grams / maxGoldGrams) * 100, 100) : 0;
+                    return (
+                      <div
+                        key={idx}
+                        onMouseEnter={() => setHoveredGoldBar(bar)}
+                        onMouseLeave={() => setHoveredGoldBar(null)}
+                        style={{
+                          width: `${Math.min(Math.max(80 / goldBars.length, 12), 45)}%`,
+                          height: `${Math.max(heightPct, 6)}%`,
+                          backgroundColor: 'var(--admin-gold-pie)',
+                          borderRadius: '3px 3px 0 0',
+                          cursor: 'pointer',
+                          transition: 'opacity 0.15s ease'
+                        }}
+                      />
+                    );
+                  })}
                 </div>
               </div>
 
@@ -272,7 +366,7 @@ export default function AdminAnalytics() {
               {hoveredGoldBar && (
                 <div style={{
                   position: 'absolute',
-                  top: '15px',
+                  top: '10px',
                   left: '50%',
                   transform: 'translateX(-50%)',
                   backgroundColor: 'var(--admin-bg-card)',
@@ -281,16 +375,18 @@ export default function AdminAnalytics() {
                   borderRadius: '6px',
                   padding: '6px 12px',
                   fontSize: '11.5px',
-                  zIndex: 10
+                  zIndex: 10,
+                  whiteSpace: 'nowrap'
                 }}>
-                  <div style={{ color: 'var(--admin-text-secondary)' }}>Mon Mar 16 2026 00:00:00 GMT+0000</div>
-                  <div style={{ fontWeight: '700', color: 'var(--admin-gold-pie)' }}>Gold (g): {hoveredGoldBar}</div>
+                  <div style={{ color: 'var(--admin-text-secondary)' }}>{hoveredGoldBar.full_date || hoveredGoldBar.date}</div>
+                  <div style={{ fontWeight: '700', color: 'var(--admin-gold-pie)' }}>Gold: {hoveredGoldBar.grams} g (₹{hoveredGoldBar.value?.toLocaleString('en-IN')})</div>
                 </div>
               )}
 
               <div style={{ display: 'flex', justifyContent: 'space-around', paddingLeft: '35px', marginTop: '6px', fontSize: '10.5px', color: 'var(--admin-text-muted)' }}>
-                <span>{isQuarterly ? '160 (Coordinated Universal Time)' : '2026-03'}</span>
-                {isAnnual && <span>2026-04</span>}
+                {goldBars.map((bar, idx) => (
+                  <span key={idx}>{bar.date}</span>
+                ))}
               </div>
             </div>
           )}
@@ -302,50 +398,103 @@ export default function AdminAnalytics() {
             Silver
           </h3>
           <div style={{ fontSize: '12.5px', color: 'var(--admin-text-secondary)', marginBottom: '14px', lineHeight: 1.4 }}>
-            Total: {silverPeriodGrams.toFixed(3)} g · Avg rate ₹{silverPeriodAvgRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm<br />
-            Value: ₹{silverPeriodValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            {silverPeriodGrams > 0 ? (
+              <>Total: {silverPeriodGrams.toFixed(3)} g · Avg rate ₹{silverPeriodAvgRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm<br />Value: ₹{silverPeriodValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</>
+            ) : (
+              <>Total: 0.000 g<br />Value: ₹0.00</>
+            )}
           </div>
 
           <div style={{ fontSize: '12.5px', fontWeight: '600', marginBottom: '8px', color: 'var(--admin-text-secondary)' }}>
             Silver (total grams by period)
           </div>
 
-          {/* Silver Bar Chart */}
-          <div style={{ height: '140px', position: 'relative', display: 'flex', alignItems: 'flex-end', paddingLeft: '35px', borderBottom: '1px solid var(--admin-border)' }}>
-            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '30px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '10px', color: 'var(--admin-text-muted)' }}>
-              <span>{isMonthly ? '0.04' : '80'}</span>
-              <span>{isMonthly ? '0.03' : '60'}</span>
-              <span>{isMonthly ? '0.02' : '40'}</span>
-              <span>{isMonthly ? '0.01' : '20'}</span>
-              <span>0</span>
+          {silverPeriodGrams === 0 || silverBars.length === 0 ? (
+            /* Empty State */
+            <div style={{
+              height: '140px',
+              border: '1px dashed var(--admin-border)',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--admin-text-muted)',
+              fontSize: '12.5px'
+            }}>
+              No silver data in this period
             </div>
+          ) : (
+            /* Silver Bar Chart */
+            <div style={{ position: 'relative' }}>
+              <div style={{ height: '140px', position: 'relative', display: 'flex', alignItems: 'flex-end', paddingLeft: '35px', borderBottom: '1px solid var(--admin-border)' }}>
+                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '30px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '10px', color: 'var(--admin-text-muted)' }}>
+                  <span>{maxSilverGrams}</span>
+                  <span>{(maxSilverGrams * 0.8).toFixed(1)}</span>
+                  <span>{(maxSilverGrams * 0.6).toFixed(1)}</span>
+                  <span>{(maxSilverGrams * 0.4).toFixed(1)}</span>
+                  <span>{(maxSilverGrams * 0.2).toFixed(1)}</span>
+                  <span>0</span>
+                </div>
 
-            <div style={{ position: 'absolute', left: '35px', right: 0, top: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', pointerEvents: 'none' }}>
-              <div style={{ borderTop: '1px dashed var(--admin-border-subtle)', width: '100%' }}></div>
-              <div style={{ borderTop: '1px dashed var(--admin-border-subtle)', width: '100%' }}></div>
-              <div style={{ borderTop: '1px dashed var(--admin-border-subtle)', width: '100%' }}></div>
-              <div style={{ borderTop: '1px dashed var(--admin-border-subtle)', width: '100%' }}></div>
-              <div style={{ borderTop: '1px solid var(--admin-border)', width: '100%' }}></div>
-            </div>
+                <div style={{ position: 'absolute', left: '35px', right: 0, top: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', pointerEvents: 'none' }}>
+                  <div style={{ borderTop: '1px dashed var(--admin-border-subtle)', width: '100%' }}></div>
+                  <div style={{ borderTop: '1px dashed var(--admin-border-subtle)', width: '100%' }}></div>
+                  <div style={{ borderTop: '1px dashed var(--admin-border-subtle)', width: '100%' }}></div>
+                  <div style={{ borderTop: '1px dashed var(--admin-border-subtle)', width: '100%' }}></div>
+                  <div style={{ borderTop: '1px solid var(--admin-border)', width: '100%' }}></div>
+                </div>
 
-            {/* Bar */}
-            <div style={{ flex: 1, display: 'flex', justifyContent: 'space-around', height: '100%', alignItems: 'flex-end', zIndex: 1 }}>
-              <div style={{
-                width: isMonthly ? '50%' : '35%',
-                height: isMonthly ? '70%' : '80%',
-                backgroundColor: 'var(--admin-silver-pie)',
-                borderRadius: '3px 3px 0 0'
-              }}></div>
+                {/* Bars */}
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'space-around', height: '100%', alignItems: 'flex-end', zIndex: 1 }}>
+                  {silverBars.map((bar, idx) => {
+                    const heightPct = maxSilverGrams > 0 ? Math.min((bar.grams / maxSilverGrams) * 100, 100) : 0;
+                    return (
+                      <div
+                        key={idx}
+                        onMouseEnter={() => setHoveredSilverBar(bar)}
+                        onMouseLeave={() => setHoveredSilverBar(null)}
+                        style={{
+                          width: `${Math.min(Math.max(80 / silverBars.length, 12), 45)}%`,
+                          height: `${Math.max(heightPct, 6)}%`,
+                          backgroundColor: 'var(--admin-silver-pie)',
+                          borderRadius: '3px 3px 0 0',
+                          cursor: 'pointer',
+                          transition: 'opacity 0.15s ease'
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
 
-              {isAnnual && (
-                <div style={{ width: '35%', height: '2%', backgroundColor: 'var(--admin-silver-pie)', borderRadius: '3px 3px 0 0' }}></div>
+              {/* Tooltip */}
+              {hoveredSilverBar && (
+                <div style={{
+                  position: 'absolute',
+                  top: '10px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  backgroundColor: 'var(--admin-bg-card)',
+                  border: '1px solid var(--admin-border)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  borderRadius: '6px',
+                  padding: '6px 12px',
+                  fontSize: '11.5px',
+                  zIndex: 10,
+                  whiteSpace: 'nowrap'
+                }}>
+                  <div style={{ color: 'var(--admin-text-secondary)' }}>{hoveredSilverBar.full_date || hoveredSilverBar.date}</div>
+                  <div style={{ fontWeight: '700', color: 'var(--admin-silver-pie)' }}>Silver: {hoveredSilverBar.grams} g (₹{hoveredSilverBar.value?.toLocaleString('en-IN')})</div>
+                </div>
               )}
-            </div>
-          </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', paddingLeft: '35px', marginTop: '6px', fontSize: '10.5px', color: 'var(--admin-text-muted)' }}>
-            <span>{isMonthly ? 'Mon Aug 03 2026 00:00:00 GMT+0000 (Coordinated Universal Time)' : isQuarterly ? 'Mon Mar 16 2026 00:00:00 GMT+0000 (Coordinated Universal Time)' : '2026-03'}</span>
-          </div>
+              <div style={{ display: 'flex', justifyContent: 'space-around', paddingLeft: '35px', marginTop: '6px', fontSize: '10.5px', color: 'var(--admin-text-muted)' }}>
+                {silverBars.map((bar, idx) => (
+                  <span key={idx}>{bar.date}</span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
