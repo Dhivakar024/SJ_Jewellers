@@ -173,14 +173,15 @@ export async function approveWithdrawal(withdrawalId, adminUser) {
 
   const newQty = Math.max(0, cleanGrams(curQty - wQty));
   const newRes = Math.max(0, cleanGrams(curRes - wQty));
-  const newInv = Math.max(0, cleanRate(newQty * curAvg));
 
+  const newAvg = newQty > 0 ? curAvg : 0;
+  const newInv = newQty > 0 ? cleanRate(newQty * newAvg) : 0;
   // Deduct from holdings
   await query(
     `UPDATE holdings 
-     SET ${metal}_quantity = ?, ${metal}_reserved = ?, ${metal}_invested = ?, updated_at = NOW() 
+     SET ${metal}_quantity = ?, ${metal}_reserved = ?, ${metal}_invested = ?, ${metal}_average_rate = ?, updated_at = NOW() 
      WHERE user_id = ?`,
-    [newQty, newRes, newInv, w.user_id]
+    [newQty, newRes, newInv, newAvg,w.user_id]
   );
 
   // Update withdrawal status

@@ -132,6 +132,12 @@ html, body, #root {
   --admin-sidebar-active-bg: #eef4ff;
   --admin-sidebar-active-text: #2563eb;
 
+  --admin-bg-progress-track: #f1f5f9;
+  --admin-chart-grid: #e2e8f0;
+  --admin-chart-line: #1e293b;
+  --admin-tooltip-bg: #0f172a;
+  --admin-tooltip-text: #ffffff;
+
   background-color: var(--admin-bg-page);
   color: var(--admin-text-main);
 }
@@ -168,6 +174,12 @@ html, body, #root {
   --admin-sidebar-border: #293650;
   --admin-sidebar-active-bg: #1e293b;
   --admin-sidebar-active-text: #60a5fa;
+
+  --admin-bg-progress-track: #1e293b;
+  --admin-chart-grid: #243048;
+  --admin-chart-line: #38bdf8;
+  --admin-tooltip-bg: #1e293b;
+  --admin-tooltip-text: #f8fafc;
 
   background-color: var(--admin-bg-page);
   color: var(--admin-text-main);

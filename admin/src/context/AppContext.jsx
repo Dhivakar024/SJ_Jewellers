@@ -50,6 +50,55 @@ export function AppProvider({ children }) {
     autoLogout: '30 minutes',
   });
 
+  // 5. Admin Theme State (Light / Dark Mode with localStorage Persistence)
+  const [adminTheme, setAdminTheme] = useState(() => {
+    try {
+      const savedTheme = localStorage.getItem('sj_admin_theme');
+      if (savedTheme === 'dark' || savedTheme === 'light') {
+        return savedTheme;
+      }
+    } catch (e) {
+      console.warn('[Admin AppContext] Failed to read theme from localStorage:', e);
+    }
+    return 'light';
+  });
+
+  const toggleAdminTheme = useCallback(() => {
+    setAdminTheme((prev) => {
+      const nextTheme = prev === 'dark' ? 'light' : 'dark';
+      try {
+        localStorage.setItem('sj_admin_theme', nextTheme);
+      } catch (e) {
+        console.warn('[Admin AppContext] Failed to save theme to localStorage:', e);
+      }
+      return nextTheme;
+    });
+  }, []);
+
+  const updateAdminTheme = useCallback((newTheme) => {
+    const theme = newTheme === 'dark' ? 'dark' : 'light';
+    setAdminTheme(theme);
+    try {
+      localStorage.setItem('sj_admin_theme', theme);
+    } catch (e) {
+      console.warn('[Admin AppContext] Failed to save theme to localStorage:', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (adminTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    } catch (e) {
+      // In non-browser/test environments
+    }
+  }, [adminTheme]);
+
   // Fetch Rates from Backend
   const fetchRates = useCallback(async () => {
     try {
@@ -402,6 +451,9 @@ export function AppProvider({ children }) {
     deleteMember,
     adminSettings,
     setAdminSettings,
+    adminTheme,
+    setAdminTheme: updateAdminTheme,
+    toggleAdminTheme,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
