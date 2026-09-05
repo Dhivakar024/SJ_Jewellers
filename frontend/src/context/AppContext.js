@@ -441,7 +441,38 @@ export function AppProvider({ children }) {
     return res;
   }, [fetchHoldings, fetchTransactions]);
 
-  // Request Withdrawal (Real Backend)
+  // Request Withdrawal OTP (Step 1 of Withdrawal Flow)
+  const requestWithdrawalOtp = useCallback(async (wthData) => {
+    const metal = (wthData.metal || wthData.asset || 'gold').toLowerCase();
+    const quantityGrams = Number(wthData.grams || wthData.quantity) || 0;
+
+    return await withdrawalService.requestWithdrawalOtp({
+      metal,
+      quantity_grams: quantityGrams,
+      withdrawal_mode: wthData.withdrawal_mode || 'physical',
+    });
+  }, []);
+
+  // Resend Withdrawal OTP
+  const resendWithdrawalOtp = useCallback(async (challengeId) => {
+    return await withdrawalService.resendWithdrawalOtp(challengeId);
+  }, []);
+
+  // Verify Withdrawal OTP & Finalize Withdrawal Creation (Step 2 of Withdrawal Flow)
+  const verifyWithdrawalOtp = useCallback(async (challengeId, otp) => {
+    const res = await withdrawalService.verifyWithdrawalOtp(challengeId, otp);
+
+    // Refresh holdings, withdrawals, and transactions immediately upon successful withdrawal
+    await Promise.allSettled([
+      fetchHoldings(),
+      fetchWithdrawals(),
+      fetchTransactions(),
+    ]);
+
+    return res;
+  }, [fetchHoldings, fetchWithdrawals, fetchTransactions]);
+
+  // Request Withdrawal (Legacy/Direct)
   const requestWithdrawal = useCallback(async (wthData) => {
     const metal = (wthData.metal || wthData.asset || 'gold').toLowerCase();
     const quantityGrams = Number(wthData.grams || wthData.quantity) || 0;
@@ -487,6 +518,9 @@ export function AppProvider({ children }) {
     submitKycRequest,
     addPurchaseTransaction,
     requestWithdrawal,
+    requestWithdrawalOtp,
+    resendWithdrawalOtp,
+    verifyWithdrawalOtp,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

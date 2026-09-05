@@ -47,6 +47,9 @@ export const ENDPOINTS = {
   // Withdrawals
   WITHDRAWALS: {
     CREATE: '/api/withdrawals',
+    REQUEST_OTP: '/api/withdrawals/request-otp',
+    RESEND_OTP: '/api/withdrawals/resend-otp',
+    VERIFY_OTP: '/api/withdrawals/verify-otp',
     LIST: '/api/withdrawals',
     DETAIL: (id) => `/api/withdrawals/${id}`,
     CANCEL: (id) => `/api/withdrawals/${id}/cancel`,

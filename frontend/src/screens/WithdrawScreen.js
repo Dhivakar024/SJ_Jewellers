@@ -17,7 +17,19 @@ import { COLORS, RADIUS, SHADOWS } from '../constants/theme';
 import { globalStyles } from '../styles/globalStyles';
 
 export default function WithdrawScreen({ route, navigation }) {
-  const { currentUser, holdings, goldRate, silverRate, submitKycRequest, requestWithdrawal, fetchHoldings, fetchLiveRates, fetchProfile } = useApp();
+  const {
+    currentUser,
+    holdings,
+    goldRate,
+    silverRate,
+    submitKycRequest,
+    requestWithdrawalOtp,
+    resendWithdrawalOtp,
+    verifyWithdrawalOtp,
+    fetchHoldings,
+    fetchLiveRates,
+    fetchProfile,
+  } = useApp();
   const fromScreen = route?.params?.fromScreen || 'Home';
   const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
 
@@ -43,9 +55,30 @@ export default function WithdrawScreen({ route, navigation }) {
   const [withdrawAsset, setWithdrawAsset] = useState('Gold');
   const [withdrawGrams, setWithdrawGrams] = useState('');
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [modalStep, setModalStep] = useState('form'); // 'form' | 'otp'
+  const [challengeId, setChallengeId] = useState('');
+  const [otpValue, setOtpValue] = useState('');
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const [otpSuccessMsg, setOtpSuccessMsg] = useState('');
+  const [otpError, setOtpError] = useState('');
+  const [isRequestingOtp, setIsRequestingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isResendingOtp, setIsResendingOtp] = useState(false);
   const [withdrawSuccess, setWithdrawSuccess] = useState(false);
   const [withdrawError, setWithdrawError] = useState('');
-  const [isSubmittingWithdrawal, setIsSubmittingWithdrawal] = useState(false);
+
+  // Resend Countdown Timer Effect
+  useEffect(() => {
+    let timer = null;
+    if (resendCountdown > 0) {
+      timer = setInterval(() => {
+        setResendCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [resendCountdown]);
 
   const goldGrams = Number(holdings?.goldGrams) || 0;
   const silverGrams = Number(holdings?.silverGrams) || 0;
@@ -66,6 +99,10 @@ export default function WithdrawScreen({ route, navigation }) {
     setWithdrawAsset(asset);
     setWithdrawGrams('');
     setWithdrawError('');
+    setOtpError('');
+    setOtpValue('');
+    setChallengeId('');
+    setModalStep('form');
     setShowWithdrawModal(true);
   };
 
@@ -105,9 +142,11 @@ export default function WithdrawScreen({ route, navigation }) {
     }
   };
 
-  const handleConfirmWithdrawal = async () => {
-    if (isSubmittingWithdrawal) return;
+  // Step 1: Request OTP Challenge (NO withdrawal created, NO balance reserved)
+  const handleRequestOtp = async () => {
+    if (isRequestingOtp) return;
     setWithdrawError('');
+    setOtpError('');
 
     const g = parseFloat(withdrawGrams) || 0;
     const maxGrams = withdrawAsset === 'Gold' ? goldGrams : silverGrams;
@@ -132,25 +171,87 @@ export default function WithdrawScreen({ route, navigation }) {
       return;
     }
 
-    setIsSubmittingWithdrawal(true);
+    setIsRequestingOtp(true);
     try {
-      await requestWithdrawal({
+      const res = await requestWithdrawalOtp({
         metal: withdrawAsset.toLowerCase(),
-        grams: g,
+        quantity_grams: g,
+        withdrawal_mode: 'physical',
       });
 
+      if (res && res.challenge_id) {
+        setChallengeId(res.challenge_id);
+        setOtpValue('');
+        setModalStep('otp');
+        setResendCountdown(30);
+      } else {
+        throw new Error(res?.message || 'Failed to dispatch withdrawal OTP.');
+      }
+    } catch (err) {
+      setWithdrawError(err.message || 'Failed to request OTP. Please try again.');
+    } finally {
+      setIsRequestingOtp(false);
+    }
+  };
+
+  // Step 2: Verify OTP and Execute Real Withdrawal Creation
+  const handleVerifyOtp = async () => {
+    if (isVerifyingOtp) return;
+    setOtpError('');
+
+    const cleanOtp = (otpValue || '').trim();
+    if (!cleanOtp || cleanOtp.length < 6) {
+      setOtpError('Please enter the complete 6-digit OTP code.');
+      return;
+    }
+
+    setIsVerifyingOtp(true);
+    try {
+      await verifyWithdrawalOtp(challengeId, cleanOtp);
+
       setWithdrawSuccess(true);
-      setIsSubmittingWithdrawal(false);
+      setModalStep('form');
+      setChallengeId('');
+      setOtpValue('');
 
       setTimeout(() => {
         setWithdrawSuccess(false);
         setShowWithdrawModal(false);
         navigation.navigate('TransactionHistory', { fromScreen: 'withdraw' });
-      }, 1200);
+      }, 1500);
     } catch (err) {
-      setIsSubmittingWithdrawal(false);
-      setWithdrawError(err.message || 'Withdrawal request failed. Please try again.');
+      setOtpError(err.message || 'Invalid or expired OTP. Please try again.');
+    } finally {
+      setIsVerifyingOtp(false);
     }
+  };
+
+  // Resend OTP Handler
+  const handleResendOtp = async () => {
+    if (isResendingOtp || resendCountdown > 0) return;
+    setOtpError('');
+    setIsResendingOtp(true);
+
+    try {
+      await resendWithdrawalOtp(challengeId);
+      setResendCountdown(30);
+      setOtpSuccessMsg('New OTP dispatched to your registered mobile.');
+      setTimeout(() => setOtpSuccessMsg(''), 3000);
+    } catch (err) {
+      setOtpError(err.message || 'Failed to resend OTP. Please try again.');
+    } finally {
+      setIsResendingOtp(false);
+    }
+  };
+
+  // Clean Cancel Handler
+  const handleCloseWithdrawModal = () => {
+    setShowWithdrawModal(false);
+    setModalStep('form');
+    setChallengeId('');
+    setOtpValue('');
+    setWithdrawError('');
+    setOtpError('');
   };
 
   const handleNavigate = (screen, params = {}) => {
@@ -344,18 +445,20 @@ export default function WithdrawScreen({ route, navigation }) {
         </View>
       </Modal>
 
-      {/* Withdrawal Form Modal */}
+      {/* Withdrawal Form & OTP Verification Modal */}
       <Modal
         visible={showWithdrawModal}
         transparent
         animationType="slide"
-        onRequestClose={() => setShowWithdrawModal(false)}
+        onRequestClose={handleCloseWithdrawModal}
       >
         <View style={globalStyles.modalOverlay}>
           <View style={styles.modalSheet}>
             <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalSheetTitle}>Withdraw {withdrawAsset}</Text>
-              <TouchableOpacity onPress={() => setShowWithdrawModal(false)}>
+              <Text style={styles.modalSheetTitle}>
+                {modalStep === 'otp' ? 'Verify Withdrawal' : `Withdraw ${withdrawAsset}`}
+              </Text>
+              <TouchableOpacity onPress={handleCloseWithdrawModal}>
                 <X size={22} color={COLORS.textDark} />
               </TouchableOpacity>
             </View>
@@ -365,10 +468,104 @@ export default function WithdrawScreen({ route, navigation }) {
                 <CheckCircle2 size={54} color="#059669" />
                 <Text style={styles.modalSuccessTitle}>Withdrawal Requested!</Text>
                 <Text style={styles.modalSuccessSub}>
-                  Your physical {withdrawAsset.toLowerCase()} is ready for shop collection at Salem branch.
+                  Your physical {withdrawAsset.toLowerCase()} request has been submitted and is pending admin processing.
                 </Text>
               </View>
+            ) : modalStep === 'otp' ? (
+              /* STEP 2: OTP VERIFICATION */
+              <View>
+                <View style={{ marginBottom: 12 }}>
+                  <Text style={styles.modalDesc}>
+                    We sent a 6-digit OTP code to your registered mobile number:
+                  </Text>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: COLORS.textDark, marginTop: 3 }}>
+                    +91 {currentUser?.mobile && currentUser.mobile.length >= 4 ? `******${currentUser.mobile.slice(-4)}` : 'registered mobile'}
+                  </Text>
+                </View>
+
+                {otpError ? (
+                  <View style={globalStyles.errorBox}>
+                    <Text style={globalStyles.errorBoxText}>{otpError}</Text>
+                  </View>
+                ) : null}
+
+                {otpSuccessMsg ? (
+                  <View style={{ backgroundColor: '#ecfdf5', borderRadius: 8, padding: 10, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: '#059669' }}>
+                    <Text style={{ fontSize: 13, color: '#065f46', fontWeight: '600' }}>{otpSuccessMsg}</Text>
+                  </View>
+                ) : null}
+
+                <View style={globalStyles.inputGroup}>
+                  <Text style={globalStyles.inputLabel}>Enter 6-Digit OTP *</Text>
+                  <TextInput
+                    style={[
+                      globalStyles.inputField,
+                      { fontSize: 22, fontWeight: '700', letterSpacing: 8, textAlign: 'center', height: 48 }
+                    ]}
+                    placeholder="------"
+                    placeholderTextColor={COLORS.textMuted}
+                    value={otpValue}
+                    onChangeText={(val) => {
+                      setOtpValue(val.replace(/\D/g, '').slice(0, 6));
+                      setOtpError('');
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    autoFocus
+                  />
+                  <Text style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 4 }}>
+                    Requested: {withdrawGrams} gm {withdrawAsset}
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={[
+                    globalStyles.primaryButton,
+                    { marginTop: 8 },
+                    (isVerifyingOtp || otpValue.length < 6) && { opacity: 0.7 }
+                  ]}
+                  onPress={handleVerifyOtp}
+                  disabled={isVerifyingOtp || otpValue.length < 6}
+                  activeOpacity={0.8}
+                >
+                  {isVerifyingOtp ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
+                  ) : (
+                    <Text style={globalStyles.primaryButtonText}>Verify OTP & Submit</Text>
+                  )}
+                </TouchableOpacity>
+
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setModalStep('form');
+                      setOtpError('');
+                    }}
+                    disabled={isVerifyingOtp}
+                    style={{ paddingVertical: 6 }}
+                  >
+                    <Text style={{ fontSize: 13, color: COLORS.primaryPurple, fontWeight: '600' }}>
+                      « Change Quantity
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={handleResendOtp}
+                    disabled={resendCountdown > 0 || isResendingOtp}
+                    style={{ paddingVertical: 6 }}
+                  >
+                    <Text style={{
+                      fontSize: 13,
+                      fontWeight: '600',
+                      color: resendCountdown > 0 ? COLORS.textMuted : COLORS.primaryPurple
+                    }}>
+                      {resendCountdown > 0 ? `Resend in ${resendCountdown}s` : (isResendingOtp ? 'Sending...' : 'Resend OTP')}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             ) : (
+              /* STEP 1: QUANTITY INPUT */
               <View>
                 <View style={styles.pickupDisclaimer}>
                   <AlertTriangle size={18} color="#d97706" />
@@ -389,7 +586,7 @@ export default function WithdrawScreen({ route, navigation }) {
                   </Text>
                   <TextInput
                     style={globalStyles.inputField}
-                    placeholder={withdrawAsset === 'Gold' ? 'Min 0.5000' : 'Min 10.0000'}
+                    placeholder={withdrawAsset === 'Gold' ? 'Min 0.0010' : 'Min 0.0010'}
                     placeholderTextColor={COLORS.textMuted}
                     value={withdrawGrams}
                     onChangeText={(val) => {
@@ -404,12 +601,12 @@ export default function WithdrawScreen({ route, navigation }) {
                 </View>
 
                 <TouchableOpacity
-                  style={[globalStyles.primaryButton, { marginTop: 10 }, isSubmittingWithdrawal && { opacity: 0.7 }]}
-                  onPress={handleConfirmWithdrawal}
-                  disabled={isSubmittingWithdrawal}
+                  style={[globalStyles.primaryButton, { marginTop: 10 }, isRequestingOtp && { opacity: 0.7 }]}
+                  onPress={handleRequestOtp}
+                  disabled={isRequestingOtp}
                   activeOpacity={0.8}
                 >
-                  {isSubmittingWithdrawal ? (
+                  {isRequestingOtp ? (
                     <ActivityIndicator color="#ffffff" size="small" />
                   ) : (
                     <Text style={globalStyles.primaryButtonText}>Confirm Request</Text>

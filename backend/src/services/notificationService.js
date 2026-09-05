@@ -42,7 +42,7 @@ export async function createNotification({
     await query(
       `INSERT INTO notifications (id, recipient_type, recipient_id, type, title, message, data, is_read, source_type, source_id, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, NOW())
-       ON DUPLICATE KEY UPDATE updated_at = NOW()`,
+       ON DUPLICATE KEY UPDATE is_read = VALUES(is_read)`,
       [id, recipient_type, recipient_id, type, title, message, dataJson, source_type, source_id]
     );
   } catch (err) {

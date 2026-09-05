@@ -5,11 +5,46 @@ import {
   getCustomerWithdrawals,
   getCustomerWithdrawalById,
   cancelCustomerWithdrawal,
+  requestWithdrawalOtp,
+  resendWithdrawalOtp,
+  verifyWithdrawalOtp,
 } from '../services/withdrawalService.js';
 
 const router = express.Router();
 
-// POST /api/withdrawals
+// POST /api/withdrawals/request-otp
+router.post('/request-otp', requireAuth, async (req, res, next) => {
+  try {
+    const result = await requestWithdrawalOtp(req.user, req.body);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/withdrawals/resend-otp
+router.post('/resend-otp', requireAuth, async (req, res, next) => {
+  try {
+    const { challenge_id } = req.body;
+    const result = await resendWithdrawalOtp(req.user, challenge_id);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/withdrawals/verify-otp
+router.post('/verify-otp', requireAuth, async (req, res, next) => {
+  try {
+    const { challenge_id, otp } = req.body;
+    const result = await verifyWithdrawalOtp(req.user, challenge_id, otp);
+    res.status(201).json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/withdrawals (Legacy unverified direct route - blocked)
 router.post('/', requireAuth, async (req, res, next) => {
   try {
     const withdrawal = await createWithdrawalRequest(req.user, req.body);

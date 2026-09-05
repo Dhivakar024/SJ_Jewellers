@@ -297,6 +297,32 @@ async function createTables() {
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       INDEX idx_audit_entity (entity_type, entity_id),
       INDEX idx_audit_date (created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`,
+
+    // 13. Withdrawal OTPs Table (Strict Separate Purpose & Pre-Creation Verification)
+    `CREATE TABLE IF NOT EXISTS withdrawal_otps (
+      id VARCHAR(36) PRIMARY KEY,
+      challenge_id VARCHAR(50) NOT NULL UNIQUE,
+      user_id VARCHAR(36) NOT NULL,
+      mobile_number VARCHAR(20) NOT NULL,
+      purpose VARCHAR(30) NOT NULL DEFAULT 'withdrawal',
+      metal VARCHAR(20) NOT NULL,
+      quantity_grams DECIMAL(12, 4) NOT NULL,
+      withdrawal_mode VARCHAR(30) NOT NULL DEFAULT 'physical',
+      otp_hash VARCHAR(64) NOT NULL,
+      attempts INT NOT NULL DEFAULT 0,
+      max_attempts INT NOT NULL DEFAULT 5,
+      resend_count INT NOT NULL DEFAULT 0,
+      last_resend_at DATETIME NULL,
+      expires_at DATETIME NOT NULL,
+      verified_at DATETIME NULL,
+      used_at DATETIME NULL,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_wd_otps_challenge (challenge_id),
+      INDEX idx_wd_otps_user (user_id),
+      INDEX idx_wd_otps_purpose (purpose),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`
   ];
 
