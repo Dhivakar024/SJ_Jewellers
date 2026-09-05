@@ -89,6 +89,12 @@ export default function SignInScreen({ navigation }) {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        {/* Centered Welcome Heading */}
+        <View style={styles.welcomeWrap}>
+          <Text style={styles.welcomeTitle}>Welcome !</Text>
+          <Text style={styles.welcomeSubtitle}>Glad to see you !</Text>
+        </View>
+
         {/* Main Sign In Header */}
         <View style={styles.headerWrap}>
           <Text style={styles.mainTitle}>Sign In</Text>
@@ -202,6 +208,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingTop: 24,
     paddingBottom: 28,
+  },
+  welcomeWrap: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  welcomeTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: COLORS.textDark,
+    textAlign: 'center',
+  },
+  welcomeSubtitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: COLORS.textDark,
+    textAlign: 'center',
+    marginTop: 2,
   },
   headerWrap: {
     marginBottom: 24,
