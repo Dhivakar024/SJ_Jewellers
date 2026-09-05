@@ -17,6 +17,7 @@ import {
   refreshApiRates,
   getRateHistory,
 } from '../services/metalRatesService.js';
+import { fetchSalemReferenceRates } from '../services/rapidApiRateService.js';
 import {
   getAdminCustomerHoldings,
   getAdminAllHoldings,
@@ -222,6 +223,17 @@ router.get('/rates/history', async (req, res, next) => {
     const { metal, limit } = req.query;
     const history = await getRateHistory(metal, limit);
     res.json(history);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/admin/rates/reference/salem (RapidAPI Live Salem Reference Rates)
+router.get('/rates/reference/salem', async (req, res, next) => {
+  try {
+    const forceRefresh = req.query.refresh === 'true' || req.query.force === 'true';
+    const rates = await fetchSalemReferenceRates({ forceRefresh });
+    res.json(rates);
   } catch (err) {
     next(err);
   }

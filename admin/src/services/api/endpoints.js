@@ -50,6 +50,7 @@ export const ENDPOINTS = {
     RATES_CUSTOM: '/api/admin/rates/custom',
     RATES_REFRESH: '/api/admin/rates/refresh',
     RATES_HISTORY: '/api/admin/rates/history',
+    RATES_REFERENCE_SALEM: '/api/admin/rates/reference/salem',
 
     // Purchases
     PURCHASES: '/api/admin/purchases',

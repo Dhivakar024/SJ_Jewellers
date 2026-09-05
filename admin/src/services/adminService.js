@@ -107,6 +107,10 @@ export const adminService = {
     return apiClient.get(ENDPOINTS.ADMIN.RATES_HISTORY, { params: { metal, limit } });
   },
 
+  getSalemReferenceRates: async (params = {}) => {
+    return apiClient.get(ENDPOINTS.ADMIN.RATES_REFERENCE_SALEM, { params });
+  },
+
   // --- Purchases ---
   getPurchases: async (params = {}) => {
     return apiClient.get(ENDPOINTS.ADMIN.PURCHASES, { params });

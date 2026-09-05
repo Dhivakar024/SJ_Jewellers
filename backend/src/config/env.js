@@ -35,6 +35,11 @@ export const config = {
   metalRatesApiUrl: process.env.METAL_RATES_API_URL || null,
   metalRatesApiKey: process.env.METAL_RATES_API_KEY || null,
 
+  // RapidAPI Live Metal Rates (Salem Reference)
+  rapidApiKey: process.env.RAPIDAPI_KEY || process.env.METAL_RATES_API_KEY || null,
+  rapidApiHost: process.env.RAPIDAPI_HOST || 'gold-silver-rates-india.p.rapidapi.com',
+  rapidApiUrl: process.env.RAPIDAPI_URL || 'https://gold-silver-rates-india.p.rapidapi.com/api/Fetch-Gold-Silver/?city=Salem',
+
   // Financial Rules
   minGoldPurchaseGrams: 0.001,
   minSilverPurchaseGrams: 0.001,

@@ -27,12 +27,15 @@ export function AppProvider({ children }) {
   // 2. Rates State
   const [goldRate, setGoldRate] = useState(16263.65);
   const [silverRate, setSilverRate] = useState(267.00);
-  const [apiGoldRate, setApiGoldRate] = useState(16263.65);
-  const [apiSilverRate, setApiSilverRate] = useState(267.00);
+  const [apiGoldRate, setApiGoldRate] = useState(null);
+  const [apiSilverRate, setApiSilverRate] = useState(null);
   const [isGoldCustom, setIsGoldCustom] = useState(false);
   const [isSilverCustom, setIsSilverCustom] = useState(false);
   const [customGoldInput, setCustomGoldInput] = useState('');
   const [customSilverInput, setCustomSilverInput] = useState('');
+  const [salemReferenceRates, setSalemReferenceRates] = useState(null);
+  const [isFetchingSalemRates, setIsFetchingSalemRates] = useState(false);
+  const [salemRatesError, setSalemRatesError] = useState(null);
 
   // 3. Data Collections
   const [dashboardOverview, setDashboardOverview] = useState(null);
@@ -119,6 +122,40 @@ export function AppProvider({ children }) {
       }
     } catch (err) {
       console.warn('[Admin AppContext] Failed to fetch rates:', err.message);
+    }
+  }, []);
+
+  // Fetch Salem Live Reference Rates via RapidAPI
+  const fetchSalemRates = useCallback(async ({ forceRefresh = false } = {}) => {
+    setIsFetchingSalemRates(true);
+    setSalemRatesError(null);
+    try {
+      const data = await adminService.getSalemReferenceRates({ refresh: forceRefresh });
+      if (data && data.success) {
+        const goldVal = Number(data.gold?.per_gram);
+        const silverVal = Number(data.silver?.per_gram);
+        const refObj = {
+          city: data.city || 'Salem',
+          gold: goldVal,
+          silver: silverVal,
+          source: data.source || 'RapidAPI',
+          updatedAt: data.updated_at || new Date().toISOString(),
+          cached: Boolean(data.cached),
+        };
+        setSalemReferenceRates(refObj);
+        setApiGoldRate(goldVal);
+        setApiSilverRate(silverVal);
+        return refObj;
+      } else {
+        throw new Error('Malformed response received for Salem live rates.');
+      }
+    } catch (err) {
+      const msg = err.response?.data?.detail || err.response?.data?.message || err.message || 'Unable to fetch Salem Gold/Silver reference rates. Please try again.';
+      setSalemRatesError(msg);
+      console.warn('[Admin AppContext] Failed to fetch Salem reference rates:', msg);
+      throw err;
+    } finally {
+      setIsFetchingSalemRates(false);
     }
   }, []);
 
@@ -430,6 +467,10 @@ export function AppProvider({ children }) {
     silverRate,
     apiGoldRate,
     apiSilverRate,
+    salemReferenceRates,
+    isFetchingSalemRates,
+    salemRatesError,
+    fetchSalemRates,
     isGoldCustom,
     isSilverCustom,
     customGoldInput,

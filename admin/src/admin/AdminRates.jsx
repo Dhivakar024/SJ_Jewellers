@@ -5,8 +5,12 @@ export default function AdminRates() {
   const { 
     goldRate, 
     silverRate, 
-    apiGoldRate = 16263.65,
-    apiSilverRate = 267.00,
+    apiGoldRate,
+    apiSilverRate,
+    salemReferenceRates,
+    isFetchingSalemRates = false,
+    salemRatesError = null,
+    fetchSalemRates,
     isGoldCustom = false, 
     isSilverCustom = false, 
     customGoldInput = '', 
@@ -17,10 +21,17 @@ export default function AdminRates() {
 
   const [goldCustom, setGoldCustom] = useState(Boolean(isGoldCustom));
   const [silverCustom, setSilverCustom] = useState(Boolean(isSilverCustom));
-  const [goldInput, setGoldInput] = useState(customGoldInput || (goldRate ? goldRate.toString() : '16263.65'));
-  const [silverInput, setSilverInput] = useState(customSilverInput || (silverRate ? silverRate.toString() : '267.00'));
+  const [goldInput, setGoldInput] = useState(customGoldInput || (goldRate ? goldRate.toString() : ''));
+  const [silverInput, setSilverInput] = useState(customSilverInput || (silverRate ? silverRate.toString() : ''));
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Auto-fetch Salem reference rates on initial render if any toggle is in API mode and not yet fetched
+  useEffect(() => {
+    if ((!goldCustom || !silverCustom) && !salemReferenceRates && !isFetchingSalemRates && typeof fetchSalemRates === 'function') {
+      fetchSalemRates().catch(() => {});
+    }
+  }, [goldCustom, silverCustom, salemReferenceRates, isFetchingSalemRates, fetchSalemRates]);
 
   // Sync state when AppContext rates update from backend
   useEffect(() => {
@@ -41,29 +52,51 @@ export default function AdminRates() {
     }
   }, [isSilverCustom, customSilverInput, silverRate]);
 
-  const liveGoldRate = apiGoldRate || 16263.65;
-  const liveSilverRate = apiSilverRate || 267.00;
+  const liveGoldRate = salemReferenceRates?.gold || apiGoldRate;
+  const liveSilverRate = salemReferenceRates?.silver || apiSilverRate;
 
   const handleToggleGold = () => {
     const nextCustom = !goldCustom;
     setGoldCustom(nextCustom);
-    if (nextCustom && !goldInput) {
-      setGoldInput(liveGoldRate.toString());
+    if (!nextCustom) {
+      // Switched to API Mode: fetch fresh Salem reference if needed
+      if (typeof fetchSalemRates === 'function' && !salemReferenceRates) {
+        fetchSalemRates().catch(() => {});
+      }
+    } else if (nextCustom && !goldInput) {
+      // Switched to Custom Mode: prefill with live reference or existing rate if available
+      if (liveGoldRate) {
+        setGoldInput(liveGoldRate.toString());
+      }
     }
   };
 
   const handleToggleSilver = () => {
     const nextCustom = !silverCustom;
     setSilverCustom(nextCustom);
-    if (nextCustom && !silverInput) {
-      setSilverInput(liveSilverRate.toString());
+    if (!nextCustom) {
+      // Switched to API Mode: fetch fresh Salem reference if needed
+      if (typeof fetchSalemRates === 'function' && !salemReferenceRates) {
+        fetchSalemRates().catch(() => {});
+      }
+    } else if (nextCustom && !silverInput) {
+      // Switched to Custom Mode: prefill with live reference or existing rate if available
+      if (liveSilverRate) {
+        setSilverInput(liveSilverRate.toString());
+      }
     }
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
-    const gVal = goldCustom ? (parseFloat(goldInput) || liveGoldRate) : liveGoldRate;
-    const sVal = silverCustom ? (parseFloat(silverInput) || liveSilverRate) : liveSilverRate;
+
+    if (!goldCustom && !silverCustom) {
+      alert('API Mode is for live Salem reference only. Please toggle to Custom Mode to set and save customer selling rates.');
+      return;
+    }
+
+    const gVal = goldCustom ? parseFloat(goldInput) : (goldRate || liveGoldRate);
+    const sVal = silverCustom ? parseFloat(silverInput) : (silverRate || liveSilverRate);
 
     if (goldCustom && (!gVal || isNaN(gVal) || gVal <= 0)) {
       alert('Please enter a valid positive rate for Gold.');
@@ -115,6 +148,77 @@ export default function AdminRates() {
       <div className="admin-card">
         <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
+          {/* Live Salem Market Reference Status Bar */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '14px 18px',
+            backgroundColor: 'var(--admin-bg-card-subtle, #f8fafc)',
+            borderRadius: '10px',
+            border: '1px solid var(--admin-border, #e2e8f0)',
+            flexWrap: 'wrap',
+            gap: '12px'
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--admin-text-value, #0f172a)' }}>
+                  Salem Live Market Reference (RapidAPI)
+                </span>
+                <span style={{
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  backgroundColor: isFetchingSalemRates ? '#fef3c7' : (salemRatesError ? '#fee2e2' : '#dcfce7'),
+                  color: isFetchingSalemRates ? '#d97706' : (salemRatesError ? '#ef4444' : '#15803d'),
+                }}>
+                  {isFetchingSalemRates ? 'Fetching...' : (salemRatesError ? 'API Error' : 'Live')}
+                </span>
+              </div>
+              <div style={{ fontSize: '12.5px', color: 'var(--admin-text-muted, #64748b)' }}>
+                {isFetchingSalemRates ? (
+                  <span style={{ color: '#d97706', fontWeight: '600' }}>Fetching Salem rates...</span>
+                ) : salemRatesError ? (
+                  <span style={{ color: '#ef4444' }}>{salemRatesError}</span>
+                ) : salemReferenceRates ? (
+                  <span>
+                    24K Gold: <strong style={{ color: 'var(--admin-text-value)' }}>₹{salemReferenceRates.gold?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/g</strong>
+                    {' • '}
+                    Silver: <strong style={{ color: 'var(--admin-text-value)' }}>₹{salemReferenceRates.silver?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/g</strong>
+                    {salemReferenceRates.updatedAt && (
+                      <>
+                        {' • '}
+                        Updated: {new Date(salemReferenceRates.updatedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                      </>
+                    )}
+                    {salemReferenceRates.cached && <span style={{ opacity: 0.8 }}> (cached)</span>}
+                  </span>
+                ) : (
+                  <span>API rates provide real-time Salem market benchmarks. Switch to API mode or click Refresh to fetch.</span>
+                )}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => fetchSalemRates && fetchSalemRates({ forceRefresh: true })}
+              disabled={isFetchingSalemRates}
+              className="admin-btn-secondary"
+              style={{
+                padding: '6px 14px',
+                fontSize: '12.5px',
+                cursor: isFetchingSalemRates ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <span>↻</span>
+              <span>{isFetchingSalemRates ? 'Fetching Salem rates...' : 'Refresh Salem Rates'}</span>
+            </button>
+          </div>
+
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
@@ -147,7 +251,15 @@ export default function AdminRates() {
                       Gold
                     </label>
                     <span className="admin-rate-subtext">
-                      Live API: ₹{liveGoldRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/g
+                      {isFetchingSalemRates ? (
+                        'Fetching Salem rates...'
+                      ) : salemRatesError && !liveGoldRate ? (
+                        'Live API: Unavailable'
+                      ) : liveGoldRate ? (
+                        `Live API (Salem 24K): ₹${Number(liveGoldRate).toLocaleString('en-IN', { minimumFractionDigits: 2 })}/g`
+                      ) : (
+                        'Live API: Not fetched yet'
+                      )}
                     </span>
                   </div>
                 </div>
@@ -205,8 +317,18 @@ export default function AdminRates() {
                 step={goldCustom ? "0.01" : undefined}
                 disabled={!goldCustom}
                 readOnly={!goldCustom}
-                placeholder="e.g. 16500.00"
-                value={goldCustom ? goldInput : `₹${liveGoldRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/g`}
+                placeholder={goldCustom ? "e.g. 16500.00" : undefined}
+                value={
+                  goldCustom
+                    ? goldInput
+                    : isFetchingSalemRates
+                    ? 'Fetching Salem rates...'
+                    : salemRatesError && !liveGoldRate
+                    ? 'Rate unavailable'
+                    : liveGoldRate
+                    ? `₹${Number(liveGoldRate).toLocaleString('en-IN', { minimumFractionDigits: 2 })}/g (Salem 24K)`
+                    : 'Fetching Salem rates...'
+                }
                 onChange={(e) => setGoldInput(e.target.value)}
                 className="admin-input"
                 style={{
@@ -248,7 +370,15 @@ export default function AdminRates() {
                       Silver
                     </label>
                     <span className="admin-rate-subtext">
-                      Live API: ₹{liveSilverRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/g
+                      {isFetchingSalemRates ? (
+                        'Fetching Salem rates...'
+                      ) : salemRatesError && !liveSilverRate ? (
+                        'Live API: Unavailable'
+                      ) : liveSilverRate ? (
+                        `Live API (Salem): ₹${Number(liveSilverRate).toLocaleString('en-IN', { minimumFractionDigits: 2 })}/g`
+                      ) : (
+                        'Live API: Not fetched yet'
+                      )}
                     </span>
                   </div>
                 </div>
@@ -306,8 +436,18 @@ export default function AdminRates() {
                 step={silverCustom ? "0.01" : undefined}
                 disabled={!silverCustom}
                 readOnly={!silverCustom}
-                placeholder="e.g. 210.00"
-                value={silverCustom ? silverInput : `₹${liveSilverRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/g`}
+                placeholder={silverCustom ? "e.g. 210.00" : undefined}
+                value={
+                  silverCustom
+                    ? silverInput
+                    : isFetchingSalemRates
+                    ? 'Fetching Salem rates...'
+                    : salemRatesError && !liveSilverRate
+                    ? 'Rate unavailable'
+                    : liveSilverRate
+                    ? `₹${Number(liveSilverRate).toLocaleString('en-IN', { minimumFractionDigits: 2 })}/g (Salem)`
+                    : 'Fetching Salem rates...'
+                }
                 onChange={(e) => setSilverInput(e.target.value)}
                 className="admin-input"
                 style={{
@@ -347,7 +487,7 @@ export default function AdminRates() {
             </div>
 
             <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)' }}>
-              Custom rates remain active until today 11:59 PM, after which they will automatically revert to live API rates.
+              API Mode displays live Salem reference rates from RapidAPI. Customer selling rates are managed and published via Custom Mode.
             </div>
           </div>
 
