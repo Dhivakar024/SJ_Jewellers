@@ -26,12 +26,12 @@ export default function AdminRates() {
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Auto-fetch Salem reference rates on initial render if any toggle is in API mode and not yet fetched
+  // Initial render / page refresh / navigation: fetch existing stored reference data (RapidAPI = 0 requests)
   useEffect(() => {
-    if ((!goldCustom || !silverCustom) && !salemReferenceRates && !isFetchingSalemRates && typeof fetchSalemRates === 'function') {
-      fetchSalemRates().catch(() => {});
+    if (!salemReferenceRates && !isFetchingSalemRates && typeof fetchSalemRates === 'function') {
+      fetchSalemRates({ forceRefresh: false }).catch(() => {});
     }
-  }, [goldCustom, silverCustom, salemReferenceRates, isFetchingSalemRates, fetchSalemRates]);
+  }, [salemReferenceRates, isFetchingSalemRates, fetchSalemRates]);
 
   // Sync state when AppContext rates update from backend
   useEffect(() => {
@@ -59,32 +59,24 @@ export default function AdminRates() {
     const nextCustom = !goldCustom;
     setGoldCustom(nextCustom);
     if (!nextCustom) {
-      // Switched to API Mode: fetch fresh Salem reference if needed
-      if (typeof fetchSalemRates === 'function' && !salemReferenceRates) {
-        fetchSalemRates().catch(() => {});
-      }
-    } else if (nextCustom && !goldInput) {
-      // Switched to Custom Mode: prefill with live reference or existing rate if available
-      if (liveGoldRate) {
-        setGoldInput(liveGoldRate.toString());
+      // Custom -> API Mode activation: perform ONE fresh RapidAPI fetch
+      if (typeof fetchSalemRates === 'function') {
+        fetchSalemRates({ forceRefresh: true }).catch(() => {});
       }
     }
+    // Admin remains in full control of custom inputs without auto-overwrites
   };
 
   const handleToggleSilver = () => {
     const nextCustom = !silverCustom;
     setSilverCustom(nextCustom);
     if (!nextCustom) {
-      // Switched to API Mode: fetch fresh Salem reference if needed
-      if (typeof fetchSalemRates === 'function' && !salemReferenceRates) {
-        fetchSalemRates().catch(() => {});
-      }
-    } else if (nextCustom && !silverInput) {
-      // Switched to Custom Mode: prefill with live reference or existing rate if available
-      if (liveSilverRate) {
-        setSilverInput(liveSilverRate.toString());
+      // Custom -> API Mode activation: perform ONE fresh RapidAPI fetch
+      if (typeof fetchSalemRates === 'function') {
+        fetchSalemRates({ forceRefresh: true }).catch(() => {});
       }
     }
+    // Admin remains in full control of custom inputs without auto-overwrites
   };
 
   const handleSave = async (e) => {

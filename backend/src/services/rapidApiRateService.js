@@ -3,32 +3,79 @@ import config from '../config/env.js';
 import { query } from '../config/db.js';
 import { cleanRate } from '../utils/formatters.js';
 
-// In-memory cache for RapidAPI Salem rates (5-minute TTL to respect Basic plan rate limits)
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+// In-memory cache for RapidAPI Salem rates
 let cachedSalemRates = null;
 let lastFetchedAt = 0;
 let inFlightRequest = null;
 
 /**
- * Fetch live Salem Gold (24K 1g) and Silver (1g) reference rates from RapidAPI.
+ * Get current stored Salem reference rates from in-memory cache or database without calling RapidAPI.
+ * RapidAPI request count: 0.
  *
- * @param {Object} options
- * @param {boolean} [options.forceRefresh=false] - If true, bypasses the in-memory cache
- * @returns {Promise<Object>} Standardized Salem reference rates object
+ * @returns {Promise<Object|null>}
  */
-export async function fetchSalemReferenceRates({ forceRefresh = false } = {}) {
-  const now = Date.now();
-
-  // 1. Return cached data if still fresh and not forcing refresh
-  if (!forceRefresh && cachedSalemRates && (now - lastFetchedAt < CACHE_TTL_MS)) {
+export async function getStoredSalemReferenceRates() {
+  if (cachedSalemRates) {
     return {
       ...cachedSalemRates,
       cached: true,
-      cache_age_seconds: Math.round((now - lastFetchedAt) / 1000),
     };
   }
 
-  // 2. Reuse in-flight promise to avoid duplicate concurrent external requests
+  // Check MySQL rates table for existing stored reference rates
+  try {
+    const rows = await query("SELECT * FROM rates WHERE metal IN ('gold', 'silver')");
+    const gold = rows.find((r) => r.metal === 'gold');
+    const silver = rows.find((r) => r.metal === 'silver');
+
+    if (gold && silver && gold.api_rate && silver.api_rate) {
+      const gRate = cleanRate(gold.api_rate);
+      const sRate = cleanRate(silver.api_rate);
+
+      cachedSalemRates = {
+        success: true,
+        city: 'Salem',
+        gold: {
+          purity: '24K',
+          per_gram: gRate,
+        },
+        silver: {
+          per_gram: sRate,
+        },
+        source: 'RapidAPI',
+        fetched_at: gold.updated_at,
+        updated_at: gold.updated_at,
+        cached: true,
+      };
+      lastFetchedAt = Date.now();
+      return cachedSalemRates;
+    }
+  } catch (dbErr) {
+    console.warn('[RapidAPI Service] Could not retrieve stored rates from DB:', dbErr.message);
+  }
+
+  return null;
+}
+
+/**
+ * Fetch live Salem Gold (24K 1g) and Silver (1g) reference rates.
+ * If forceRefresh is false, returns existing stored reference data without calling RapidAPI.
+ * If forceRefresh is true (or no stored data exists), triggers exactly ONE fresh RapidAPI request.
+ *
+ * @param {Object} options
+ * @param {boolean} [options.forceRefresh=false] - If true, triggers fresh fetch from RapidAPI
+ * @returns {Promise<Object>} Standardized Salem reference rates object
+ */
+export async function fetchSalemReferenceRates({ forceRefresh = false } = {}) {
+  // 1. If not forcing a refresh, return existing stored reference data (RapidAPI = 0 requests)
+  if (!forceRefresh) {
+    const stored = await getStoredSalemReferenceRates();
+    if (stored) {
+      return stored;
+    }
+  }
+
+  // 2. Reuse in-flight promise to prevent duplicate concurrent external requests
   if (inFlightRequest) {
     return inFlightRequest;
   }
@@ -172,7 +219,7 @@ export async function fetchSalemReferenceRates({ forceRefresh = false } = {}) {
  * Useful for inspection or initial state.
  */
 export function getCachedSalemRates() {
-  if (cachedSalemRates && (Date.now() - lastFetchedAt < CACHE_TTL_MS)) {
+  if (cachedSalemRates) {
     return {
       ...cachedSalemRates,
       cached: true,
@@ -193,6 +240,7 @@ export function clearSalemRatesCache() {
 
 export default {
   fetchSalemReferenceRates,
+  getStoredSalemReferenceRates,
   getCachedSalemRates,
   clearSalemRatesCache,
 };
