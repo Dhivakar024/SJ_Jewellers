@@ -68,20 +68,30 @@ export async function requestWithdrawalOtp(user, data) {
   }
 
   // 4. Validate quantity
-  const quantityGrams = cleanGrams(data?.quantity_grams || data?.grams);
-  if (quantityGrams <= 0) {
-    const error = new Error('Please enter a valid withdrawal quantity');
+  const rawQty = data?.quantity_grams !== undefined ? data.quantity_grams : (data?.grams !== undefined ? data.grams : data?.quantity);
+  if (rawQty === undefined || rawQty === null || rawQty.toString().trim() === '') {
+    const error = new Error('Please enter a withdrawal quantity.');
     error.status = 400;
     throw error;
   }
 
-  if (metal === 'gold' && quantityGrams < config.minGoldWithdrawalGrams) {
-    const error = new Error(`Minimum gold withdrawal quantity is ${config.minGoldWithdrawalGrams} grams`);
+  const str = rawQty.toString().trim();
+  if (!/^\d+(\.\d+)?$/.test(str)) {
+    const error = new Error('Please enter a valid gram quantity.');
     error.status = 400;
     throw error;
   }
-  if (metal === 'silver' && quantityGrams < config.minSilverWithdrawalGrams) {
-    const error = new Error(`Minimum silver withdrawal quantity is ${config.minSilverWithdrawalGrams} grams`);
+
+  const quantityGrams = cleanGrams(str);
+  if (quantityGrams <= 0) {
+    const error = new Error('Please enter a valid withdrawal quantity.');
+    error.status = 400;
+    throw error;
+  }
+
+  const minGrams = metal === 'gold' ? config.minGoldWithdrawalGrams : config.minSilverWithdrawalGrams;
+  if (quantityGrams < minGrams) {
+    const error = new Error(`Minimum withdrawal quantity is ${minGrams.toFixed(4)} gm.`);
     error.status = 400;
     throw error;
   }
@@ -90,10 +100,11 @@ export async function requestWithdrawalOtp(user, data) {
   const holding = await getOrCreateHoldings(user.id);
   const totalQty = cleanGrams(holding[`${metal}_quantity`]);
   const reservedQty = cleanGrams(holding[`${metal}_reserved`]);
-  const availableQty = cleanGrams(totalQty - reservedQty);
+  const availableQty = cleanGrams(Math.max(0, totalQty - reservedQty));
 
   if (quantityGrams > availableQty) {
-    const error = new Error(`Insufficient ${metal} balance (Available: ${availableQty.toFixed(4)} gm)`);
+    const metalCap = metal.charAt(0).toUpperCase() + metal.slice(1);
+    const error = new Error(`Insufficient ${metalCap} balance.`);
     error.status = 400;
     throw error;
   }
@@ -289,7 +300,7 @@ export async function verifyWithdrawalOtp(user, challengeId, enteredOtp) {
   }
 
   if (record.attempts >= record.max_attempts) {
-    const error = new Error('Maximum verification attempts exceeded. Please start a new withdrawal request.');
+    const error = new Error('Too many attempts. Please request a new OTP.');
     error.status = 400;
     throw error;
   }
@@ -307,7 +318,7 @@ export async function verifyWithdrawalOtp(user, challengeId, enteredOtp) {
     );
     const updatedAttempts = record.attempts + 1;
     if (updatedAttempts >= record.max_attempts) {
-      const error = new Error('Maximum verification attempts exceeded. Please start a new withdrawal request.');
+      const error = new Error('Too many attempts. Please request a new OTP.');
       error.status = 400;
       throw error;
     }
@@ -378,10 +389,11 @@ export async function verifyWithdrawalOtp(user, challengeId, enteredOtp) {
     const h = holdingRows[0];
     const totalQty = cleanGrams(h[`${metal}_quantity`]);
     const curReserved = cleanGrams(h[`${metal}_reserved`]);
-    const availableQty = cleanGrams(totalQty - curReserved);
+    const availableQty = cleanGrams(Math.max(0, totalQty - curReserved));
 
     if (quantityGrams > availableQty) {
-      const error = new Error(`Insufficient ${metal} balance. Available: ${availableQty.toFixed(4)} gm`);
+      const metalCap = metal.charAt(0).toUpperCase() + metal.slice(1);
+      const error = new Error(`Insufficient ${metalCap} balance.`);
       error.status = 400;
       throw error;
     }

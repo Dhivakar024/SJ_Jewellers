@@ -78,6 +78,8 @@ function buildHoldingsValuation(holding, activeRates) {
 
   // Gold
   const gQty = cleanGrams(holding.gold_quantity);
+  const gReserved = cleanGrams(holding.gold_reserved);
+  const gAvail = cleanGrams(Math.max(0, gQty - gReserved));
   const gInv = cleanRate(holding.gold_invested);
   const gAvg = cleanRate(holding.gold_average_rate);
   const gVal = cleanRate(gQty * goldRate);
@@ -85,6 +87,8 @@ function buildHoldingsValuation(holding, activeRates) {
 
   // Silver
   const sQty = cleanGrams(holding.silver_quantity);
+  const sReserved = cleanGrams(holding.silver_reserved);
+  const sAvail = cleanGrams(Math.max(0, sQty - sReserved));
   const sInv = cleanRate(holding.silver_invested);
   const sAvg = cleanRate(holding.silver_average_rate);
   const sVal = cleanRate(sQty * silverRate);
@@ -97,6 +101,8 @@ function buildHoldingsValuation(holding, activeRates) {
   return {
     gold: {
       quantity_grams: gQty,
+      reserved_grams: gReserved,
+      available_grams: gAvail,
       total_invested: gInv,
       average_buy_rate: gAvg,
       current_rate: goldRate,
@@ -105,6 +111,8 @@ function buildHoldingsValuation(holding, activeRates) {
     },
     silver: {
       quantity_grams: sQty,
+      reserved_grams: sReserved,
+      available_grams: sAvail,
       total_invested: sInv,
       average_buy_rate: sAvg,
       current_rate: silverRate,

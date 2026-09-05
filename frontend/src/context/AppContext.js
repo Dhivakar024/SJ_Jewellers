@@ -155,9 +155,25 @@ export function AppProvider({ children }) {
     try {
       const data = await holdingsService.getHoldings();
       if (data) {
+        const goldTotal = Number(data.gold?.quantity_grams) || 0;
+        const goldReserved = Number(data.gold?.reserved_grams) || 0;
+        const goldAvailable = data.gold?.available_grams !== undefined
+          ? Number(data.gold.available_grams)
+          : Math.max(0, goldTotal - goldReserved);
+
+        const silverTotal = Number(data.silver?.quantity_grams) || 0;
+        const silverReserved = Number(data.silver?.reserved_grams) || 0;
+        const silverAvailable = data.silver?.available_grams !== undefined
+          ? Number(data.silver.available_grams)
+          : Math.max(0, silverTotal - silverReserved);
+
         const mapped = {
-          goldGrams: Number(data.gold?.quantity_grams) || 0,
-          silverGrams: Number(data.silver?.quantity_grams) || 0,
+          goldGrams: goldTotal,
+          goldReservedGrams: goldReserved,
+          goldAvailableGrams: goldAvailable,
+          silverGrams: silverTotal,
+          silverReservedGrams: silverReserved,
+          silverAvailableGrams: silverAvailable,
           goldInvested: Number(data.gold?.total_invested) || 0,
           silverInvested: Number(data.silver?.total_invested) || 0,
           goldCurrentValue: Number(data.gold?.current_value) || 0,
@@ -444,7 +460,10 @@ export function AppProvider({ children }) {
   // Request Withdrawal OTP (Step 1 of Withdrawal Flow)
   const requestWithdrawalOtp = useCallback(async (wthData) => {
     const metal = (wthData.metal || wthData.asset || 'gold').toLowerCase();
-    const quantityGrams = Number(wthData.grams || wthData.quantity) || 0;
+    const rawQty = wthData.quantity_grams !== undefined 
+      ? wthData.quantity_grams 
+      : (wthData.grams !== undefined ? wthData.grams : wthData.quantity);
+    const quantityGrams = Number(rawQty) || 0;
 
     return await withdrawalService.requestWithdrawalOtp({
       metal,
@@ -475,7 +494,10 @@ export function AppProvider({ children }) {
   // Request Withdrawal (Legacy/Direct)
   const requestWithdrawal = useCallback(async (wthData) => {
     const metal = (wthData.metal || wthData.asset || 'gold').toLowerCase();
-    const quantityGrams = Number(wthData.grams || wthData.quantity) || 0;
+    const rawQty = wthData.quantity_grams !== undefined 
+      ? wthData.quantity_grams 
+      : (wthData.grams !== undefined ? wthData.grams : wthData.quantity);
+    const quantityGrams = Number(rawQty) || 0;
 
     const res = await withdrawalService.requestWithdrawal({
       metal,

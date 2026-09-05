@@ -1,4 +1,5 @@
 import express from 'express';
+import config from '../config/env.js';
 import { requireAuth } from '../middleware/auth.js';
 import {
   createWithdrawalRequest,
@@ -11,6 +12,14 @@ import {
 } from '../services/withdrawalService.js';
 
 const router = express.Router();
+
+// GET /api/withdrawals/rules (Expose authoritative minimum withdrawal rules)
+router.get('/rules', (req, res) => {
+  res.json({
+    min_gold_withdrawal_grams: config.minGoldWithdrawalGrams,
+    min_silver_withdrawal_grams: config.minSilverWithdrawalGrams,
+  });
+});
 
 // POST /api/withdrawals/request-otp
 router.post('/request-otp', requireAuth, async (req, res, next) => {

@@ -80,8 +80,20 @@ export default function WithdrawScreen({ route, navigation }) {
     };
   }, [resendCountdown]);
 
-  const goldGrams = Number(holdings?.goldGrams) || 0;
-  const silverGrams = Number(holdings?.silverGrams) || 0;
+  const goldTotal = Number(holdings?.goldGrams) || 0;
+  const goldReserved = Number(holdings?.goldReservedGrams) || 0;
+  const goldAvailable = holdings?.goldAvailableGrams !== undefined
+    ? Number(holdings.goldAvailableGrams)
+    : Math.max(0, goldTotal - goldReserved);
+
+  const silverTotal = Number(holdings?.silverGrams) || 0;
+  const silverReserved = Number(holdings?.silverReservedGrams) || 0;
+  const silverAvailable = holdings?.silverAvailableGrams !== undefined
+    ? Number(holdings.silverAvailableGrams)
+    : Math.max(0, silverTotal - silverReserved);
+
+  const goldGrams = goldTotal;
+  const silverGrams = silverTotal;
 
   const handleBack = () => {
     if (fromScreen === 'profile') {
@@ -148,26 +160,40 @@ export default function WithdrawScreen({ route, navigation }) {
     setWithdrawError('');
     setOtpError('');
 
-    const g = parseFloat(withdrawGrams) || 0;
-    const maxGrams = withdrawAsset === 'Gold' ? goldGrams : silverGrams;
+    const raw = (withdrawGrams || '').trim();
+    if (!raw) {
+      setWithdrawError('Please enter a withdrawal quantity.');
+      return;
+    }
 
-    if (g <= 0) {
+    if (!/^\d+(\.\d+)?$/.test(raw)) {
       setWithdrawError('Please enter a valid gram quantity.');
       return;
     }
 
-    if (g > maxGrams) {
-      setWithdrawError(`Insufficient ${withdrawAsset.toLowerCase()} balance (Max: ${maxGrams.toFixed(4)} gm).`);
+    const g = parseFloat(raw);
+    if (isNaN(g) || !isFinite(g) || g <= 0) {
+      setWithdrawError('Please enter a valid withdrawal quantity.');
       return;
     }
 
-    if (withdrawAsset === 'Gold' && g < 0.001) {
-      setWithdrawError('Minimum gold withdrawal is 0.001 grams.');
+    const normalizedGrams = Math.round(g * 10000) / 10000;
+    if (normalizedGrams <= 0) {
+      setWithdrawError('Please enter a valid withdrawal quantity.');
       return;
     }
 
-    if (withdrawAsset === 'Silver' && g < 0.001) {
-      setWithdrawError('Minimum silver withdrawal is 0.001 grams.');
+    const minGrams = 0.001; // Authoritative backend rule: 0.0010 gm
+    if (normalizedGrams < minGrams) {
+      setWithdrawError(`Minimum withdrawal quantity is ${minGrams.toFixed(4)} gm.`);
+      return;
+    }
+
+    const isGold = withdrawAsset === 'Gold';
+    const availableGrams = isGold ? goldAvailable : silverAvailable;
+
+    if (normalizedGrams > availableGrams) {
+      setWithdrawError(`Insufficient ${withdrawAsset} balance.`);
       return;
     }
 
@@ -175,7 +201,8 @@ export default function WithdrawScreen({ route, navigation }) {
     try {
       const res = await requestWithdrawalOtp({
         metal: withdrawAsset.toLowerCase(),
-        quantity_grams: g,
+        quantity_grams: normalizedGrams,
+        grams: normalizedGrams,
         withdrawal_mode: 'physical',
       });
 
@@ -220,7 +247,7 @@ export default function WithdrawScreen({ route, navigation }) {
         navigation.navigate('TransactionHistory', { fromScreen: 'withdraw' });
       }, 1500);
     } catch (err) {
-      setOtpError(err.message || 'Invalid or expired OTP. Please try again.');
+      setOtpError(err.message || 'Invalid OTP. Please try again.');
     } finally {
       setIsVerifyingOtp(false);
     }
@@ -529,9 +556,12 @@ export default function WithdrawScreen({ route, navigation }) {
                   activeOpacity={0.8}
                 >
                   {isVerifyingOtp ? (
-                    <ActivityIndicator color="#ffffff" size="small" />
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                      <ActivityIndicator color="#ffffff" size="small" style={{ marginRight: 8 }} />
+                      <Text style={globalStyles.primaryButtonText}>Verifying OTP...</Text>
+                    </View>
                   ) : (
-                    <Text style={globalStyles.primaryButtonText}>Verify OTP & Submit</Text>
+                    <Text style={globalStyles.primaryButtonText}>Verify OTP</Text>
                   )}
                 </TouchableOpacity>
 
@@ -596,7 +626,7 @@ export default function WithdrawScreen({ route, navigation }) {
                     keyboardType="numeric"
                   />
                   <Text style={styles.balanceHint}>
-                    Available: {withdrawAsset === 'Gold' ? goldGrams.toFixed(4) : silverGrams.toFixed(4)} gm
+                    Available: {withdrawAsset === 'Gold' ? goldAvailable.toFixed(4) : silverAvailable.toFixed(4)} gm
                   </Text>
                 </View>
 

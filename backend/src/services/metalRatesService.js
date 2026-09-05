@@ -54,6 +54,12 @@ export async function getRatesPublic() {
   return {
     gold_rate: cleanRate(gold.active_rate),
     silver_rate: cleanRate(silver.active_rate),
+    rules: {
+      min_gold_withdrawal_grams: config.minGoldWithdrawalGrams,
+      min_silver_withdrawal_grams: config.minSilverWithdrawalGrams,
+      min_gold_purchase_grams: config.minGoldPurchaseGrams,
+      min_silver_purchase_grams: config.minSilverPurchaseGrams,
+    },
     gold: {
       api_rate: cleanRate(gold.api_rate),
       active_rate: cleanRate(gold.active_rate),
