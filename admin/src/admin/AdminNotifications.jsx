@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   CheckCircle, AlertCircle, Clock, ShieldCheck, ShieldAlert, 
-  X, Check, RefreshCw, User, Phone, Mail, MapPin, CreditCard 
+  X, Check, RefreshCw, User, Phone, Mail, MapPin, CreditCard, DollarSign 
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import adminService from '../services/adminService';
@@ -11,12 +11,13 @@ export default function AdminNotifications() {
     withdrawals = [], 
     pendingVerifications = [], 
     approveWithdrawal, 
+    rejectWithdrawal,
     verifyCustomer, 
     rejectKyc, 
     refreshAllData 
   } = useApp() || {};
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof refreshAllData === 'function') {
       refreshAllData();
     }
@@ -28,10 +29,24 @@ export default function AdminNotifications() {
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [detailError, setDetailError] = useState('');
   
+  // KYC Rejection State
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+
+  // Withdrawal Rejection State
+  const [showRejectWithdrawalModal, setShowRejectWithdrawalModal] = useState(false);
+  const [withdrawalRejectionReason, setWithdrawalRejectionReason] = useState('');
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+
+  // Auto-hide toast after 4 seconds
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(''), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
 
   const pendingWithdrawals = withdrawals.filter((w) => w && (w.status === 'Pending' || w.rawStatus === 'pending'));
 
@@ -72,6 +87,31 @@ export default function AdminNotifications() {
       }
     } catch (err) {
       alert(err.message || 'Failed to approve withdrawal.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Reject Withdrawal Action
+  const handleRejectWithdrawalAction = async () => {
+    if (!selectedWithdrawal || isProcessing) return;
+    const reason = withdrawalRejectionReason.trim() || 'Insufficient holdings or unverified details';
+    setIsProcessing(true);
+    try {
+      if (typeof rejectWithdrawal === 'function') {
+        await rejectWithdrawal(selectedWithdrawal.id, reason);
+      } else {
+        await adminService.rejectWithdrawal(selectedWithdrawal.id, reason);
+      }
+      setToastMessage(`Withdrawal for ${selectedWithdrawal.customer} rejected.`);
+      setShowRejectWithdrawalModal(false);
+      setWithdrawalRejectionReason('');
+      setSelectedWithdrawal(null);
+      if (typeof refreshAllData === 'function') {
+        await refreshAllData();
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to reject withdrawal.');
     } finally {
       setIsProcessing(false);
     }
@@ -231,7 +271,7 @@ export default function AdminNotifications() {
                     setSelectedWithdrawal(w);
                   }}
                 >
-                  Confirm paid
+                  Review & Confirm
                 </button>
               </div>
             ))
@@ -319,16 +359,107 @@ export default function AdminNotifications() {
         </div>
       </div>
 
-      {/* 4. Modal: Confirm Amount Paid */}
+      {/* 4. Modal: Review & Confirm Withdrawal Details */}
       {selectedWithdrawal && (
-        <div className="admin-modal-overlay" onClick={() => setSelectedWithdrawal(null)}>
-          <div className="admin-modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: '17px', fontWeight: '700', margin: '0 0 8px 0', color: 'var(--admin-text-heading)' }}>
-              Confirm payment
-            </h3>
-            <p style={{ fontSize: '13.5px', color: 'var(--admin-text-secondary)', marginBottom: '18px' }}>
-              Confirm that ₹{parseFloat(selectedWithdrawal.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })} has been transferred to <strong>{selectedWithdrawal.customer}</strong>.
-            </p>
+        <div className="admin-modal-overlay" onClick={() => {
+          if (!isProcessing) setSelectedWithdrawal(null);
+        }}>
+          <div className="admin-modal-box" style={{ maxWidth: '480px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <h3 style={{ fontSize: '17px', fontWeight: '800', margin: 0, color: 'var(--admin-text-heading)' }}>
+                Withdrawal Request Details
+              </h3>
+              <button
+                onClick={() => setSelectedWithdrawal(null)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--admin-text-muted)',
+                  cursor: 'pointer',
+                  padding: '4px'
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{
+              backgroundColor: 'var(--admin-bg-card-subtle)',
+              border: '1px solid var(--admin-border)',
+              borderRadius: '10px',
+              padding: '14px 16px',
+              fontSize: '13px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px',
+              marginBottom: '20px',
+              color: 'var(--admin-text-secondary)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '6px' }}>
+                <span style={{ fontWeight: '600' }}>Customer:</span>
+                <span style={{ fontWeight: '700', color: 'var(--admin-text-value)' }}>{selectedWithdrawal.customer}</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '6px' }}>
+                <span style={{ fontWeight: '600' }}>Mobile:</span>
+                <span style={{ fontWeight: '700', color: 'var(--admin-text-value)' }}>{selectedWithdrawal.mobile || 'Not available'}</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '6px' }}>
+                <span style={{ fontWeight: '600' }}>Metal:</span>
+                <span style={{ fontWeight: '700', color: selectedWithdrawal.metal === 'Gold' ? 'var(--admin-gold)' : 'var(--admin-text-main)' }}>
+                  {selectedWithdrawal.metal}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '6px' }}>
+                <span style={{ fontWeight: '600' }}>Quantity:</span>
+                <span style={{ fontWeight: '700', color: 'var(--admin-text-value)' }}>
+                  {selectedWithdrawal.quantity || `${selectedWithdrawal.grams} gm`}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '6px' }}>
+                <span style={{ fontWeight: '600' }}>Rate at Request:</span>
+                <span style={{ fontWeight: '600', color: 'var(--admin-text-value)' }}>
+                  ₹{Number(selectedWithdrawal.rate || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}/gm
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '6px' }}>
+                <span style={{ fontWeight: '600' }}>Total Amount:</span>
+                <span style={{ fontWeight: '800', color: '#059669', fontSize: '14.5px' }}>
+                  ₹{parseFloat(selectedWithdrawal.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '6px' }}>
+                <span style={{ fontWeight: '600' }}>Withdrawal Mode:</span>
+                <span style={{ fontWeight: '600', color: 'var(--admin-text-value)', textTransform: 'capitalize' }}>
+                  {selectedWithdrawal.withdrawalMode || 'Physical'}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--admin-border-subtle)', paddingBottom: '6px' }}>
+                <span style={{ fontWeight: '600' }}>Request Date:</span>
+                <span style={{ fontWeight: '500', color: 'var(--admin-text-value)' }}>{selectedWithdrawal.date}</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontWeight: '600' }}>Status:</span>
+                <span style={{
+                  fontWeight: '700',
+                  color: '#b45309',
+                  backgroundColor: '#fef3c7',
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  fontSize: '11.5px',
+                  textTransform: 'uppercase'
+                }}>
+                  Pending Payment
+                </span>
+              </div>
+            </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
               <button
@@ -337,8 +468,27 @@ export default function AdminNotifications() {
                 className="admin-btn-secondary"
                 onClick={() => setSelectedWithdrawal(null)}
               >
-                Cancel
+                Close
               </button>
+
+              <button
+                type="button"
+                disabled={isProcessing}
+                style={{
+                  backgroundColor: '#fee2e2',
+                  color: '#dc2626',
+                  border: '1px solid #fecaca',
+                  borderRadius: '8px',
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  cursor: isProcessing ? 'not-allowed' : 'pointer'
+                }}
+                onClick={() => setShowRejectWithdrawalModal(true)}
+              >
+                Reject Withdrawal
+              </button>
+
               <button
                 type="button"
                 disabled={isProcessing}
@@ -352,7 +502,70 @@ export default function AdminNotifications() {
         </div>
       )}
 
-      {/* 5. Modal: Review & Verify Customer (Real Backend Data) */}
+      {/* 5. Modal: Reject Withdrawal Reason */}
+      {showRejectWithdrawalModal && (
+        <div className="admin-modal-overlay" style={{ zIndex: 250 }} onClick={() => setShowRejectWithdrawalModal(false)}>
+          <div className="admin-modal-box" style={{ maxWidth: '420px' }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontSize: '17px', fontWeight: '800', margin: '0 0 8px 0', color: '#dc2626' }}>
+              Reject Withdrawal Request
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--admin-text-secondary)', marginBottom: '14px' }}>
+              Please enter the reason for rejecting the withdrawal for <strong>{selectedWithdrawal?.customer || 'this customer'}</strong>.
+            </p>
+
+            <div style={{ marginBottom: '16px' }}>
+              <textarea
+                value={withdrawalRejectionReason}
+                onChange={(e) => setWithdrawalRejectionReason(e.target.value)}
+                placeholder="e.g. Bank account details mismatch, invalid payment information..."
+                rows={3}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--admin-border)',
+                  backgroundColor: 'var(--admin-bg-page)',
+                  color: 'var(--admin-text-main)',
+                  fontSize: '13px',
+                  outline: 'none',
+                  resize: 'vertical',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                type="button"
+                disabled={isProcessing}
+                className="admin-btn-secondary"
+                onClick={() => setShowRejectWithdrawalModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isProcessing}
+                style={{
+                  backgroundColor: '#dc2626',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  cursor: isProcessing ? 'not-allowed' : 'pointer'
+                }}
+                onClick={handleRejectWithdrawalAction}
+              >
+                {isProcessing ? 'Rejecting...' : 'Reject Withdrawal'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. Modal: Review & Verify Customer KYC (Real Backend Data) */}
       {selectedVerification && (
         <div className="admin-modal-overlay" onClick={() => {
           if (!isProcessing) {
@@ -551,7 +764,7 @@ export default function AdminNotifications() {
         </div>
       )}
 
-      {/* 6. Modal: Reject KYC Reason */}
+      {/* 7. Modal: Reject KYC Reason */}
       {showRejectModal && (
         <div className="admin-modal-overlay" style={{ zIndex: 250 }} onClick={() => setShowRejectModal(false)}>
           <div className="admin-modal-box" style={{ maxWidth: '420px' }} onClick={(e) => e.stopPropagation()}>

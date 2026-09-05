@@ -100,6 +100,8 @@ export async function notifyWithdrawalSubmitted(withdrawalDoc) {
   });
 
   // Admin notification
+  const userRows = await query('SELECT id, name, mobile, email FROM users WHERE id = ? LIMIT 1', [withdrawalDoc.user_id]);
+  const user = userRows[0] || {};
   const admins = await query("SELECT id FROM users WHERE role = 'admin'");
   for (const adm of admins) {
     await createNotification({
@@ -107,13 +109,21 @@ export async function notifyWithdrawalSubmitted(withdrawalDoc) {
       recipient_id: adm.id,
       type: 'withdrawal_submitted',
       title: 'New Withdrawal Request',
-      message: `A customer has submitted a ${capMetal} withdrawal request for ${qty} g.`,
+      message: `${user.name || 'A customer'} (${user.mobile || ''}) has submitted a ${capMetal} withdrawal request for ${qty} g.`,
       data: {
         transaction_id: withdrawalDoc.transaction_id,
         withdrawal_id: withdrawalDoc.id,
         user_id: withdrawalDoc.user_id,
+        customer_name: user.name || 'Customer',
+        name: user.name || 'Customer',
+        mobile: user.mobile || '',
+        email: user.email || '',
         metal: withdrawalDoc.metal,
         quantity_grams: qty,
+        rate_per_gram: withdrawalDoc.rate_per_gram,
+        metal_value: withdrawalDoc.metal_value,
+        withdrawal_mode: withdrawalDoc.withdrawal_mode || 'Physical',
+        created_at: withdrawalDoc.created_at || new Date().toISOString(),
       },
       source_type: 'withdrawal',
       source_id: withdrawalDoc.id,
