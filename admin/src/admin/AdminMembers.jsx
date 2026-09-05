@@ -144,14 +144,22 @@ export default function AdminMembers() {
     }
 
     // Prefer real transactions from memberDetail if available
-    if (memberDetail?.transactions || memberDetail?.withdrawals) {
-      const rawTx = Array.isArray(memberDetail.transactions) ? memberDetail.transactions : [];
-      const rawWd = Array.isArray(memberDetail.withdrawals) ? memberDetail.withdrawals : [];
+    if (memberDetail?.transactions || memberDetail?.withdrawals || memberDetail?.purchases) {
+      const rawTx = Array.isArray(memberDetail.purchases)
+        ? memberDetail.purchases
+        : (Array.isArray(memberDetail.transactions)
+            ? memberDetail.transactions.filter((t) => (t.type || '').toLowerCase() === 'purchase')
+            : []);
+      const rawWd = Array.isArray(memberDetail.withdrawals)
+        ? memberDetail.withdrawals
+        : (Array.isArray(memberDetail.transactions)
+            ? memberDetail.transactions.filter((t) => (t.type || '').toLowerCase() === 'withdrawal')
+            : []);
 
       const purchases = rawTx.map((t) => {
         const isGold = (t.metal || '').toLowerCase().includes('gold');
         const gNum = parseFloat(t.quantity_grams || t.quantity || 0) || 0;
-        const amtNum = parseFloat(t.total_amount || t.amount || 0) || 0;
+        const amtNum = parseFloat(t.total_amount ?? t.metal_value ?? t.amount ?? 0) || 0;
         const rateVal = parseFloat(t.rate_per_gram || t.rate) || (gNum > 0 && amtNum > 0 ? (amtNum / gNum) : (isGold ? goldRate : silverRate));
         const d = new Date(t.created_at || Date.now());
         const dateFormatted = `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
@@ -172,8 +180,9 @@ export default function AdminMembers() {
       const memberWithdrawals = rawWd.map((w) => {
         const isGold = (w.metal || '').toLowerCase().includes('gold');
         const gNum = parseFloat(w.quantity_grams || w.grams || 0) || 0;
-        const amtNum = parseFloat(w.metal_value || w.amount || 0) || 0;
-        const rateVal = parseFloat(w.rate_per_gram || w.rate) || (isGold ? goldRate : silverRate);
+        const storedRate = parseFloat(w.rate_per_gram ?? w.rate) || 0;
+        const amtNum = parseFloat(w.total_amount ?? w.metal_value ?? w.amount ?? 0) || (gNum > 0 && storedRate > 0 ? (gNum * storedRate) : 0);
+        const rateVal = storedRate > 0 ? storedRate : (gNum > 0 && amtNum > 0 ? (amtNum / gNum) : (isGold ? goldRate : silverRate));
         const d = new Date(w.created_at || Date.now());
         const dateFormatted = `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 
@@ -200,8 +209,8 @@ export default function AdminMembers() {
         silverPurchases,
         goldWithdrawals,
         silverWithdrawals,
-        allGold: [...goldPurchases, ...goldWithdrawals],
-        allSilver: [...silverPurchases, ...silverWithdrawals],
+        allGold: [...goldPurchases, ...goldWithdrawals].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)),
+        allSilver: [...silverPurchases, ...silverWithdrawals].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)),
       };
     }
 
@@ -253,8 +262,9 @@ export default function AdminMembers() {
     }).map((w) => {
       const isGold = (w.metal || w.asset || '').toLowerCase().includes('gold');
       const gNum = parseFloat(w.grams || (w.quantity ? w.quantity.toString().replace(/[^0-9.]/g, '') : 0)) || 0;
-      const amtNum = parseFloat(w.amount ? w.amount.toString().replace(/,/g, '') : 0) || 0;
-      const rateVal = parseFloat(w.rate) || (isGold ? goldRate : silverRate);
+      const storedRate = parseFloat(w.rate || w.rate_per_gram) || 0;
+      const amtNum = parseFloat(w.amount ? w.amount.toString().replace(/,/g, '') : (w.total_amount ?? w.metal_value ?? 0)) || (gNum > 0 && storedRate > 0 ? (gNum * storedRate) : 0);
+      const rateVal = storedRate > 0 ? storedRate : (gNum > 0 && amtNum > 0 ? (amtNum / gNum) : (isGold ? goldRate : silverRate));
 
       return {
         ...w,
@@ -264,8 +274,8 @@ export default function AdminMembers() {
         displayRate: rateVal,
         displayAmount: amtNum,
         displayDate: w.date || 'Recent',
-        displayStatus: w.status || 'Pending',
-        displayPayment: 'Bank Transfer'
+        displayStatus: (w.status === 'completed' || w.status === 'approved' || w.status === 'Success') ? 'Success' : (w.status === 'rejected' || w.status === 'Rejected' ? 'Rejected' : 'Pending'),
+        displayPayment: w.withdrawalMode || w.withdrawal_mode || 'Physical Delivery'
       };
     });
 
@@ -279,8 +289,8 @@ export default function AdminMembers() {
       silverPurchases,
       goldWithdrawals,
       silverWithdrawals,
-      allGold: [...goldPurchases, ...goldWithdrawals],
-      allSilver: [...silverPurchases, ...silverWithdrawals]
+      allGold: [...goldPurchases, ...goldWithdrawals].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)),
+      allSilver: [...silverPurchases, ...silverWithdrawals].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
     };
   }, [memberDetail, selectedMemberSummary, transactions, withdrawals, goldRate, silverRate]);
 
@@ -289,7 +299,13 @@ export default function AdminMembers() {
     if (memberDetail?.holdings?.gold) {
       return memberDetail.holdings.gold;
     }
-    const grams = (memberTransactions?.goldPurchases || []).reduce((acc, p) => acc + (p?.displayGrams || 0), 0);
+    const boughtGrams = (memberTransactions?.goldPurchases || [])
+      .filter((p) => p?.displayStatus === 'Success')
+      .reduce((acc, p) => acc + (p?.displayGrams || 0), 0);
+    const withdrawnGrams = (memberTransactions?.goldWithdrawals || [])
+      .filter((w) => w?.displayStatus === 'Success')
+      .reduce((acc, w) => acc + (w?.displayGrams || 0), 0);
+    const grams = Math.max(0, boughtGrams - withdrawnGrams);
     return {
       quantity_grams: grams,
       invested_amount: grams * goldRate,
@@ -303,7 +319,13 @@ export default function AdminMembers() {
     if (memberDetail?.holdings?.silver) {
       return memberDetail.holdings.silver;
     }
-    const grams = (memberTransactions?.silverPurchases || []).reduce((acc, p) => acc + (p?.displayGrams || 0), 0);
+    const boughtGrams = (memberTransactions?.silverPurchases || [])
+      .filter((p) => p?.displayStatus === 'Success')
+      .reduce((acc, p) => acc + (p?.displayGrams || 0), 0);
+    const withdrawnGrams = (memberTransactions?.silverWithdrawals || [])
+      .filter((w) => w?.displayStatus === 'Success')
+      .reduce((acc, w) => acc + (w?.displayGrams || 0), 0);
+    const grams = Math.max(0, boughtGrams - withdrawnGrams);
     return {
       quantity_grams: grams,
       invested_amount: grams * silverRate,

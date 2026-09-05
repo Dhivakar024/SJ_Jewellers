@@ -66,6 +66,10 @@ async function testAdminMembersViewFlow() {
 
     const kycId = vijayDetail.kyc.id;
 
+    // Reset status to pending so approval flow can run reliably
+    await query("UPDATE users SET kyc_status = 'pending' WHERE id = ?", [vijaySummary.id]);
+    await query("UPDATE kyc SET status = 'pending', reviewed_at = NULL, reviewed_by = NULL WHERE id = ?", [kycId]);
+
     // 4. Admin Approves Vijay's KYC via POST /api/admin/kyc/:kycId/approve
     const approveRes = await axios.post(`${BASE_URL}/api/admin/kyc/${kycId}/approve`, {}, { headers: adminHeaders });
     console.log(`✓ 4. Admin approved Vijay's KYC (Response: ${approveRes.data.message || 'Approved'})`);
