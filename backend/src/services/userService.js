@@ -187,10 +187,14 @@ export async function getAdminUsers({ page = 1, limit = 20, search, status_filte
   const totalPages = Math.max(1, Math.ceil(total / safeLimit));
 
   const rows = await query(
-    `SELECT id, id as user_id, name, mobile, email, role, account_status, kyc_status, created_at 
-     FROM users 
+    `SELECT u.id, u.id as user_id, u.name, u.mobile, u.email, u.role, u.account_status, u.kyc_status, u.created_at,
+            COALESCE(h.gold_quantity, 0) as gold_grams,
+            COALESCE(h.silver_quantity, 0) as silver_grams,
+            (SELECT COUNT(*) FROM purchases WHERE user_id = u.id) as total_orders
+     FROM users u
+     LEFT JOIN holdings h ON u.id = h.user_id
      ${whereSql} 
-     ORDER BY created_at DESC 
+     ORDER BY u.created_at DESC 
      LIMIT ${safeLimit} OFFSET ${offset}`,
     params
   );
@@ -223,11 +227,13 @@ export async function getAdminUserDetail(userId) {
   const holdingsRows = await query('SELECT * FROM holdings WHERE user_id = ? LIMIT 1', [userId]);
   const holdings = holdingsRows[0] || {
     gold_quantity: 0,
+    gold_reserved: 0,
+    gold_invested: 0,
+    gold_average_rate: 0,
     silver_quantity: 0,
-    gold_invested_amount: 0,
-    silver_invested_amount: 0,
-    gold_avg_buy_rate: 0,
-    silver_avg_buy_rate: 0,
+    silver_reserved: 0,
+    silver_invested: 0,
+    silver_average_rate: 0,
   };
 
   // Fetch Live Rates for Valuation
@@ -238,11 +244,13 @@ export async function getAdminUserDetail(userId) {
   const activeSilverRate = Number(silverRateRow?.active_rate || config.defaultSilverRate);
 
   const goldQty = cleanGrams(holdings.gold_quantity || 0);
+  const goldRes = cleanGrams(holdings.gold_reserved || 0);
   const silverQty = cleanGrams(holdings.silver_quantity || 0);
-  const goldInvested = cleanRate(holdings.gold_invested_amount || 0);
-  const silverInvested = cleanRate(holdings.silver_invested_amount || 0);
-  const goldAvgRate = cleanRate(holdings.gold_avg_buy_rate || (goldQty > 0 ? goldInvested / goldQty : 0));
-  const silverAvgRate = cleanRate(holdings.silver_avg_buy_rate || (silverQty > 0 ? silverInvested / silverQty : 0));
+  const silverRes = cleanGrams(holdings.silver_reserved || 0);
+  const goldInvested = cleanRate(holdings.gold_invested || holdings.gold_invested_amount || 0);
+  const silverInvested = cleanRate(holdings.silver_invested || holdings.silver_invested_amount || 0);
+  const goldAvgRate = cleanRate(holdings.gold_average_rate || holdings.gold_avg_buy_rate || (goldQty > 0 ? goldInvested / goldQty : 0));
+  const silverAvgRate = cleanRate(holdings.silver_average_rate || holdings.silver_avg_buy_rate || (silverQty > 0 ? silverInvested / silverQty : 0));
 
   // Fetch Member Purchases & Withdrawals
   const purchaseRows = await query(
@@ -254,33 +262,37 @@ export async function getAdminUserDetail(userId) {
     [userId]
   );
 
+  const formattedPurchases = purchaseRows.map((p) => ({
+    id: p.id || p.transaction_id,
+    transaction_id: p.transaction_id,
+    user_id: p.user_id,
+    type: 'purchase',
+    metal: (p.metal || '').toLowerCase(),
+    quantity_grams: cleanGrams(p.quantity_grams),
+    rate_per_gram: cleanRate(p.rate_per_gram),
+    total_amount: cleanRate(p.total_amount),
+    status: p.status || 'completed',
+    payment_method: p.payment_method || 'UPI',
+    created_at: p.created_at,
+  }));
+
+  const formattedWithdrawals = wdRows.map((w) => ({
+    id: w.id || w.transaction_id,
+    transaction_id: w.transaction_id,
+    user_id: w.user_id,
+    type: 'withdrawal',
+    metal: (w.metal || '').toLowerCase(),
+    quantity_grams: cleanGrams(w.quantity_grams),
+    rate_per_gram: cleanRate(w.rate_per_gram),
+    total_amount: cleanRate(w.metal_value),
+    status: w.status || 'pending',
+    payment_method: w.withdrawal_mode || 'Physical Delivery',
+    created_at: w.created_at,
+  }));
+
   const formattedTransactions = [
-    ...purchaseRows.map((p) => ({
-      id: p.id || p.transaction_id,
-      transaction_id: p.transaction_id,
-      user_id: p.user_id,
-      type: 'purchase',
-      metal: (p.metal || '').toLowerCase(),
-      quantity_grams: cleanGrams(p.quantity_grams),
-      rate_per_gram: cleanRate(p.rate_per_gram),
-      total_amount: cleanRate(p.total_amount),
-      status: p.status || 'completed',
-      payment_method: p.payment_method || 'UPI',
-      created_at: p.created_at,
-    })),
-    ...wdRows.map((w) => ({
-      id: w.id || w.transaction_id,
-      transaction_id: w.transaction_id,
-      user_id: w.user_id,
-      type: 'withdrawal',
-      metal: (w.metal || '').toLowerCase(),
-      quantity_grams: cleanGrams(w.quantity_grams),
-      rate_per_gram: cleanRate(w.rate_per_gram),
-      total_amount: cleanRate(w.metal_value),
-      status: w.status || 'pending',
-      payment_method: w.withdrawal_mode || 'Physical Delivery',
-      created_at: w.created_at,
-    })),
+    ...formattedPurchases,
+    ...formattedWithdrawals,
   ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
   return {
@@ -293,6 +305,7 @@ export async function getAdminUserDetail(userId) {
     account_status: user.account_status,
     kyc_status: user.kyc_status,
     mobile_verified: true,
+    created_at: user.created_at,
     profile: {
       full_name: profile.full_name || null,
       date_of_birth: profile.date_of_birth || null,
@@ -343,35 +356,31 @@ export async function getAdminUserDetail(userId) {
     holdings: {
       gold: {
         quantity_grams: goldQty,
+        reserved_grams: goldRes,
         invested_amount: goldInvested,
+        total_invested: goldInvested,
         avg_buy_rate: goldAvgRate,
+        average_buy_rate: goldAvgRate,
         current_rate: activeGoldRate,
         current_value: cleanRate(goldQty * activeGoldRate),
       },
       silver: {
         quantity_grams: silverQty,
+        reserved_grams: silverRes,
         invested_amount: silverInvested,
+        total_invested: silverInvested,
         avg_buy_rate: silverAvgRate,
+        average_buy_rate: silverAvgRate,
         current_rate: activeSilverRate,
         current_value: cleanRate(silverQty * activeSilverRate),
       },
       total_current_value: cleanRate((goldQty * activeGoldRate) + (silverQty * activeSilverRate)),
       total_invested_amount: cleanRate(goldInvested + silverInvested),
+      total_invested: cleanRate(goldInvested + silverInvested),
     },
+    purchases: formattedPurchases,
+    withdrawals: formattedWithdrawals,
     transactions: formattedTransactions,
-    withdrawals: wdRows.map((w) => ({
-      id: w.id || w.transaction_id,
-      withdrawal_id: w.id || w.transaction_id,
-      transaction_id: w.transaction_id,
-      user_id: w.user_id,
-      metal: w.metal,
-      quantity_grams: cleanGrams(w.quantity_grams),
-      rate_per_gram: cleanRate(w.rate_per_gram),
-      metal_value: cleanRate(w.metal_value),
-      status: w.status,
-      withdrawal_mode: w.withdrawal_mode,
-      created_at: w.created_at,
-    })),
     created_at: user.created_at,
     updated_at: user.updated_at,
   };

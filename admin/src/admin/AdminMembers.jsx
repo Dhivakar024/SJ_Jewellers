@@ -52,7 +52,8 @@ export default function AdminMembers() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   
-  // Pagination State for Members Table
+  // Search & Pagination State for Members Table
+  const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -892,6 +893,12 @@ export default function AdminMembers() {
                 <div className="admin-holdings-sub-gold">
                   Valuation: ₹{Number(goldHoldingsData?.current_value || (Number(goldHoldingsData?.quantity_grams || 0) * goldRate)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · (₹{goldRate.toLocaleString('en-IN')}/gm)
                 </div>
+
+                {Number(goldHoldingsData?.reserved_grams || 0) > 0 && (
+                  <div style={{ fontSize: '11.5px', color: '#b45309', marginTop: '4px', fontWeight: '600' }}>
+                    Reserved for Withdrawal: {Number(goldHoldingsData.reserved_grams).toFixed(4)} gm
+                  </div>
+                )}
               </div>
 
               {/* Silver Holdings Card */}
@@ -923,6 +930,12 @@ export default function AdminMembers() {
                 <div className="admin-holdings-sub-silver">
                   Valuation: ₹{Number(silverHoldingsData?.current_value || (Number(silverHoldingsData?.quantity_grams || 0) * silverRate)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · (₹{silverRate.toLocaleString('en-IN')}/gm)
                 </div>
+
+                {Number(silverHoldingsData?.reserved_grams || 0) > 0 && (
+                  <div style={{ fontSize: '11.5px', color: '#475569', marginTop: '4px', fontWeight: '600' }}>
+                    Reserved for Withdrawal: {Number(silverHoldingsData.reserved_grams).toFixed(4)} gm
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1310,22 +1323,78 @@ export default function AdminMembers() {
         </div>
       )}
 
-      {/* 1. Page Header (Fixed at top) */}
-      <div className="admin-page-header" style={{ flexShrink: 0, marginBottom: '14px' }}>
-        <h1 className="admin-page-title">Members</h1>
-        <p className="admin-page-sub">
-          All registered users ({members.length})
-        </p>
+      {/* 1. Page Header with Search Bar */}
+      <div className="admin-page-header" style={{ flexShrink: 0, marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <h1 className="admin-page-title">Members</h1>
+          <p className="admin-page-sub">
+            All registered users ({members.length})
+          </p>
+        </div>
+
+        {/* Search Input Box */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            placeholder="Search by name, mobile, email..."
+            style={{
+              padding: '7px 14px',
+              borderRadius: '8px',
+              border: '1px solid var(--admin-border)',
+              backgroundColor: 'var(--admin-bg-card)',
+              color: 'var(--admin-text-main)',
+              fontSize: '13px',
+              width: '240px',
+              outline: 'none',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+            }}
+          />
+          {searchTerm && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setCurrentPage(1);
+              }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--admin-text-muted)',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: '600'
+              }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       {/* 2. Members Table Container */}
       {(() => {
-        const totalItems = members.length;
+        const filteredMembers = members.filter((m) => {
+          if (!m) return false;
+          if (!searchTerm || !searchTerm.trim()) return true;
+          const term = searchTerm.toLowerCase().trim();
+          const name = (m.name || '').toLowerCase();
+          const mobile = (m.mobile || '').toLowerCase();
+          const email = (m.email || '').toLowerCase();
+          const username = (m.username || '').toLowerCase();
+          const id = (m.id || '').toLowerCase();
+          return name.includes(term) || mobile.includes(term) || email.includes(term) || username.includes(term) || id.includes(term);
+        });
+
+        const totalItems = filteredMembers.length;
         const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
         const safePage = Math.min(Math.max(1, currentPage), totalPages);
         const startIndex = (safePage - 1) * pageSize;
         const endIndex = Math.min(startIndex + pageSize, totalItems);
-        const paginatedMembers = members.slice(startIndex, endIndex);
+        const paginatedMembers = filteredMembers.slice(startIndex, endIndex);
 
         return (
           <div 

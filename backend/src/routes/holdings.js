@@ -7,7 +7,16 @@ import {
 
 const router = express.Router();
 
-// GET /api/holdings/me
+// GET /api/holdings & GET /api/holdings/me
+router.get('/', requireAuth, async (req, res, next) => {
+  try {
+    const holdings = await getCustomerHoldings(req.user);
+    res.json(holdings);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/me', requireAuth, async (req, res, next) => {
   try {
     const holdings = await getCustomerHoldings(req.user);
